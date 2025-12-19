@@ -1,0 +1,14 @@
+D:\InventoryEx\InventoryEx\bin\Debug\net8.0\InventoryEx.exe
+D:\InventoryEx\InventoryEx\bin\Debug\net8.0\InventoryEx.deps.json
+D:\InventoryEx\InventoryEx\bin\Debug\net8.0\InventoryEx.runtimeconfig.json
+D:\InventoryEx\InventoryEx\bin\Debug\net8.0\InventoryEx.dll
+D:\InventoryEx\InventoryEx\bin\Debug\net8.0\InventoryEx.pdb
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.GeneratedMSBuildEditorConfig.editorconfig
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.AssemblyInfoInputs.cache
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.AssemblyInfo.cs
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.csproj.CoreCompileInputs.cache
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.dll
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\refint\InventoryEx.dll
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.pdb
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\InventoryEx.genruntimeconfig.cache
+D:\InventoryEx\InventoryEx\obj\Debug\net8.0\ref\InventoryEx.dll

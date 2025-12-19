@@ -1,0 +1,14 @@
+D:\InventoryEx\ListEx\bin\Debug\net8.0\ListEx.exe
+D:\InventoryEx\ListEx\bin\Debug\net8.0\ListEx.deps.json
+D:\InventoryEx\ListEx\bin\Debug\net8.0\ListEx.runtimeconfig.json
+D:\InventoryEx\ListEx\bin\Debug\net8.0\ListEx.dll
+D:\InventoryEx\ListEx\bin\Debug\net8.0\ListEx.pdb
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.GeneratedMSBuildEditorConfig.editorconfig
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.AssemblyInfoInputs.cache
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.AssemblyInfo.cs
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.csproj.CoreCompileInputs.cache
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.dll
+D:\InventoryEx\ListEx\obj\Debug\net8.0\refint\ListEx.dll
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.pdb
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ListEx.genruntimeconfig.cache
+D:\InventoryEx\ListEx\obj\Debug\net8.0\ref\ListEx.dll

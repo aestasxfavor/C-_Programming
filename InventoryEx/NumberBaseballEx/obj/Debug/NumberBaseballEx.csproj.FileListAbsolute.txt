@@ -1,0 +1,8 @@
+D:\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.exe.config
+D:\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.exe
+D:\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.pdb
+D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.csproj.AssemblyReference.cache
+D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.csproj.CoreCompileInputs.cache
+D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe
+D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.pdb
+D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe.config

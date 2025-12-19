@@ -1,0 +1,8 @@
+D:\InventoryEx\StringEx\bin\Debug\StringEx.exe.config
+D:\InventoryEx\StringEx\bin\Debug\StringEx.exe
+D:\InventoryEx\StringEx\bin\Debug\StringEx.pdb
+D:\InventoryEx\StringEx\obj\Debug\StringEx.csproj.AssemblyReference.cache
+D:\InventoryEx\StringEx\obj\Debug\StringEx.csproj.CoreCompileInputs.cache
+D:\InventoryEx\StringEx\obj\Debug\StringEx.exe
+D:\InventoryEx\StringEx\obj\Debug\StringEx.pdb
+D:\InventoryEx\StringEx\obj\Debug\StringEx.exe.config
