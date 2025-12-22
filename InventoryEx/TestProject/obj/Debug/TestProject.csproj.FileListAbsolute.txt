@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\TestProject\bin\Debug\TestProject.exe.config
+D:\C-_Programming\InventoryEx\TestProject\bin\Debug\TestProject.exe
+D:\C-_Programming\InventoryEx\TestProject\bin\Debug\TestProject.pdb
+D:\C-_Programming\InventoryEx\TestProject\obj\Debug\TestProject.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\TestProject\obj\Debug\TestProject.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\TestProject\obj\Debug\TestProject.exe
+D:\C-_Programming\InventoryEx\TestProject\obj\Debug\TestProject.pdb
+D:\C-_Programming\InventoryEx\TestProject\obj\Debug\TestProject.exe.config

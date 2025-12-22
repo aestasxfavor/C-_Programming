@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\InventoryEx\\ListEx\\ListEx.csproj": {}
+    "D:\\C-_Programming\\InventoryEx\\ListEx\\ListEx.csproj": {}
   },
   "projects": {
-    "D:\\InventoryEx\\ListEx\\ListEx.csproj": {
+    "D:\\C-_Programming\\InventoryEx\\ListEx\\ListEx.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\InventoryEx\\ListEx\\ListEx.csproj",
+        "projectUniqueName": "D:\\C-_Programming\\InventoryEx\\ListEx\\ListEx.csproj",
         "projectName": "ListEx",
-        "projectPath": "D:\\InventoryEx\\ListEx\\ListEx.csproj",
+        "projectPath": "D:\\C-_Programming\\InventoryEx\\ListEx\\ListEx.csproj",
         "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\InventoryEx\\ListEx\\obj\\",
+        "outputPath": "D:\\C-_Programming\\InventoryEx\\ListEx\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -6,3 +6,11 @@ D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.csproj.CoreCompileInp
 D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe
 D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.pdb
 D:\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe.config
+D:\C-_Programming\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe.config
+D:\C-_Programming\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.exe
+D:\C-_Programming\InventoryEx\NumberBaseballEx\obj\Debug\NumberBaseballEx.pdb
+D:\C-_Programming\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.exe.config
+D:\C-_Programming\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.exe
+D:\C-_Programming\InventoryEx\NumberBaseballEx\bin\Debug\NumberBaseballEx.pdb
