@@ -1,0 +1,8 @@
+C:\Users\DPC\Desktop\Program\BattleSystem\bin\Debug\BattleSystem.exe.config
+C:\Users\DPC\Desktop\Program\BattleSystem\bin\Debug\BattleSystem.exe
+C:\Users\DPC\Desktop\Program\BattleSystem\bin\Debug\BattleSystem.pdb
+C:\Users\DPC\Desktop\Program\BattleSystem\obj\Debug\BattleSystem.csproj.AssemblyReference.cache
+C:\Users\DPC\Desktop\Program\BattleSystem\obj\Debug\BattleSystem.csproj.CoreCompileInputs.cache
+C:\Users\DPC\Desktop\Program\BattleSystem\obj\Debug\BattleSystem.exe
+C:\Users\DPC\Desktop\Program\BattleSystem\obj\Debug\BattleSystem.pdb
+C:\Users\DPC\Desktop\Program\BattleSystem\obj\Debug\BattleSystem.exe.config
