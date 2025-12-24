@@ -26,8 +26,6 @@ namespace TestProject
 
         public int Damage { get; set; }
 
-        bool IsDead { get; set; }   // 얘도 3단계 턴제까지 가야한다면 그때 사용하기
-
         public abstract void CharacterInfo();
         public abstract void TakeDamage();
     }
