@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\StructureEx\bin\Debug\StructureEx.exe.config
+D:\C-_Programming\InventoryEx\StructureEx\bin\Debug\StructureEx.exe
+D:\C-_Programming\InventoryEx\StructureEx\bin\Debug\StructureEx.pdb
+D:\C-_Programming\InventoryEx\StructureEx\obj\Debug\StructureEx.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\StructureEx\obj\Debug\StructureEx.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\StructureEx\obj\Debug\StructureEx.exe
+D:\C-_Programming\InventoryEx\StructureEx\obj\Debug\StructureEx.pdb
+D:\C-_Programming\InventoryEx\StructureEx\obj\Debug\StructureEx.exe.config
