@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\TreeEx\bin\Debug\TreeEx.exe.config
+D:\C-_Programming\InventoryEx\TreeEx\bin\Debug\TreeEx.exe
+D:\C-_Programming\InventoryEx\TreeEx\bin\Debug\TreeEx.pdb
+D:\C-_Programming\InventoryEx\TreeEx\obj\Debug\TreeEx.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\TreeEx\obj\Debug\TreeEx.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\TreeEx\obj\Debug\TreeEx.exe
+D:\C-_Programming\InventoryEx\TreeEx\obj\Debug\TreeEx.pdb
+D:\C-_Programming\InventoryEx\TreeEx\obj\Debug\TreeEx.exe.config
