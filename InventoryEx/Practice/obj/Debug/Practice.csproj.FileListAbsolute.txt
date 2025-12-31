@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\Practice\bin\Debug\Practice.exe.config
+D:\C-_Programming\InventoryEx\Practice\bin\Debug\Practice.exe
+D:\C-_Programming\InventoryEx\Practice\bin\Debug\Practice.pdb
+D:\C-_Programming\InventoryEx\Practice\obj\Debug\Practice.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\Practice\obj\Debug\Practice.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\Practice\obj\Debug\Practice.exe
+D:\C-_Programming\InventoryEx\Practice\obj\Debug\Practice.pdb
+D:\C-_Programming\InventoryEx\Practice\obj\Debug\Practice.exe.config
