@@ -181,24 +181,28 @@ namespace Practice
         }
         #endregion
 
-        static void ReverseTriangle(string _str1, string _str2)
+        static void ReverseTriangle(string _str_1, string _str_2)
         {
-            //int height = 0;
-            //if (!int.TryParse(Console.ReadLine(), out height)))
-            //        Console.WriteLine("파싱 실패");
-            //int width = 0;
-            //if (!int.TryParse(Console.ReadLine(), out width)))
-            //        Console.WriteLine("파싱 실패");
+            // 실제로는 이런 방식은 쓰면 안된다.
+            //int height = int.Parse(Console.ReadLine());
+            int height = 0;
+            if (!int.TryParse(_str_1, out height))
+                Console.WriteLine("파싱 실패");
 
-            //int spaceCount = 0;
-            //for (int i = height - 1; i >= 0; i--)
-            //{
-            //    Console.Write(" ");
-            //    for (int j = 0; j <= spaceCount; j++)
-            //    {
+            int width = 0;
+            if (!int.TryParse(_str_2, out width))
+                Console.WriteLine("파싱 실패");
 
-            //    }
-            //}
+            int spaceConut = 0;
+            for (int i = height - 1; i >= 0; i--)
+            {
+                for (int j = 0; j < spaceConut; j++)
+                    Console.Write(" ");
+                for (int j = 0; j <= i; j++)
+                    Console.Write("▽");
+                Console.WriteLine();
+                spaceConut++;
+            }
 
         }
     }

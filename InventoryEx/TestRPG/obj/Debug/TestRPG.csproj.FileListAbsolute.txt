@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\TestRPG\bin\Debug\TestRPG.exe.config
+D:\C-_Programming\InventoryEx\TestRPG\bin\Debug\TestRPG.exe
+D:\C-_Programming\InventoryEx\TestRPG\bin\Debug\TestRPG.pdb
+D:\C-_Programming\InventoryEx\TestRPG\obj\Debug\TestRPG.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\TestRPG\obj\Debug\TestRPG.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\TestRPG\obj\Debug\TestRPG.exe
+D:\C-_Programming\InventoryEx\TestRPG\obj\Debug\TestRPG.pdb
+D:\C-_Programming\InventoryEx\TestRPG\obj\Debug\TestRPG.exe.config
