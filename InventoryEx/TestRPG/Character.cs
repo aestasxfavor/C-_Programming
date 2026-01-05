@@ -7,7 +7,12 @@ using System.Threading.Tasks;
 
 namespace TestRPG
 {
-    internal abstract class Character
+    public interface IMoveController
+    {
+        void InputMove(ConsoleKeyInfo _keyinfo, StageMap _stageMap);
+        void MoveFunc(int  _dtX, int _dtY, StageMap _stageMap);
+    }
+    public abstract class Character
     {
         protected string m_name;
         public string Name { get { return m_name; } }
@@ -36,6 +41,8 @@ namespace TestRPG
         protected int m_gold;
         public int Gold { get { return m_gold; } }
 
+        public int CurX { get; set; }
+        public int CurY { get; set; }
         public abstract void ShowStatus();
     }
 
