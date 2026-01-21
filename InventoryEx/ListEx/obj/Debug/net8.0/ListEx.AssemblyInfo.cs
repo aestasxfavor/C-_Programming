@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ListEx")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ed1fc5f1f2d899c0d252cd8737800cfdea13c7c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f682724433bae907263e365a0395761752163c6")]
 [assembly: System.Reflection.AssemblyProductAttribute("ListEx")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ListEx")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

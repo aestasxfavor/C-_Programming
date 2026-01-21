@@ -1,0 +1,7 @@
+D:\C-_Programming\InventoryEx\Astar\bin\Debug\Astar.exe.config
+D:\C-_Programming\InventoryEx\Astar\bin\Debug\Astar.exe
+D:\C-_Programming\InventoryEx\Astar\bin\Debug\Astar.pdb
+D:\C-_Programming\InventoryEx\Astar\obj\Debug\Astar.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\Astar\obj\Debug\Astar.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\Astar\obj\Debug\Astar.exe
+D:\C-_Programming\InventoryEx\Astar\obj\Debug\Astar.pdb
