@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\Poker\bin\Debug\Poker.exe.config
+D:\C-_Programming\InventoryEx\Poker\bin\Debug\Poker.exe
+D:\C-_Programming\InventoryEx\Poker\bin\Debug\Poker.pdb
+D:\C-_Programming\InventoryEx\Poker\obj\Debug\Poker.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\Poker\obj\Debug\Poker.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\Poker\obj\Debug\Poker.exe
+D:\C-_Programming\InventoryEx\Poker\obj\Debug\Poker.pdb
+D:\C-_Programming\InventoryEx\Poker\obj\Debug\Poker.exe.config
