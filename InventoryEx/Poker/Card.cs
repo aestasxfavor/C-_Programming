@@ -9,10 +9,10 @@ namespace Poker
     // 문양
     public enum suit
     {
-        spade = 0,
+        Clover =0,
+        spade,
         diamond,
         heart,
-        clover
     }
     // 숫자 파워
     public enum rank

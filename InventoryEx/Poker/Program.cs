@@ -29,7 +29,27 @@ namespace Poker
 
             pokerManager.ShowCard();
 
-            HandRank handRank = new HandRank();
+            List<HandRank> listHandRank = new List<HandRank>();
+            for (int i = 0; i < pokerManager.GetPlayerCount(); i++)
+            {
+                listHandRank.Add(pokerManager.HandRanking(i));
+            }
+
+            Console.WriteLine();
+
+            for (int i = 0; i < listHandRank.Count; i++)
+            {
+                Console.WriteLine(listHandRank[i].RankingCard);
+            }
+
+            pokerManager.CheckWinner(listHandRank);
+
+            HandRank rankA = pokerManager.HandRanking(0);
+            HandRank rankB = pokerManager.HandRanking(1);
+
+            Console.WriteLine();
+            Console.WriteLine(rankA.HR);
+            Console.WriteLine(rankB.HR);
   
             Console.ReadLine();
 

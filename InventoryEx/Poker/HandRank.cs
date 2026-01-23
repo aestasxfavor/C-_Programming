@@ -25,11 +25,12 @@ namespace Poker
     {
         public Bonus HR { get; set; }
 
-        public Card HighCard { get; set; }
+        public Card RankingCard { get; set; }
 
-        public HandRank(Bonus _ranking)
+        public HandRank(Bonus _ranking, Card _rankingCard)
         {
             HR = _ranking;
+            RankingCard = _rankingCard;
         }
     }
 }

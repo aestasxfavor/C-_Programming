@@ -1,0 +1,8 @@
+D:\C-_Programming\InventoryEx\CodingTest\bin\Debug\CodingTest.exe.config
+D:\C-_Programming\InventoryEx\CodingTest\bin\Debug\CodingTest.exe
+D:\C-_Programming\InventoryEx\CodingTest\bin\Debug\CodingTest.pdb
+D:\C-_Programming\InventoryEx\CodingTest\obj\Debug\CodingTest.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\CodingTest\obj\Debug\CodingTest.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\CodingTest\obj\Debug\CodingTest.exe
+D:\C-_Programming\InventoryEx\CodingTest\obj\Debug\CodingTest.pdb
+D:\C-_Programming\InventoryEx\CodingTest\obj\Debug\CodingTest.exe.config
