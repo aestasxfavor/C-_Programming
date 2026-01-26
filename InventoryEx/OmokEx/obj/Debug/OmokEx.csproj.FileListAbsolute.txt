@@ -1,0 +1,7 @@
+D:\C-_Programming\InventoryEx\OmokEx\bin\Debug\OmokEx.exe.config
+D:\C-_Programming\InventoryEx\OmokEx\bin\Debug\OmokEx.exe
+D:\C-_Programming\InventoryEx\OmokEx\bin\Debug\OmokEx.pdb
+D:\C-_Programming\InventoryEx\OmokEx\obj\Debug\OmokEx.csproj.AssemblyReference.cache
+D:\C-_Programming\InventoryEx\OmokEx\obj\Debug\OmokEx.csproj.CoreCompileInputs.cache
+D:\C-_Programming\InventoryEx\OmokEx\obj\Debug\OmokEx.exe
+D:\C-_Programming\InventoryEx\OmokEx\obj\Debug\OmokEx.pdb
