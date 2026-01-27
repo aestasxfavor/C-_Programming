@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,6 +18,152 @@ namespace Practice2
     public class PPP
     {
 
+    }
+
+    public class MyList
+    {
+        public int[] Data { get; set; }
+        public int Capacity { get; set; }
+        public int Count { get; set; }
+        public MyList()
+        {
+            Data = new int[4];
+            Capacity = 4;
+            Count = 0;
+        }
+
+        public void Add(int _add)
+        {
+            Count++;
+            if (Capacity < Count)
+            {
+
+                int[] temp = new int[Capacity];
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    temp[i] = Data[i];
+                }
+                Capacity = Capacity == 0 ? 4 : Capacity * 2;
+
+                Data = new int[Capacity];
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    Data[i] = temp[i];
+                }
+            }
+
+            Data[Count] = _add;
+        }
+
+        public void Insert(int _index, int _add)
+        {
+            Resize();
+            if (_index < 0)
+            {
+                _index = 0;
+            }
+            else if (Count < _index)
+            {
+                _index = Count;
+            }
+
+            for (int i = Count; i > _index; i--)
+            {
+                Data[i + 1] = Data[i];
+                Data[_index] = _add;
+            }
+        }
+
+        public void Remove(int _value)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                if (Data[i] == _value)
+                {
+                    //Data[Count] = null;
+                    for (int j = 0; j < Count - 1; j++)
+                    {
+                        Data[j] = Data[j + 1];
+                    }
+                    //Data[Count] = null;
+                    Count--;
+                    break;
+                }
+            }
+        }
+
+        public void RemoveAt(int _index)
+        {
+            if (_index >= 0 && _index < Count)
+            {
+                //Data[Count] = null;
+                for (int i = 0; i < Count - 1; i++)
+                {
+                    Data[i] = Data[i + 1];
+                }
+                //Data[Count] = null;
+                Count--;
+
+            }
+        }
+
+        public void Resize()
+        {
+
+        }
+        public void Clear()
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                //Data[Count] = null;
+            }
+            Count = 0;
+        }
+
+        public void Sort()
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                if (Data[i] < Data[i + 1])
+                {
+                    int temp = Data[i];
+                    int index = i;
+
+                    for (int j = i +1; j < Count; j++)
+                    {
+                        if (temp > Data[j])
+                        {
+                            temp = Data[j];
+                            index = j;
+                        }
+                    }
+                    int dummy = Data[index];
+                    Data[index] = Data[i];
+                    Data[i] = dummy;
+                }
+            }
+        }
+
+        public void Reverse()
+        {
+            int[] temp = new int[Count];
+            for (int i = 0; i < Count; i++)
+            {
+                temp[i] = Data[i];
+            }
+
+            for(int i = 0; i < Count / 2; i++)
+            {
+                int dummy = temp[i];
+                temp[i] = temp[Count - 1];
+                temp[Count - 1] = dummy;
+            }
+
+            for (int i = 0; i < Count; i++)
+            {
+                Data[i] = temp[i];
+            }
+        }
     }
 
     // delegate: 대리자? 
