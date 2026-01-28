@@ -243,7 +243,7 @@ namespace Practice2
 
             // var는 웬만해선 쓰지 않는걸 비추한다. 오른쪽에 있는걸 보고 유추해야함
 
-            list.Remove(555);   // 555의 값ㅇ르 가지고 있는 녀석을 제거
+            list.Remove(555);   // 555의 값을 가지고 있는 녀석을 제거
             list.RemoveAt(555); // 555번째 index를 제거
             list.Clear();       // 모든 요소 비우기
 
