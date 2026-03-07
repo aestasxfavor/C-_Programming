@@ -4,35 +4,35 @@ using UnityEngine;
 public class ObstaclePool : MonoBehaviour
 {
     [SerializeField] private GameObject obstaclePrefab;
-    [SerializeField] private int poolSize = 7;
+    [SerializeField] private int obstaclePoolSize = 10;
 
-    private List<GameObject> pool = new List<GameObject>();
+    private List<GameObject> obstaclePool = new List<GameObject>();
 
     private void Awake()
     {
-        for (int i = 0; i < poolSize; i++)
+        for (int i = 0; i < obstaclePoolSize; i++)
         {
             GameObject obj = Instantiate(obstaclePrefab);
             obj.SetActive(false);
-            pool.Add(obj);
+            obstaclePool.Add(obj);
         }
     }
 
     public GameObject GetObstacle()
     {
-        foreach (var obj in pool)
+        for (int i = 0; i < obstaclePool.Count; i++)
         {
-            if (!obj.activeSelf)
+            if (!obstaclePool[i].activeSelf)
             {
-                obj.SetActive(true);
-                return obj;
+                obstaclePool[i].SetActive(true);
+                return obstaclePool[i];
             }
         }
 
         // 다 사용 중이면 하나 더 만들기
         GameObject newObj = Instantiate(obstaclePrefab);
         newObj.SetActive(false);
-        pool.Add(newObj);
+        obstaclePool.Add(newObj);
         return newObj;
     }
 }

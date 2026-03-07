@@ -5,31 +5,31 @@ public class ObstacleSpawner : MonoBehaviour
 {
     [SerializeField] private ObstaclePool obstaclePool;
     [SerializeField] private Transform player;
+
+    // 기본 생성 설정
     [SerializeField] private float spawnInterval = 1.5f;
     [SerializeField] private float spawnDistance = 8f;
-
     private float timer = 0f;
 
-    // 난이도용
-    private float playTime = 0f;
-    private bool difficultyUp = false;
-
+    // 난이도 조절
     [SerializeField] private float currentObstacleSpeed = 3f;
-    [SerializeField] private float increaseSpeed = 6f;
+    [SerializeField] private float speedIncrease = 0.5f;      // 속도 증가량
+    [SerializeField] private float intervalDecrease = 0.1f;   // 생성 간격 감소량
+    [SerializeField] private float minSpawnInterval = 0.4f;   // 최소 생성 간격
+    private float nextDifficultyTime = 10f;                   // 10초마다 증가
 
     void Update()
     {
         timer += Time.deltaTime;
-        playTime += Time.deltaTime;
 
-        // 20초 후 난이도 상승
-        if (!difficultyUp && playTime >= 20f)
+        // 20초 후 난이도 상승 -> 10초마다 상승으로 변경
+        if (Time.time >= nextDifficultyTime)
         {
-            difficultyUp = true;
-            spawnInterval = 0.8f;   // 난이도 증가
-            currentObstacleSpeed = increaseSpeed;
+            IncreaseDifficulty();
+            nextDifficultyTime += 10f;   // 다음 상승 시간 예약
         }
 
+        // 스폰 처리
         if (timer >= spawnInterval)
         {
             timer = 0f;
@@ -37,7 +37,21 @@ public class ObstacleSpawner : MonoBehaviour
         }
     }
 
-    void SpawnObstacle()
+    private void IncreaseDifficulty()
+    {
+        currentObstacleSpeed += speedIncrease;
+
+        spawnInterval -= intervalDecrease;
+        if (spawnInterval < minSpawnInterval)
+        {
+            spawnInterval = minSpawnInterval;
+
+        }
+
+        Debug.Log("난이도 상승! 현재 속도: " + currentObstacleSpeed + ", 인터벌: " + spawnInterval);
+    }
+
+    private void SpawnObstacle()
     {
         Vector2 spawnPos = GetRandomSpawnPosition();
         GameObject obj = obstaclePool.GetObstacle();
@@ -50,7 +64,7 @@ public class ObstacleSpawner : MonoBehaviour
         obj.GetComponent<Obstacle>().SetSpeed(currentObstacleSpeed);
     }
 
-    Vector2 GetRandomSpawnPosition()
+    private Vector2 GetRandomSpawnPosition()
     {
         int side = Random.Range(0, 4);
         Vector2 pos = Vector2.zero;

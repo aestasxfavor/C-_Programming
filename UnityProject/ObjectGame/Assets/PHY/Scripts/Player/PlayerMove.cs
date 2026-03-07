@@ -6,14 +6,18 @@ using UnityEngine.UIElements;
 
 public class PlayerMove : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private GameObject GameOverPanel;
+    [SerializeField] private Life lifeScript;
+
+    [SerializeField] private float moveSpeed = 5f;
 
     [SerializeField] private TMPro.TextMeshProUGUI scoreText;
     [SerializeField] private TMPro.TextMeshProUGUI timeText;
 
     private float score = 0f;
     private float startTime;
+
+    private bool isInvincible = false;
 
     private void Start()
     {
@@ -47,18 +51,28 @@ public class PlayerMove : MonoBehaviour
             x = 1f;
         }
 
-        Vector2 dir = new Vector2(x, y).normalized;     //속도 정규화
-        transform.Translate(dir * moveSpeed * Time.deltaTime);
+        Vector2 dir = new Vector2(x, y).normalized;    
+        transform.Translate(dir * moveSpeed * Time.deltaTime);  //속도 정규화
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (isInvincible) return;     // 무적 상태면 충돌 무시
+
+        // 장애물 충돌 → 라이프 감소
         if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
-            Time.timeScale = 0f;
-            GameOverPanel.SetActive(true);
+            lifeScript.TakeDamage();      // UI 업데이트 + 라이프 감소 처리
+
+            if (GameOverPanel.activeSelf == false)
+            {
+                // 수명 남아있으면 플레이어만 리스폰
+                transform.position = Vector3.zero;
+                StartCoroutine(InvincibleRoutine());
+            }
         }
 
+        // 점수 획득
         if (collision.gameObject.layer == LayerMask.NameToLayer("Score"))
         {
             score += 5;
@@ -76,5 +90,23 @@ public class PlayerMove : MonoBehaviour
     {
         score += _score;
         UpdateScoreUI();
+    }
+
+    private IEnumerator InvincibleRoutine()
+    {
+        isInvincible = true;
+
+        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+
+        float time = 0f;
+        while (time < 1f)
+        {
+            sprite.enabled = !sprite.enabled;   // 깜빡
+            yield return new WaitForSeconds(0.1f);
+            time += 0.1f;
+        }
+
+        sprite.enabled = true;  // 다시 보이게
+        isInvincible = false;
     }
 }

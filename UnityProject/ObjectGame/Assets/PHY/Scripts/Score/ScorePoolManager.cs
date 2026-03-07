@@ -4,20 +4,20 @@ using UnityEngine;
 public class ScorePoolManager : MonoBehaviour
 {
     [SerializeField] private GameObject scorePrefab;
-    [SerializeField] private int poolSize = 5;
+    [SerializeField] private int scorePoolSize = 5;
     [SerializeField] private float spawnInterval = 3f;
 
-    private List<GameObject> pool = new List<GameObject>();
+    private List<GameObject> scorePool = new List<GameObject>();
     private float timer = 0f;
 
     private void Start()
     {
         // Ç® »ý¼º
-        for (int i = 0; i < poolSize; i++)
+        for (int i = 0; i < scorePoolSize; i++)
         {
             GameObject obj = Instantiate(scorePrefab);
             obj.SetActive(false);
-            pool.Add(obj);
+            scorePool.Add(obj);
         }
     }
 
@@ -32,7 +32,7 @@ public class ScorePoolManager : MonoBehaviour
         }
     }
 
-    void SpawnScoreItem()
+    private void SpawnScoreItem()
     {
         GameObject obj = GetPooledObject();
         if (obj == null) return;
@@ -41,19 +41,20 @@ public class ScorePoolManager : MonoBehaviour
         obj.SetActive(true);
     }
 
-    GameObject GetPooledObject()
+    private GameObject GetPooledObject()
     {
-        foreach (var obj in pool)
+        for (int i = 0; i < scorePool.Count; i++)
         {
-            if (!obj.activeSelf)
+            if (!scorePool[i].activeSelf)
             {
-                return obj;
+                return scorePool[i];
             }
         }
         return null;
+
     }
 
-    Vector2 GetRandomPosition()
+    private Vector2 GetRandomPosition()
     {
         float x = Random.Range(-7f, 7f);
         float y = Random.Range(-4f, 4f);

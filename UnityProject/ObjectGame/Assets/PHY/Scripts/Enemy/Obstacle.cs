@@ -7,7 +7,7 @@ public class Obstacle : MonoBehaviour
     [SerializeField] private float speed = 3f;
     private Vector2 dir;
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         transform.Translate(dir * speed * Time.deltaTime);
 
