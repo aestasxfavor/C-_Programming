@@ -17,19 +17,28 @@ public class ObstacleSpawner : MonoBehaviour
     [SerializeField] private float intervalDecrease = 0.1f;   // 생성 간격 감소량
     [SerializeField] private float minSpawnInterval = 0.4f;   // 최소 생성 간격
     private float nextDifficultyTime = 10f;                   // 10초마다 증가
+    private float elapsedTime = 0f;
 
+    private void Start()
+    {
+        timer = 0f;
+        elapsedTime = 0f;
+        nextDifficultyTime = 10f;
+    }
     void Update()
     {
-        timer += Time.deltaTime;
+       float dt = Time.deltaTime;
+        timer += dt;
+        elapsedTime += dt;
 
-        // 20초 후 난이도 상승 -> 10초마다 상승으로 변경
-        if (Time.time >= nextDifficultyTime)
+        // 난이도 증가
+        if (elapsedTime >= nextDifficultyTime)
         {
             IncreaseDifficulty();
-            nextDifficultyTime += 10f;   // 다음 상승 시간 예약
+            nextDifficultyTime += 10f;
         }
 
-        // 스폰 처리
+        // 장애물 생성
         if (timer >= spawnInterval)
         {
             timer = 0f;
@@ -48,7 +57,7 @@ public class ObstacleSpawner : MonoBehaviour
 
         }
 
-        Debug.Log("난이도 상승! 현재 속도: " + currentObstacleSpeed + ", 인터벌: " + spawnInterval);
+        //Debug.Log("난이도 상승 현재 속도: " + currentObstacleSpeed + ", 인터벌: " + spawnInterval);
     }
 
     private void SpawnObstacle()
