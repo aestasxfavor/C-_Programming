@@ -41,6 +41,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        //ResetBestScore();
+
         bestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
 
         if (endPanel != null)
@@ -100,6 +102,8 @@ public class GameManager : MonoBehaviour
         currentTime = gameDuration;
         isGamePlaying = true;
 
+        SoundManager.Instance.PlayGameBGM();
+
         if (endPanel != null)
         {
             endPanel.SetActive(false);
@@ -143,5 +147,14 @@ public class GameManager : MonoBehaviour
     public void GoToTitle()
     {
         SceneManager.LoadScene("Title");
+    }
+
+    public void ResetBestScore()
+    {
+        PlayerPrefs.DeleteKey(BestScoreKey);
+        PlayerPrefs.Save();
+
+        bestScore = 0;
+        UpdateUI();
     }
 }

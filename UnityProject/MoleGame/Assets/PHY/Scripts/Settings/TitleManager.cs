@@ -5,6 +5,10 @@ using UnityEngine.SceneManagement;
 
 public class TitleManager : MonoBehaviour
 {
+    private void Start()
+    {
+        SoundManager.Instance.PlayTitleBGM();
+    }
     public void StartGame()
     {
         SceneManager.LoadScene("Game");

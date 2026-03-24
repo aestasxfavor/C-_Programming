@@ -121,5 +121,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   riseHeight: 1
-  moveSpeed: 6
-  stayTime: 2.5
+  moveSpeed: 8
+  stayTime: 0.6
+  isTrap: 1

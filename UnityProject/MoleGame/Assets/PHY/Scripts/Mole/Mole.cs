@@ -9,6 +9,9 @@ public class Mole : MonoBehaviour
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float stayTime = 1f;
 
+    [Header("Mole Type")]
+    [SerializeField] private bool isTrap = false;
+
     private Vector3 hiddenPos;
     private Vector3 shownPos;
 
@@ -81,11 +84,21 @@ public class Mole : MonoBehaviour
     {
         if (!isClickable) return;
         if (isHit) return;
+        if (!GameManager.Instance.IsGamePlaying) return;
 
         isHit = true;
         isClickable = false;
 
-        GameManager.Instance.AddScore(10);
+        if (isTrap)
+        {
+            SoundManager.Instance.PlayTrapMoleSFX();
+            GameManager.Instance.AddScore(-5);
+        }
+        else
+        {
+            SoundManager.Instance.PlayNormalMoleSFX();
+            GameManager.Instance.AddScore(10);
+        }
 
         if (currentRoutine != null)
         {
