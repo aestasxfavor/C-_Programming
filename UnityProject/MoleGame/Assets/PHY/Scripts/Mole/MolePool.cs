@@ -7,7 +7,7 @@ public class MolePool : MonoBehaviour
     [SerializeField] private Mole molePrefab;
     [SerializeField] private int poolSize = 9;
 
-    private List<Mole> pool = new List<Mole>();
+    private List<Mole> molePool = new List<Mole>();
 
     private void Awake()
     {
@@ -20,17 +20,17 @@ public class MolePool : MonoBehaviour
         {
             Mole mole = Instantiate(molePrefab, transform);
             mole.gameObject.SetActive(false);
-            pool.Add(mole);
+            molePool.Add(mole);
         }
     }
 
     public Mole GetMole()
     {
-        for (int i = 0; i < pool.Count; i++)
+        for (int i = 0; i < molePool.Count; i++)
         {
-            if (!pool[i].IsActive)
+            if (!molePool[i].IsActive)
             {
-                return pool[i];
+                return molePool[i];
             }
         }
 
@@ -39,16 +39,16 @@ public class MolePool : MonoBehaviour
 
     public int GetPoolCount()
     {
-        return pool.Count;
+        return molePool.Count;
     }
 
-    public void ForceHideAll()
+    public void HideAllMoles()
     {
-        for (int i = 0; i < pool.Count; i++)
+        for (int i = 0; i < molePool.Count; i++)
         {
-            if (pool[i].gameObject.activeSelf)
+            if (molePool[i].gameObject.activeSelf)
             {
-                pool[i].ForceHide();
+                molePool[i].HideImmediately();
             }
         }
     }

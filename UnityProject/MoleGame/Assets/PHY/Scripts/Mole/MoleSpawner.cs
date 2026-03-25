@@ -22,7 +22,7 @@ public class MoleSpawner : MonoBehaviour
     private Coroutine spawnRoutine;
     private bool isSpawning = false;
 
-    private bool[] holeOccupied;
+    private bool[] isFullHole;
 
     private float currentSpawnInterval;
     private float currentTrapChance;
@@ -30,10 +30,10 @@ public class MoleSpawner : MonoBehaviour
 
     private void Awake()
     {
-        holeOccupied = new bool[holePoints.Length];
+        isFullHole = new bool[holePoints.Length];
     }
 
-    public void StartSpawning()
+    public void StartSpawn()
     {
         if (isSpawning) return;
 
@@ -48,7 +48,7 @@ public class MoleSpawner : MonoBehaviour
         spawnRoutine = StartCoroutine(SpawnRoutine());
     }
 
-    public void StopSpawning()
+    public void StopSpawn()
     {
         if (!isSpawning) return;
 
@@ -67,7 +67,7 @@ public class MoleSpawner : MonoBehaviour
     {
         while (isSpawning)
         {
-            UpdateDifficulty();
+            IncreaseInterval();
 
             SpawnMole();
 
@@ -75,16 +75,16 @@ public class MoleSpawner : MonoBehaviour
         }
     }
 
-    private void UpdateDifficulty()
+    private void IncreaseInterval()
     {
-        float elapsedTime = Time.time - spawnStartTime;
+        float passedTime = Time.time - spawnStartTime;
 
-        if (elapsedTime < 10f)
+        if (passedTime < 10f)
         {
             currentSpawnInterval = earlySpawnInterval;
             currentTrapChance = earlyTrapChance;
         }
-        else if (elapsedTime < 20f)
+        else if (passedTime < 20f)
         {
             currentSpawnInterval = midSpawnInterval;
             currentTrapChance = midTrapChance;
@@ -98,20 +98,20 @@ public class MoleSpawner : MonoBehaviour
 
     private void SpawnMole()
     {
-        List<int> availableHoles = new List<int>();
+        List<int> emptyHoles = new List<int>();
 
-        for (int i = 0; i < holeOccupied.Length; i++)
+        for (int i = 0; i < isFullHole.Length; i++)
         {
-            if (!holeOccupied[i])
+            if (!isFullHole[i])
             {
-                availableHoles.Add(i);
+                emptyHoles.Add(i);
             }
         }
 
-        if (availableHoles.Count == 0) return;
+        if (emptyHoles.Count == 0) return;
 
-        int randomListIndex = Random.Range(0, availableHoles.Count);
-        int holeIndex = availableHoles[randomListIndex];
+        int randomListIndex = Random.Range(0, emptyHoles.Count);
+        int holeIndex = emptyHoles[randomListIndex];
 
         MolePool selectedPool = Random.value < currentTrapChance ? trapMolePool : normalMolePool;
         if (selectedPool == null) return;
@@ -119,33 +119,33 @@ public class MoleSpawner : MonoBehaviour
         Mole mole = selectedPool.GetMole();
         if (mole == null) return;
 
-        holeOccupied[holeIndex] = true;
+        isFullHole[holeIndex] = true;
 
         Vector3 spawnPos = holePoints[holeIndex].position;
-        mole.ActivateMole(spawnPos, holeIndex, ReleaseHole);
+        mole.ActivateMole(spawnPos, holeIndex, EmptyHole);
     }
 
-    private void ReleaseHole(int holeIndex)
+    private void EmptyHole(int holeIndex)
     {
-        if (holeIndex < 0 || holeIndex >= holeOccupied.Length) return;
-        holeOccupied[holeIndex] = false;
+        if (holeIndex < 0 || holeIndex >= isFullHole.Length) return;
+        isFullHole[holeIndex] = false;
     }
 
     private void ClearAllMoles()
     {
         if (normalMolePool != null)
         {
-            normalMolePool.ForceHideAll();
+            normalMolePool.HideAllMoles();
         }
 
         if (trapMolePool != null)
         {
-            trapMolePool.ForceHideAll();
+            trapMolePool.HideAllMoles();
         }
 
-        for (int i = 0; i < holeOccupied.Length; i++)
+        for (int i = 0; i < isFullHole.Length; i++)
         {
-            holeOccupied[i] = false;
+            isFullHole[i] = false;
         }
     }
 }

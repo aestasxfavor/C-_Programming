@@ -111,7 +111,7 @@ public class GameManager : MonoBehaviour
 
         if (moleSpawner != null)
         {
-            moleSpawner.StartSpawning();
+            moleSpawner.StartSpawn();
         }
 
         UpdateUI();
@@ -123,7 +123,7 @@ public class GameManager : MonoBehaviour
 
         if (moleSpawner != null)
         {
-            moleSpawner.StopSpawning();
+            moleSpawner.StopSpawn();
         }
 
         if (endPanel != null)

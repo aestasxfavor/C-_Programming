@@ -5,7 +5,7 @@ using UnityEngine;
 public class Mole : MonoBehaviour
 {
     [Header("Move Setting")]
-    [SerializeField] private float riseHeight = 1.2f;
+    [SerializeField] private float popUpHeight = 1.2f;
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float stayTime = 1f;
 
@@ -24,16 +24,17 @@ public class Mole : MonoBehaviour
 
     public bool IsActive => gameObject.activeSelf;
 
-    public void SetupPosition(Vector3 spawnPos)
+    public void SetPosition(Vector3 spawnPos)
     {
         hiddenPos = spawnPos;
-        shownPos = hiddenPos + Vector3.up * riseHeight;
+        shownPos = hiddenPos + Vector3.up * popUpHeight;
         transform.position = hiddenPos;
     }
 
+    // 두더지 활성화
     public void ActivateMole(Vector3 spawnPos, int holeIndex, Action<int> releaseAction)
     {
-        SetupPosition(spawnPos);
+        SetPosition(spawnPos);
 
         currentHoleIndex = holeIndex;
         releaseHoleAction = releaseAction;
@@ -133,22 +134,8 @@ public class Mole : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void ForceHide()
+    public void HideImmediately()
     {
-        if (currentRoutine != null)
-        {
-            StopCoroutine(currentRoutine);
-            currentRoutine = null;
-        }
-
-        isClickable = false;
-        isHit = false;
-
-        releaseHoleAction?.Invoke(currentHoleIndex);
-
-        currentHoleIndex = -1;
-        releaseHoleAction = null;
-
-        gameObject.SetActive(false);
+        DeactivateMole();
     }
 }
