@@ -57,4 +57,24 @@ int main()
 	cout << a * b << endl;
 	*/
 #pragma endregion
+
+#pragma region Coding Test 2026_04_12
+	/*
+	11382번: 꼬마 정민
+
+	long long a, b, c, sum;
+
+	cin >> a >> b >> c;
+
+	sum = a + b + c;
+
+	cout << sum << endl;
+
+	*/
+#pragma endregion
+	
+
+
+
+
 }
