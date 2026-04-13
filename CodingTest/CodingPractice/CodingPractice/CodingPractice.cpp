@@ -60,7 +60,7 @@ int main()
 
 #pragma region Coding Test 2026_04_12
 	/*
-	11382번: 꼬마 정민
+	백준: 11382번 꼬마 정민
 
 	long long a, b, c, sum;
 
@@ -72,9 +72,29 @@ int main()
 
 	*/
 #pragma endregion
+
+#pragma region Coding Test 2026_04_13
+	/*
+	백준: 10172번 고양이
+	cout << "\\    /\\" << endl;
+	cout << " )  ( ')" << endl;
+	cout << "(  /  )" << endl;
+	cout << " \\(__)|" << endl;
+
+	*/
+
+	/*
+	백준 10172번 강아지
+	cout << "|\\_/|" << endl;
+	cout << "|q p|   /}" << endl;
+	cout << "( 0 )\"\"\"\\" << endl;
+	cout << "|\"^\"`    |" << endl;
+	cout << "||_/=\\\\__|" << endl;
+
+	*/
+#pragma endregion
+
 	
-
-
 
 
 }
