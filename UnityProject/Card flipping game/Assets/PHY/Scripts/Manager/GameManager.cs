@@ -18,19 +18,19 @@ public class GameManager : MonoBehaviour
     [Header("End UI")]
     [SerializeField] private GameObject endPanel;
     [SerializeField] private Button restartButton;
-    [SerializeField] private Button quitButton;
+    [SerializeField] private Button exitButton;
     [SerializeField] private TMP_Text finalScoreText;
 
     private Card firstCard;
     private Card secondCard;
 
-    private bool isChecking;
+    private List<Card> spawnedCards = new List<Card>();
 
     private int score;
     private int flipCount;
     private int matchedCount;
 
-    private List<Card> spawnedCards = new List<Card>();
+    private bool isChecking;
 
     private void Start()
     {
@@ -39,9 +39,9 @@ public class GameManager : MonoBehaviour
             restartButton.onClick.AddListener(RestartGame);
         }
 
-        if (quitButton != null)
+        if (exitButton != null)
         {
-            quitButton.onClick.AddListener(QuitGame);
+            exitButton.onClick.AddListener(ExitGame);
         }
 
         if (endPanel != null)
@@ -89,14 +89,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 초기 시작시 앞면을 잠시 보여주는 코루틴 함수
+    // 시작할 때 카드 앞면 잠깐 보여주기
     private IEnumerator StartPreviewRoutine()
     {
         yield return new WaitForSeconds(0.2f);
 
         for (int i = 0; i < spawnedCards.Count; i++)
         {
-            spawnedCards[i].SetFrontInstant();
+            spawnedCards[i].OpenCard();
         }
 
         yield return new WaitForSeconds(0.8f);
@@ -180,7 +180,7 @@ public class GameManager : MonoBehaviour
 
         UpdateUI();
 
-        if (matchedCount >= 16)
+        if (matchedCount >= cardSprites.Length * 2)
         {
             EndGame();
         }
@@ -211,12 +211,13 @@ public class GameManager : MonoBehaviour
             finalScoreText.text = $"Game Clear!\nFinal Score: {score}\nFlip Count: {flipCount}";
         }
     }
+
     private void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    private void QuitGame()
+    private void ExitGame()
     {
         SceneManager.LoadScene("Title");
     }

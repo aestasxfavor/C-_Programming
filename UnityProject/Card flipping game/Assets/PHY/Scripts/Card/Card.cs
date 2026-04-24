@@ -13,17 +13,18 @@ public class Card : MonoBehaviour
     [Header("Flip")]
     [SerializeField] private float flipDuration = 0.15f;
 
+    [Header("Particle")]
     [SerializeField] private ParticleSystem matchParticle;
 
-    private int cardId;
     private GameManager gameManager;
+
+    private int cardId;
 
     private bool isFlipped;
     private bool isMatched;
     private bool isAnimating;
 
     public int CardId => cardId;
-    public bool IsAnimating => isAnimating;
 
     private void Reset()
     {
@@ -41,7 +42,7 @@ public class Card : MonoBehaviour
 
         frontImage.sprite = frontSprite;
 
-        SetBackInstant();
+        CloseCard();
 
         button.interactable = true;
         button.onClick.RemoveAllListeners();
@@ -58,7 +59,7 @@ public class Card : MonoBehaviour
         gameManager.SelectCard(this);
     }
 
-    // 카드 앞면 보여주는 로직
+    // 카드 앞면 보여주기
     public void ShowFront()
     {
         if (isAnimating) return;
@@ -67,7 +68,7 @@ public class Card : MonoBehaviour
         StartCoroutine(FlipRoutine(true));
     }
 
-    // 카드 뒷면 보여주는 로직
+    // 카드 뒷면 보여주기
     public void ShowBack()
     {
         if (isAnimating) return;
@@ -76,7 +77,7 @@ public class Card : MonoBehaviour
         StartCoroutine(FlipRoutine(false));
     }
 
-    public void SetFrontInstant()
+    public void OpenCard()
     {
         isFlipped = true;
         front.SetActive(true);
@@ -84,7 +85,7 @@ public class Card : MonoBehaviour
         transform.localScale = Vector3.one;
     }
 
-    public void SetBackInstant()
+    public void CloseCard()
     {
         isFlipped = false;
         front.SetActive(false);
@@ -92,50 +93,54 @@ public class Card : MonoBehaviour
         transform.localScale = Vector3.one;
     }
 
-    // 카드 뒤집는 코루틴 함수
+    // 카드 뒤집기 애니메이션
     private IEnumerator FlipRoutine(bool showFront)
     {
         isAnimating = true;
 
-        Vector3 startScale = transform.localScale;
-
-        yield return ScaleX(1f, 0f);
-
-        front.SetActive(showFront);
-        back.SetActive(!showFront);
-
-        yield return ScaleX(0f, 1f);
-
-        transform.localScale = startScale;
-        isAnimating = false;
-    }
-
-    private IEnumerator ScaleX(float start, float end)
-    {
+        Vector3 originalScale = transform.localScale;
         float timer = 0f;
-        Vector3 scale = transform.localScale;
 
+        // 카드가 접히는 것처럼 X 크기 줄이기
         while (timer < flipDuration)
         {
             timer += Time.deltaTime;
 
-            float x = Mathf.Lerp(start, end, timer / flipDuration);
-            transform.localScale = new Vector3(x, scale.y, scale.z);
+            float x = Mathf.Lerp(originalScale.x, 0f, timer / flipDuration);
+            transform.localScale = new Vector3(x, originalScale.y, originalScale.z);
 
             yield return null;
         }
 
-        transform.localScale = new Vector3(end, scale.y, scale.z);
+        // 카드가 거의 안 보이는 순간 앞면,뒷면 교체
+        front.SetActive(showFront);
+        back.SetActive(!showFront);
+
+        timer = 0f;
+
+        // 다시 펼쳐지는 것처럼 X 크기를 키우기
+        while (timer < flipDuration)
+        {
+            timer += Time.deltaTime;
+
+            float x = Mathf.Lerp(0f, originalScale.x, timer / flipDuration);
+            transform.localScale = new Vector3(x, originalScale.y, originalScale.z);
+
+            yield return null;
+        }
+
+        transform.localScale = originalScale;
+        isAnimating = false;
     }
 
-    // 매치된 카드 로직
+    // 매치된 카드 처리
     public void SetMatched()
     {
         isMatched = true;
         button.interactable = false;
     }
 
-    // 매치했을때만 나오는 파티클 로직
+    // 매치했을때만 나오는 파티클
     public void PlayMatchEffect()
     {
         if (matchParticle != null)
