@@ -10,5 +10,5 @@ AssetOrigin:
   productId: 264045
   packageName: CardHouse
   packageVersion: 1.0.4
-  assetPath: Assets/CardHouse/SampleGames/MemoryMatch/Prefabs/ParticleBurst.prefab
+  assetPath: Assets/PHY/Prefabs/ParticleBurst.prefab
   uploadId: 742285
