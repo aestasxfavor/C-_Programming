@@ -1,9 +1,58 @@
 using UnityEngine;
 
-public class Enemy : MonoBehaviour, IDamageable
+[RequireComponent(typeof(Health))]
+public class Enemy : MonoBehaviour
 {
-    public void TakeDamage(int damage)
+    [SerializeField] private int collisionDamage = 1;
+
+    private Health health;
+    private bool hasCollided;
+
+    private void Awake()
     {
-       
+        health = GetComponent<Health>();
+    }
+
+    private void OnEnable()
+    {
+        hasCollided = false;
+
+        if (health != null)
+        {
+            health.OnDied += HandleDied;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (health != null)
+        {
+            health.OnDied -= HandleDied;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (hasCollided)
+        {
+            return;
+        }
+
+        PlayerCombatStats playerStats = other.GetComponentInParent<PlayerCombatStats>();
+
+        if (playerStats == null)
+        {
+            return;
+        }
+
+        hasCollided = true;
+
+        playerStats.ReduceUnitCount(collisionDamage);
+        gameObject.SetActive(false);
+    }
+
+    private void HandleDied()
+    {
+        gameObject.SetActive(false);
     }
 }

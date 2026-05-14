@@ -1,16 +1,72 @@
+using System;
 using UnityEngine;
 
-public class PlayerCombatStats : MonoBehaviour
+public class PlayerCombatStats : MonoBehaviour, IDamageable
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private int startUnitCount = 10;
+    [SerializeField] private int attackDamage = 1;
+
+    public int UnitCount { get; private set; }
+    public int AttackDamage => attackDamage;
+
+    public event Action<int> OnUnitCountChanged;
+    public event Action<int> OnAttackDamageChanged;
+    public event Action OnUnitCountZero;
+
+    private void Awake()
     {
-        
+        UnitCount = Mathf.Max(0, startUnitCount);
+
+        OnUnitCountChanged?.Invoke(UnitCount);
+        OnAttackDamageChanged?.Invoke(attackDamage);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetUnitCount(int value)
     {
-        
+        UnitCount = Mathf.Max(0, value);
+
+        OnUnitCountChanged?.Invoke(UnitCount);
+
+        if (UnitCount <= 0)
+        {
+            OnUnitCountZero?.Invoke();
+        }
+    }
+
+    public void AddUnitCount(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        SetUnitCount(UnitCount + amount);
+    }
+
+    public void ReduceUnitCount(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        SetUnitCount(UnitCount - amount);
+    }
+
+    public void IncreaseAttackDamage(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        attackDamage += amount;
+
+        OnAttackDamageChanged?.Invoke(attackDamage);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        ReduceUnitCount(damage);
     }
 }
