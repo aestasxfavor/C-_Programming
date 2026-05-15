@@ -669,6 +669,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 418881356}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &281318348
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 281318350}
+  - component: {fileID: 281318349}
+  m_Layer: 0
+  m_Name: EnemyPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &281318349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281318348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27ea2fa7b99339d4abce487bec63041e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPool
+  enemyPrefab: {fileID: 6914028129300178372, guid: 3ac87d2634993cd4ab66b3000dec38c0, type: 3}
+  initialSize: 20
+--- !u!4 &281318350
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281318348}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1064,10 +1110,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a493dd0d479ce7b468d55f847cc10d7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageObjectSpawner
+  enemyPool: {fileID: 281318349}
   enemyPrefabs:
   - {fileID: 6914028129300178372, guid: 3ac87d2634993cd4ab66b3000dec38c0, type: 3}
-  bossPrefab: {fileID: 1430677436606034283, guid: 5645ad083fabe9448a0f32c0d349a616, type: 3}
   obstaclePrefab: {fileID: 6764263192272071652, guid: 2754965e68a4b414baf525dbb23da6b2, type: 3}
+  gatePrefabs:
+  - {fileID: 2173703289518869078, guid: 9766977605339db418688f9467c596bb, type: 3}
+  - {fileID: 8464301895501153186, guid: 0c9eb9fc6f0db3147bd70f053c04690b, type: 3}
+  - {fileID: 5882294789369464587, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
   spawnPoints:
   - {fileID: 585649544}
   - {fileID: 74962362}
@@ -1075,10 +1125,11 @@ MonoBehaviour:
   - {fileID: 779919566}
   - {fileID: 200649106}
   spawnInterval: 1
-  minEnemyCount: 2
-  maxEnemyCount: 4
-  bossSpawnEveryWave: 10
+  minEnemyCount: 1
+  maxEnemyCount: 3
   obstacleSpawnChance: 0.25
+  gateSpawnChance: 0.2
+  minWavesBetweenGates: 3
 --- !u!4 &418881356
 Transform:
   m_ObjectHideFlags: 0
@@ -1214,6 +1265,37 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &478067112
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 478067113}
+  m_Layer: 0
+  m_Name: BossSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &478067113
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478067112}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 80}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 510372075}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &480788624
 GameObject:
   m_ObjectHideFlags: 0
@@ -1411,6 +1493,54 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 48a3404dab1f68a4cb702a709ef59b5f, type: 3}
+--- !u!1 &510372073
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 510372075}
+  - component: {fileID: 510372074}
+  m_Layer: 0
+  m_Name: FinalBossSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &510372074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 510372073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51f213a5874b44a4797a542728b70d77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FinalBossSpawner
+  finalBossPrefab: {fileID: 1430677436606034283, guid: 5645ad083fabe9448a0f32c0d349a616, type: 3}
+  spawnPoint: {fileID: 478067113}
+  stageObjectSpawner: {fileID: 418881355}
+--- !u!4 &510372075
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 510372073}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 478067113}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &543036215
 GameObject:
   m_ObjectHideFlags: 0
@@ -2102,6 +2232,52 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 832575517}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &988808250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 988808252}
+  - component: {fileID: 988808251}
+  m_Layer: 0
+  m_Name: BulletPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &988808251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988808250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0746d22de0dd96045b2ced4fb274c31c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BulletPool
+  bulletPrefab: {fileID: 5963130999758364736, guid: 6e39ef98bc2ddb449a6b70406dbecbe2, type: 3}
+  initialSize: 30
+--- !u!4 &988808252
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988808250}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -3776,11 +3952,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   playTime: 60
   timerText: {fileID: 1556881715}
+  finalBossSpawner: {fileID: 510372074}
+  finalBossSpawnRemainTime: 20
   playerUnitManager: {fileID: 5593195910303664952}
   playerAttackController: {fileID: 5593195910303664954}
   stageObjectSpawner: {fileID: 418881355}
-  successUI: {fileID: 0}
-  failUI: {fileID: 0}
+  successUI: {fileID: 1318326324}
+  failUI: {fileID: 1935408100}
 --- !u!1 &2129896775
 GameObject:
   m_ObjectHideFlags: 0
@@ -4022,7 +4200,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5882294789369464587, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6712291806753932117, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4067,13 +4245,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2948021932835734655, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 920364582685027216, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8aad4d426708d1c41a144334629a7219, type: 3}
 --- !u!143 &5593195908962984078
 CharacterController:
@@ -5136,13 +5308,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttackController
   canAttack: 0
-  bulletPrefab: {fileID: 308573541755748527, guid: 6e39ef98bc2ddb449a6b70406dbecbe2, type: 3}
   firePoint: {fileID: 1557279899}
   fireInterval: 0.5
   bulletSpacing: 0.3
   maxBulletPerShot: 10
   playerUnitManager: {fileID: 0}
   playerCombatStats: {fileID: 0}
+  bulletPool: {fileID: 0}
 --- !u!1001 &6299466146012338898
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5197,18 +5369,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8464301895501153186, guid: 0c9eb9fc6f0db3147bd70f053c04690b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 4361720887328949418, guid: 0c9eb9fc6f0db3147bd70f053c04690b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 2024205532709532057, guid: 0c9eb9fc6f0db3147bd70f053c04690b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c9eb9fc6f0db3147bd70f053c04690b, type: 3}
 --- !u!1001 &8018295253434829150
 PrefabInstance:
@@ -5290,7 +5456,6 @@ SceneRoots:
   - {fileID: 39216295}
   - {fileID: 1168483497}
   - {fileID: 2101029846}
-  - {fileID: 1065563576}
   - {fileID: 8018295253434829150}
   - {fileID: 17633023534328588}
   - {fileID: 418881356}
@@ -5298,3 +5463,7 @@ SceneRoots:
   - {fileID: 712518191}
   - {fileID: 1885830512}
   - {fileID: 362849550}
+  - {fileID: 510372075}
+  - {fileID: 988808252}
+  - {fileID: 281318350}
+  - {fileID: 1065563576}

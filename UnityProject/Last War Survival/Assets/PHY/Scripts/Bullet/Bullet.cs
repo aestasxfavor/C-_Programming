@@ -1,7 +1,5 @@
 using UnityEngine;
-/// <summary>
-/// 나중에 BulletPool.sc에서 풀링작업예정
-/// </summary>
+
 public class Bullet : MonoBehaviour
 {
     [Header("Bullet Settings")]
@@ -11,6 +9,7 @@ public class Bullet : MonoBehaviour
 
     private float lifeTimer;
     private bool hasHit;
+    private BulletPool bulletPool;
 
     private void OnEnable()
     {
@@ -22,6 +21,11 @@ public class Bullet : MonoBehaviour
     {
         Move();
         CheckLifeTime();
+    }
+
+    public void SetPool(BulletPool pool)
+    {
+        bulletPool = pool;
     }
 
     public void SetDamage(int value)
@@ -40,7 +44,7 @@ public class Bullet : MonoBehaviour
 
         if (lifeTimer >= lifeTime)
         {
-            Destroy(gameObject);
+            ReturnToPool();
         }
     }
 
@@ -64,6 +68,17 @@ public class Bullet : MonoBehaviour
 
         Debug.Log($"Bullet Hit: {other.name}, Damage: {damage}");
 
-        Destroy(gameObject);
+        ReturnToPool();
+    }
+
+    private void ReturnToPool()
+    {
+        if (bulletPool != null)
+        {
+            bulletPool.ReturnBullet(this);
+            return;
+        }
+
+        gameObject.SetActive(false);
     }
 }

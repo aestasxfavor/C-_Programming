@@ -4,9 +4,14 @@ public class StageObjectMover : MonoBehaviour
 {
     [Header("Move Settings")]
     [SerializeField] private float moveSpeed = 7f;
-    [SerializeField] private float disableZ = -12f;
+    [SerializeField] private float disableZ = -8f;
 
     private bool canMove = true;
+
+    private void OnEnable()
+    {
+        canMove = true;
+    }
 
     private void Update()
     {

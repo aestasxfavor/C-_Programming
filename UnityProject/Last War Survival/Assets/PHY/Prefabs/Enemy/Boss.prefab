@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c91a4d2bf5ccbf49aceafb30d3d7cb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  collisionDamage: 20
+  collisionDamage: 9999
 --- !u!114 &8897246817235296522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,7 +117,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c177777e682184047b75d9b87f0e7220, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 9999
 --- !u!114 &8475864816170083540
 MonoBehaviour:
   m_ObjectHideFlags: 0

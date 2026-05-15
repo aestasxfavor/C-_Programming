@@ -6,7 +6,7 @@ public class PlayerAttackController : MonoBehaviour
     [SerializeField] private bool canAttack = false;
 
     [Header("Attack Settings")]
-    [SerializeField] private GameObject bulletPrefab;
+    //[SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireInterval = 0.3f;
     [SerializeField] private float bulletSpacing = 0.25f;
@@ -15,6 +15,7 @@ public class PlayerAttackController : MonoBehaviour
     [Header("References")]
     [SerializeField] private PlayerUnitManager playerUnitManager;
     [SerializeField] private PlayerCombatStats playerCombatStats;
+    [SerializeField] private BulletPool bulletPool;
 
     private float fireTimer;
 
@@ -33,6 +34,11 @@ public class PlayerAttackController : MonoBehaviour
         if (firePoint == null)
         {
             firePoint = transform;
+        }
+
+        if (bulletPool == null)
+        {
+            bulletPool = FindFirstObjectByType<BulletPool>();
         }
     }
 
@@ -62,9 +68,9 @@ public class PlayerAttackController : MonoBehaviour
 
     private void Fire()
     {
-        if (bulletPrefab == null)
+        if (bulletPool == null)
         {
-            Debug.LogWarning("Bullet Prefab이 비어 있어요.");
+            Debug.LogWarning("BulletPool이 비어 있어요.");
             return;
         }
 
@@ -93,14 +99,7 @@ public class PlayerAttackController : MonoBehaviour
         {
             Vector3 spawnPosition = GetBulletSpawnPosition(i, bulletCount);
 
-            GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, firePoint.rotation);
-
-            Bullet bullet = bulletObject.GetComponent<Bullet>();
-
-            if (bullet != null)
-            {
-                bullet.SetDamage(attackDamage);
-            }
+            bulletPool.GetBullet(spawnPosition, firePoint.rotation, attackDamage);
         }
     }
 

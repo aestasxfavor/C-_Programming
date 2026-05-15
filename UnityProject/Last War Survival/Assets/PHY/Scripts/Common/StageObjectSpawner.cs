@@ -4,24 +4,36 @@ using UnityEngine;
 
 public class StageObjectSpawner : MonoBehaviour
 {
-    [Header("Prefabs")]
+    [Header("Enemy Pool")]
+    [SerializeField] private EnemyPool enemyPool;
+
+    [Header("Enemy Prefabs")]
     [SerializeField] private GameObject[] enemyPrefabs;
-    [SerializeField] private GameObject bossPrefab;
+
+    [Header("Obstacle Prefab")]
     [SerializeField] private GameObject obstaclePrefab;
+
+    [Header("Gate Prefabs")]
+    [SerializeField] private GameObject[] gatePrefabs;
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
     [Header("Spawn Settings")]
-    [SerializeField] private float spawnInterval = 1.2f;
-    [SerializeField] private int minEnemyCount = 1;
+    [SerializeField] private float spawnInterval = 2.2f;
+    [SerializeField] private int minEnemyCount = 2;
     [SerializeField] private int maxEnemyCount = 3;
-    [SerializeField] private int bossSpawnEveryWave = 6;
 
     [Range(0f, 1f)]
-    [SerializeField] private float obstacleSpawnChance = 0.25f;
+    [SerializeField] private float obstacleSpawnChance = 0.15f;
+
+    [Header("Gate Spawn Settings")]
+    [Range(0f, 1f)]
+    [SerializeField] private float gateSpawnChance = 0.2f;
+    [SerializeField] private int minWavesBetweenGates = 3;
 
     private int waveCount;
+    private int wavesSinceLastGate;
     private Coroutine spawnRoutine;
 
     private void OnEnable()
@@ -56,33 +68,63 @@ public class StageObjectSpawner : MonoBehaviour
         }
 
         waveCount++;
+        wavesSinceLastGate++;
 
-        List<int> usedLanes = new List<int>();
-
-        if (bossPrefab != null && bossSpawnEveryWave > 0 && waveCount % bossSpawnEveryWave == 0)
+        if (CanSpawnGate())
         {
-            int bossLane = Random.Range(0, spawnPoints.Length);
-            SpawnAt(bossPrefab, bossLane);
-            usedLanes.Add(bossLane);
+            SpawnGateWave();
             return;
         }
+
+        SpawnEnemyObstacleWave();
+    }
+
+    private bool CanSpawnGate()
+    {
+        if (gatePrefabs == null || gatePrefabs.Length == 0)
+        {
+            return false;
+        }
+
+        if (wavesSinceLastGate < minWavesBetweenGates)
+        {
+            return false;
+        }
+
+        return Random.value <= gateSpawnChance;
+    }
+
+    private void SpawnGateWave()
+    {
+        GameObject gatePrefab = GetRandomGatePrefab();
+
+        if (gatePrefab == null)
+        {
+            return;
+        }
+
+        int laneIndex = Random.Range(0, spawnPoints.Length);
+
+        SpawnAt(gatePrefab, laneIndex);
+
+        wavesSinceLastGate = 0;
+
+        Debug.Log("Gate Spawned");
+    }
+
+    private void SpawnEnemyObstacleWave()
+    {
+        List<int> usedLanes = new List<int>();
 
         int enemyCount = Random.Range(minEnemyCount, maxEnemyCount + 1);
         enemyCount = Mathf.Clamp(enemyCount, 1, spawnPoints.Length);
 
-        List<int> lanes = GetRandomLaneIndices(enemyCount);
+        List<int> enemyLanes = GetRandomLaneIndices(enemyCount);
 
-        for (int i = 0; i < lanes.Count; i++)
+        for (int i = 0; i < enemyLanes.Count; i++)
         {
-            GameObject enemyPrefab = GetRandomEnemyPrefab();
-
-            if (enemyPrefab == null)
-            {
-                continue;
-            }
-
-            SpawnAt(enemyPrefab, lanes[i]);
-            usedLanes.Add(lanes[i]);
+            SpawnEnemy(enemyLanes[i]);
+            usedLanes.Add(enemyLanes[i]);
         }
 
         if (obstaclePrefab != null && Random.value <= obstacleSpawnChance)
@@ -96,6 +138,31 @@ public class StageObjectSpawner : MonoBehaviour
         }
     }
 
+    private void SpawnEnemy(int laneIndex)
+    {
+        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
+        {
+            return;
+        }
+
+        Transform spawnPoint = spawnPoints[laneIndex];
+
+        if (enemyPool != null)
+        {
+            enemyPool.GetEnemy(spawnPoint.position, spawnPoint.rotation);
+            return;
+        }
+
+        GameObject enemyPrefab = GetRandomEnemyPrefab();
+
+        if (enemyPrefab == null)
+        {
+            return;
+        }
+
+        Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
+    }
+
     private GameObject GetRandomEnemyPrefab()
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0)
@@ -106,6 +173,17 @@ public class StageObjectSpawner : MonoBehaviour
 
         int index = Random.Range(0, enemyPrefabs.Length);
         return enemyPrefabs[index];
+    }
+
+    private GameObject GetRandomGatePrefab()
+    {
+        if (gatePrefabs == null || gatePrefabs.Length == 0)
+        {
+            return null;
+        }
+
+        int index = Random.Range(0, gatePrefabs.Length);
+        return gatePrefabs[index];
     }
 
     private List<int> GetRandomLaneIndices(int count)

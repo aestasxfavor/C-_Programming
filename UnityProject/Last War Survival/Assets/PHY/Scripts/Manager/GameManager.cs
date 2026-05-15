@@ -1,11 +1,16 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     [Header("Game Time")]
     [SerializeField] private float playTime = 60f;
     [SerializeField] private TextMeshProUGUI timerText;
+
+    [Header("Final Boss")]
+    [SerializeField] private FinalBossSpawner finalBossSpawner;
+    [SerializeField] private float finalBossSpawnRemainTime = 10f;
 
     [Header("References")]
     [SerializeField] private PlayerUnitManager playerUnitManager;
@@ -18,11 +23,13 @@ public class GameManager : MonoBehaviour
 
     private float remainTime;
     private bool isGameEnded;
+    private bool hasRequestedFinalBoss;
 
     private void Start()
     {
         remainTime = playTime;
         isGameEnded = false;
+        hasRequestedFinalBoss = false;
 
         if (successUI != null)
         {
@@ -34,7 +41,20 @@ public class GameManager : MonoBehaviour
             failUI.SetActive(false);
         }
 
+        if (finalBossSpawner != null)
+        {
+            finalBossSpawner.OnFinalBossDied += HandleFinalBossDied;
+        }
+
         UpdateTimerUI();
+    }
+
+    private void OnDestroy()
+    {
+        if (finalBossSpawner != null)
+        {
+            finalBossSpawner.OnFinalBossDied -= HandleFinalBossDied;
+        }
     }
 
     private void Update()
@@ -45,7 +65,32 @@ public class GameManager : MonoBehaviour
         }
 
         CheckUnitCount();
+        CheckFinalBossSpawn();
         UpdateTimer();
+    }
+
+    private void CheckFinalBossSpawn()
+    {
+        if (hasRequestedFinalBoss)
+        {
+            return;
+        }
+
+        if (remainTime > finalBossSpawnRemainTime)
+        {
+            return;
+        }
+
+        hasRequestedFinalBoss = true;
+
+        if (finalBossSpawner != null)
+        {
+            finalBossSpawner.SpawnFinalBoss();
+        }
+        else
+        {
+            Debug.LogWarning("FinalBossSpawner가 GameManager에 연결되지 않았어요.");
+        }
     }
 
     private void UpdateTimer()
@@ -85,6 +130,13 @@ public class GameManager : MonoBehaviour
         {
             StageFail();
         }
+    }
+
+    private void HandleFinalBossDied()
+    {
+        Debug.Log("Final Boss Clear");
+
+        StageClear();
     }
 
     private void StageClear()
@@ -136,5 +188,16 @@ public class GameManager : MonoBehaviour
         {
             playerAttackController.enabled = false;
         }
+    }
+
+    public void Replay()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void ExitGame()
+    {
+        Debug.Log("Exit Game");
+        Application.Quit();
     }
 }
