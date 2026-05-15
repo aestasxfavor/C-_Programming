@@ -4,6 +4,8 @@ using UnityEngine;
 public class ObstacleBox : MonoBehaviour
 {
     [SerializeField] private int damageReward = 5;
+
+    // 프리팹 참조가 비어 있을 경우 보상 지급 시 런타임에서 자동 탐색
     [SerializeField] private PlayerCombatStats playerStats;
 
     private Health health;

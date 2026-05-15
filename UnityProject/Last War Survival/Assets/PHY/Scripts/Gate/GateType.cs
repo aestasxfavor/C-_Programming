@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum OperationType
+public enum GateType
 {
     Plus,
     Minus,

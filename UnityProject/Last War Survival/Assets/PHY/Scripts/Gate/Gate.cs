@@ -4,7 +4,7 @@ using UnityEngine;
 public class Gate : MonoBehaviour
 {
     [Header("Gate Settings")]
-    [SerializeField] private OperationType operationType;
+    [SerializeField] private GateType gateType;
     [SerializeField] private int value = 1;
 
     [Header("References")]
@@ -12,8 +12,9 @@ public class Gate : MonoBehaviour
 
     private bool isUsed;
 
-    private void Start()
+    private void OnEnable()
     {
+        isUsed = false;
         UpdateGateText();
     }
 
@@ -32,7 +33,8 @@ public class Gate : MonoBehaviour
         }
 
         isUsed = true;
-        playerUnitManager.ApplyGate(operationType, value);
+
+        playerUnitManager.ApplyGate(gateType, value);
 
         gameObject.SetActive(false);
     }
@@ -49,18 +51,18 @@ public class Gate : MonoBehaviour
 
     private string GetOperationText()
     {
-        switch (operationType)
+        switch (gateType)
         {
-            case OperationType.Plus:
+            case GateType.Plus:
                 return $"+{value}";
 
-            case OperationType.Minus:
+            case GateType.Minus:
                 return $"-{value}";
 
-            case OperationType.Multiply:
+            case GateType.Multiply:
                 return $"¡¿{value}";
 
-            case OperationType.Divide:
+            case GateType.Divide:
                 return $"¡À{value}";
 
             default:

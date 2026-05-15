@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class FinalBossSpawner : MonoBehaviour
+public class BossSpawner : MonoBehaviour
 {
     [Header("Final Boss")]
     [SerializeField] private GameObject finalBossPrefab;

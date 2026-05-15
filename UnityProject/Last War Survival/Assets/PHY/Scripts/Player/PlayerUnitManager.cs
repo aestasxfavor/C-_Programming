@@ -6,12 +6,11 @@ public class PlayerUnitManager : MonoBehaviour
 {
     [Header("Unit Settings")]
     [SerializeField] private int currentUnitCount = 1;
-    [SerializeField] private int minUnitCount = 1;
-    [SerializeField] private int maxUnitCount = 100;
+    [SerializeField] private int minUnitCount = 0;
+    [SerializeField] private int maxUnitCount = 20;
 
-    [Header("Visual Source")]
-    [SerializeField] private GameObject armatureSource;
-    [SerializeField] private GameObject meshSource;
+    [Header("Unit Pool")]
+    [SerializeField] private PlayerUnitPool playerUnitPool;
 
     [Header("Unit Formation")]
     [SerializeField] private Transform unitParent;
@@ -22,13 +21,12 @@ public class PlayerUnitManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI unitCountText;
 
-    private readonly List<GameObject> unitCopies = new List<GameObject>();
+    private readonly List<GameObject> activeUnitCopies = new();
 
     public int CurrentUnitCount => currentUnitCount;
 
     private void Start()
     {
-        FindVisualSources();
         PrepareUnitParent();
 
         ClampUnitCount();
@@ -36,29 +34,31 @@ public class PlayerUnitManager : MonoBehaviour
         UpdateUnitCountUI();
     }
 
-    public void ApplyGate(OperationType operationType, int value)
+    private void LateUpdate()
+    {
+        UpdateFormation();
+    }
+
+    public void ApplyGate(GateType gateType, int value)
     {
         int amount = Mathf.Abs(value);
 
-        Debug.Log($"Gate Applied: {operationType} {value}");
-
-        switch (operationType)
+        Debug.Log($"Gate Applied: {gateType} {value}");
+        switch (gateType)
         {
-            case OperationType.Plus:
+            case GateType.Plus:
                 currentUnitCount += amount;
                 break;
 
-            case OperationType.Minus:
+            case GateType.Minus:
                 currentUnitCount -= amount;
                 break;
 
-            case OperationType.Multiply:
+            case GateType.Multiply:
                 currentUnitCount *= amount;
                 break;
 
-            //게이트 연산은 현재 전체 유닛 수를 기준으로 적용
-            //나누기 연산은 정수 계산 기준으로 소수점 버림 처리
-            case OperationType.Divide:
+            case GateType.Divide:
                 if (amount != 0)
                 {
                     currentUnitCount /= amount;
@@ -74,10 +74,20 @@ public class PlayerUnitManager : MonoBehaviour
         UpdateUnitCountUI();
 
         Debug.Log($"Player Unit Count: {currentUnitCount}");
+
+        if (currentUnitCount <= 0)
+        {
+            HandleUnitCountZero();
+        }
     }
 
     public void ReduceUnitCount(int damage)
     {
+        if (damage <= 0)
+        {
+            return;
+        }
+
         currentUnitCount -= damage;
 
         ClampUnitCount();
@@ -95,39 +105,6 @@ public class PlayerUnitManager : MonoBehaviour
     private void HandleUnitCountZero()
     {
         Debug.Log("Game Over: All player units are dead.");
-    }
-
-    private void FindVisualSources()
-    {
-        if (armatureSource == null)
-        {
-            Transform armature = transform.Find("Armature");
-
-            if (armature != null)
-            {
-                armatureSource = armature.gameObject;
-            }
-        }
-
-        if (meshSource == null)
-        {
-            Transform mesh = transform.Find("Player");
-
-            if (mesh != null)
-            {
-                meshSource = mesh.gameObject;
-            }
-        }
-
-        if (armatureSource == null)
-        {
-            Debug.LogError("Armature Source를 찾지 못했어요. 루트 Player 밑에 Armature가 있는지 확인하세요.");
-        }
-
-        if (meshSource == null)
-        {
-            Debug.LogError("Mesh Source를 찾지 못했어요. 루트 Player 밑에 자식 Player가 있는지 확인하세요.");
-        }
     }
 
     private void PrepareUnitParent()
@@ -148,159 +125,90 @@ public class PlayerUnitManager : MonoBehaviour
 
     private void SyncUnitCopies()
     {
-        if (armatureSource == null || meshSource == null)
+        if (playerUnitPool == null)
         {
-            Debug.LogWarning("아군 유닛 복제용 소스가 비어 있어서 복제를 중단해요.");
+            Debug.LogError("PlayerUnitPool이 PlayerUnitManager에 연결되지 않았습니다.");
             return;
         }
 
-        int copyCount = currentUnitCount - 1;
+        int copyCount = Mathf.Max(0, currentUnitCount - 1);
 
-        Debug.Log($"Need Copy Count: {copyCount}, Current Copy Count: {unitCopies.Count}");
+        Debug.Log($"Need Copy Count: {copyCount}, Current Copy Count: {activeUnitCopies.Count}");
 
-        while (unitCopies.Count < copyCount)
+        while (activeUnitCopies.Count < copyCount)
         {
             AddUnitCopy();
         }
 
-        for (int i = 0; i < unitCopies.Count; i++)
+        while (activeUnitCopies.Count > copyCount)
         {
-            unitCopies[i].SetActive(i < copyCount);
+            RemoveLastUnitCopy();
         }
 
-        UpdateFormation(copyCount);
+        UpdateFormation();
     }
 
     private void AddUnitCopy()
     {
-        GameObject unitRoot = new GameObject($"PlayerUnit_Copy_{unitCopies.Count + 1}");
+        GameObject unitCopy = playerUnitPool.GetUnit();
 
-        unitRoot.transform.SetParent(unitParent);
-        unitRoot.transform.localPosition = Vector3.zero;
-        unitRoot.transform.localRotation = Quaternion.identity;
-        unitRoot.transform.localScale = Vector3.one;
-
-        GameObject armatureCopy = Instantiate(armatureSource, unitRoot.transform);
-        armatureCopy.name = "Armature";
-        armatureCopy.transform.localPosition = armatureSource.transform.localPosition;
-        armatureCopy.transform.localRotation = armatureSource.transform.localRotation;
-        armatureCopy.transform.localScale = armatureSource.transform.localScale;
-
-        GameObject meshCopy = Instantiate(meshSource, unitRoot.transform);
-        meshCopy.name = "Player";
-        meshCopy.transform.localPosition = meshSource.transform.localPosition;
-        meshCopy.transform.localRotation = meshSource.transform.localRotation;
-        meshCopy.transform.localScale = meshSource.transform.localScale;
-
-        RebindSkinnedMeshes(meshCopy.transform, armatureCopy.transform);
-        DisableUnneededComponents(unitRoot);
-
-        unitRoot.SetActive(false);
-        unitCopies.Add(unitRoot);
-
-        Debug.Log($"Unit Copy Created: {unitRoot.name}");
-    }
-
-    private void RebindSkinnedMeshes(Transform meshRoot, Transform copiedArmatureRoot)
-    {
-        SkinnedMeshRenderer[] skinnedMeshRenderers = meshRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-
-        foreach (SkinnedMeshRenderer skinnedMeshRenderer in skinnedMeshRenderers)
+        if (unitCopy == null)
         {
-            Transform[] originalBones = skinnedMeshRenderer.bones;
-            Transform[] copiedBones = new Transform[originalBones.Length];
-
-            for (int i = 0; i < originalBones.Length; i++)
-            {
-                Transform copiedBone = FindChildByName(copiedArmatureRoot, originalBones[i].name);
-
-                if (copiedBone != null)
-                {
-                    copiedBones[i] = copiedBone;
-                }
-                else
-                {
-                    copiedBones[i] = originalBones[i];
-                }
-            }
-
-            skinnedMeshRenderer.bones = copiedBones;
-
-            if (skinnedMeshRenderer.rootBone != null)
-            {
-                Transform copiedRootBone = FindChildByName(copiedArmatureRoot, skinnedMeshRenderer.rootBone.name);
-
-                if (copiedRootBone != null)
-                {
-                    skinnedMeshRenderer.rootBone = copiedRootBone;
-                }
-            }
-        }
-    }
-
-    private Transform FindChildByName(Transform parent, string targetName)
-    {
-        Transform[] children = parent.GetComponentsInChildren<Transform>(true);
-
-        foreach (Transform child in children)
-        {
-            if (child.name == targetName)
-            {
-                return child;
-            }
+            return;
         }
 
-        return null;
+        activeUnitCopies.Add(unitCopy);
+
+        Debug.Log($"Unit Copy Activated: {unitCopy.name}");
     }
 
-    private void DisableUnneededComponents(GameObject unitRoot)
+    private void RemoveLastUnitCopy()
     {
-        MonoBehaviour[] scripts = unitRoot.GetComponentsInChildren<MonoBehaviour>(true);
+        int lastIndex = activeUnitCopies.Count - 1;
 
-        foreach (MonoBehaviour script in scripts)
+        if (lastIndex < 0)
         {
-            if (script == null)
+            return;
+        }
+
+        GameObject unitCopy = activeUnitCopies[lastIndex];
+
+        activeUnitCopies.RemoveAt(lastIndex);
+        playerUnitPool.ReturnUnit(unitCopy);
+
+        Debug.Log("Unit Copy Returned To Pool");
+    }
+
+    private void UpdateFormation()
+    {
+        if (unitParent == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < activeUnitCopies.Count; i++)
+        {
+            if (activeUnitCopies[i] == null)
             {
                 continue;
             }
 
-            script.enabled = false;
-        }
-
-        Collider[] colliders = unitRoot.GetComponentsInChildren<Collider>(true);
-
-        foreach (Collider col in colliders)
-        {
-            col.enabled = false;
-        }
-
-        Rigidbody[] rigidbodies = unitRoot.GetComponentsInChildren<Rigidbody>(true);
-
-        foreach (Rigidbody rb in rigidbodies)
-        {
-            rb.isKinematic = true;
-            rb.useGravity = false;
-        }
-    }
-
-    private void UpdateFormation(int activeCopyCount)
-    {
-        for (int i = 0; i < activeCopyCount; i++)
-        {
             int row = i / unitsPerRow;
             int column = i % unitsPerRow;
 
             int rowStartIndex = row * unitsPerRow;
-            int countInThisRow = Mathf.Min(unitsPerRow, activeCopyCount - rowStartIndex);
+            int countInThisRow = Mathf.Min(unitsPerRow, activeUnitCopies.Count - rowStartIndex);
 
             float centerOffset = (countInThisRow - 1) * 0.5f;
 
             float x = (column - centerOffset) * spacingX;
             float z = -(row + 1) * spacingZ;
 
-            unitCopies[i].transform.localPosition = new Vector3(x, 0f, z);
-            unitCopies[i].transform.localRotation = Quaternion.identity;
-            unitCopies[i].transform.localScale = Vector3.one;
+            Vector3 localOffset = new Vector3(x, 0f, z);
+
+            activeUnitCopies[i].transform.position = unitParent.TransformPoint(localOffset);
+            activeUnitCopies[i].transform.rotation = unitParent.rotation;
+            activeUnitCopies[i].transform.localScale = Vector3.one;
         }
     }
 

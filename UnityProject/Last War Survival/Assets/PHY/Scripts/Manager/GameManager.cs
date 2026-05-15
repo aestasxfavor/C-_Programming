@@ -9,8 +9,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     [Header("Final Boss")]
-    [SerializeField] private FinalBossSpawner finalBossSpawner;
-    [SerializeField] private float finalBossSpawnRemainTime = 10f;
+    [SerializeField] private BossSpawner bossSpawner;
+    [SerializeField] private float bossSpawnRemainTime = 10f;
 
     [Header("References")]
     [SerializeField] private PlayerUnitManager playerUnitManager;
@@ -41,9 +41,9 @@ public class GameManager : MonoBehaviour
             failUI.SetActive(false);
         }
 
-        if (finalBossSpawner != null)
+        if (bossSpawner != null)
         {
-            finalBossSpawner.OnFinalBossDied += HandleFinalBossDied;
+            bossSpawner.OnFinalBossDied += HandleFinalBossDied;
         }
 
         UpdateTimerUI();
@@ -51,9 +51,9 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (finalBossSpawner != null)
+        if (bossSpawner != null)
         {
-            finalBossSpawner.OnFinalBossDied -= HandleFinalBossDied;
+            bossSpawner.OnFinalBossDied -= HandleFinalBossDied;
         }
     }
 
@@ -76,16 +76,16 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (remainTime > finalBossSpawnRemainTime)
+        if (remainTime > bossSpawnRemainTime)
         {
             return;
         }
 
         hasRequestedFinalBoss = true;
 
-        if (finalBossSpawner != null)
+        if (bossSpawner != null)
         {
-            finalBossSpawner.SpawnFinalBoss();
+            bossSpawner.SpawnFinalBoss();
         }
         else
         {

@@ -15,8 +15,7 @@ public class Health : MonoBehaviour, IDamageable
     public event Action<int, int> OnHealthChanged;
 
     /// <summary>
-    /// 풀링 재사용 시 HP를 다시 최대 체력으로 초기화
-    /// 풀링은 추후 예정
+    /// 풀링으로 다시 활성화될 때 HP를 최대 체력으로 초기화
     /// </summary>
     private void OnEnable()
     {

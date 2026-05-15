@@ -489,7 +489,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f563555d41f378e44afaa5ab5e9418ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gate
-  operationType: 0
+  gateType: 0
   value: 5
   operationText: {fileID: 7101203473255835886}
 --- !u!54 &6151589911418768118
@@ -694,7 +694,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f563555d41f378e44afaa5ab5e9418ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gate
-  operationType: 3
+  gateType: 3
   value: 2
   operationText: {fileID: 642780360866005857}
 --- !u!54 &3942384819346456040
