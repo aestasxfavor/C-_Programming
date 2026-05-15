@@ -38,16 +38,19 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        PlayerCombatStats playerStats = other.GetComponentInParent<PlayerCombatStats>();
+        PlayerUnitManager playerUnitManager = other.GetComponentInParent<PlayerUnitManager>();
 
-        if (playerStats == null)
+        if (playerUnitManager == null)
         {
             return;
         }
 
         hasCollided = true;
 
-        playerStats.ReduceUnitCount(collisionDamage);
+        playerUnitManager.ReduceUnitCount(collisionDamage);
+
+        Debug.Log($"Enemy hit player unit. Damage: {collisionDamage}");
+
         gameObject.SetActive(false);
     }
 

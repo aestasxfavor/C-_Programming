@@ -194,6 +194,7 @@ GameObject:
   - component: {fileID: 8677031295773914123}
   - component: {fileID: 4686227783394083639}
   - component: {fileID: 4432049577358297932}
+  - component: {fileID: -349075760701392448}
   m_Layer: 0
   m_Name: Division Gate
   m_TagString: Untagged
@@ -310,3 +311,30 @@ MonoBehaviour:
   operationType: 3
   value: 2
   operationText: {fileID: 2514894732865860105}
+--- !u!54 &-349075760701392448
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8559071339860501068}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
