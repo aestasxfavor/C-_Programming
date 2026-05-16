@@ -25,7 +25,7 @@ public class Gate : MonoBehaviour
             return;
         }
 
-        PlayerUnitManager playerUnitManager = other.GetComponent<PlayerUnitManager>();
+        PlayerUnitManager playerUnitManager = other.GetComponentInParent<PlayerUnitManager>();
 
         if (playerUnitManager == null)
         {
@@ -36,7 +36,20 @@ public class Gate : MonoBehaviour
 
         playerUnitManager.ApplyGate(gateType, value);
 
-        gameObject.SetActive(false);
+        DisableGateSet();
+    }
+
+    private void DisableGateSet()
+    {
+        StageObjectMover gateSetMover = GetComponentInParent<StageObjectMover>();
+
+        if (gateSetMover != null)
+        {
+            gateSetMover.gameObject.SetActive(false);
+            return;
+        }
+
+        transform.root.gameObject.SetActive(false);
     }
 
     private void UpdateGateText()

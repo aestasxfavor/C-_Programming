@@ -6,7 +6,6 @@ public class PlayerAttackController : MonoBehaviour
     [SerializeField] private bool canAttack = false;
 
     [Header("Attack Settings")]
-    //[SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireInterval = 0.3f;
     [SerializeField] private float bulletSpacing = 0.25f;
@@ -92,6 +91,8 @@ public class PlayerAttackController : MonoBehaviour
         {
             attackDamage = playerCombatStats.AttackDamage;
         }
+
+        Debug.Log($"현재 발사 공격력: {attackDamage}");
 
         int bulletCount = Mathf.Min(unitCount, maxBulletPerShot);
 

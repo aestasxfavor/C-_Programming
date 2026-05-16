@@ -62,6 +62,8 @@ public class PlayerCombatStats : MonoBehaviour, IDamageable
 
         attackDamage += amount;
 
+        Debug.Log($"현재 공격력: {attackDamage}");
+
         OnAttackDamageChanged?.Invoke(attackDamage);
     }
 

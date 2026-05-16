@@ -8,6 +8,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float playTime = 60f;
     [SerializeField] private TextMeshProUGUI timerText;
 
+    [Header("Unit UI")]
+    [SerializeField] private TextMeshProUGUI unitText;
+
     [Header("Final Boss")]
     [SerializeField] private BossSpawner bossSpawner;
     [SerializeField] private float bossSpawnRemainTime = 10f;
@@ -27,6 +30,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
+
         remainTime = playTime;
         isGameEnded = false;
         hasRequestedFinalBoss = false;
@@ -47,6 +52,7 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateTimerUI();
+        UpdateUnitUI();
     }
 
     private void OnDestroy()
@@ -67,6 +73,7 @@ public class GameManager : MonoBehaviour
         CheckUnitCount();
         CheckFinalBossSpawn();
         UpdateTimer();
+        UpdateUnitUI();
     }
 
     private void CheckFinalBossSpawn()
@@ -101,7 +108,6 @@ public class GameManager : MonoBehaviour
         {
             remainTime = 0f;
             UpdateTimerUI();
-            StageClear();
             return;
         }
 
@@ -116,7 +122,22 @@ public class GameManager : MonoBehaviour
         }
 
         int seconds = Mathf.CeilToInt(remainTime);
-        timerText.text = $"Time : {seconds}";
+        timerText.text = $"{seconds}";
+    }
+
+    private void UpdateUnitUI()
+    {
+        if (unitText == null)
+        {
+            return;
+        }
+
+        if (playerUnitManager == null)
+        {
+            return;
+        }
+
+        unitText.text = $"Unit : {playerUnitManager.CurrentUnitCount}";
     }
 
     private void CheckUnitCount()
@@ -188,16 +209,19 @@ public class GameManager : MonoBehaviour
         {
             playerAttackController.enabled = false;
         }
+
+        Time.timeScale = 0f;
     }
 
     public void Replay()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void ExitGame()
     {
-        Debug.Log("Exit Game");
-        Application.Quit();
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Title");
     }
 }

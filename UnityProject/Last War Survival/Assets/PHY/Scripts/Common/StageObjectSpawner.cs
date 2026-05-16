@@ -152,7 +152,7 @@ public class StageObjectSpawner : MonoBehaviour
 
     private void SpawnGateWave()
     {
-        int laneIndex = Random.Range(0, spawnPoints.Length);
+        int laneIndex = GetCenterLaneIndex();
 
         SpawnGate(laneIndex);
 
@@ -314,5 +314,30 @@ public class StageObjectSpawner : MonoBehaviour
         }
 
         return spawnPoints.Length / 2;
+    }
+
+    public void StopAndClearStageObjects()
+    {
+        if (spawnRoutine != null)
+        {
+            StopCoroutine(spawnRoutine);
+            spawnRoutine = null;
+        }
+
+        StageObjectMover[] movers = FindObjectsByType<StageObjectMover>(FindObjectsSortMode.None);
+
+        for (int i = 0; i < movers.Length; i++)
+        {
+            if (movers[i] == null)
+            {
+                continue;
+            }
+
+            movers[i].gameObject.SetActive(false);
+        }
+
+        enabled = false;
+
+        Debug.Log("Stage Objects Cleared");
     }
 }

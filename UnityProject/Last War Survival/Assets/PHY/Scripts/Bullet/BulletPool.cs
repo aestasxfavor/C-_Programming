@@ -18,7 +18,8 @@ public class BulletPool : MonoBehaviour
     {
         for (int i = 0; i < initialSize; i++)
         {
-            CreateBullet();
+            Bullet bullet = CreateBullet();
+            bulletPool.Enqueue(bullet);
         }
     }
 
@@ -28,8 +29,6 @@ public class BulletPool : MonoBehaviour
 
         bullet.gameObject.SetActive(false);
         bullet.SetPool(this);
-
-        bulletPool.Enqueue(bullet);
 
         return bullet;
     }

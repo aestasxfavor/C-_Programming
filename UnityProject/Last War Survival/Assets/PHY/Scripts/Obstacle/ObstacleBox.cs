@@ -84,10 +84,11 @@ public class ObstacleBox : MonoBehaviour
 
         if (playerStats == null)
         {
+            Debug.LogWarning("PlayerCombatStats를 찾지 못해서 공격력 보상 지급 실패");
             return;
         }
 
         playerStats.IncreaseAttackDamage(damageReward);
-        Debug.Log($"공격력 +{damageReward} 보상 지급");
+        Debug.Log($"공격력 +{damageReward} 보상 지급 완료");
     }
 }

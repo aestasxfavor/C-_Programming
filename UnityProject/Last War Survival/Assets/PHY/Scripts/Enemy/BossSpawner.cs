@@ -11,6 +11,7 @@ public class BossSpawner : MonoBehaviour
     [SerializeField] private StageObjectSpawner stageObjectSpawner;
 
     private bool hasSpawned;
+    private GameObject spawnedBossObject;
     private Health spawnedBossHealth;
 
     public bool HasSpawned => hasSpawned;
@@ -42,16 +43,16 @@ public class BossSpawner : MonoBehaviour
 
         if (stageObjectSpawner != null)
         {
-            stageObjectSpawner.enabled = false;
+            stageObjectSpawner.StopAndClearStageObjects();
         }
 
-        GameObject bossObject = Instantiate(finalBossPrefab, spawnPoint.position, spawnPoint.rotation);
+        spawnedBossObject = Instantiate(finalBossPrefab, spawnPoint.position, spawnPoint.rotation);
 
-        spawnedBossHealth = bossObject.GetComponent<Health>();
+        spawnedBossHealth = spawnedBossObject.GetComponent<Health>();
 
         if (spawnedBossHealth == null)
         {
-            spawnedBossHealth = bossObject.GetComponentInChildren<Health>();
+            spawnedBossHealth = spawnedBossObject.GetComponentInChildren<Health>();
         }
 
         if (spawnedBossHealth != null)
@@ -71,6 +72,11 @@ public class BossSpawner : MonoBehaviour
         if (spawnedBossHealth != null)
         {
             spawnedBossHealth.OnDied -= HandleFinalBossDied;
+        }
+
+        if (spawnedBossObject != null)
+        {
+            spawnedBossObject.SetActive(false);
         }
 
         Debug.Log("Final Boss Died");
