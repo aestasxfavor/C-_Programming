@@ -5,21 +5,27 @@ public class BulletPool : MonoBehaviour
 {
     [Header("Pool Settings")]
     [SerializeField] private Bullet bulletPrefab;
-    [SerializeField] private int initialSize = 30;
+    [SerializeField] private int poolSize = 30;
 
-    private readonly Queue<Bullet> bulletPool = new Queue<Bullet>();
+    private readonly Queue<Bullet> pooledBullets = new Queue<Bullet>();
 
     private void Awake()
     {
-        CreateInitialBullets();
+        CreatePool();
     }
 
-    private void CreateInitialBullets()
+    private void CreatePool()
     {
-        for (int i = 0; i < initialSize; i++)
+        if (bulletPrefab == null)
+        {
+            return;
+        }
+
+        // 게임 중 Instantiate 호출을 줄이기 위해 총알을 미리 생성
+        for (int i = 0; i < poolSize; i++)
         {
             Bullet bullet = CreateBullet();
-            bulletPool.Enqueue(bullet);
+            pooledBullets.Enqueue(bullet);
         }
     }
 
@@ -37,9 +43,9 @@ public class BulletPool : MonoBehaviour
     {
         Bullet bullet;
 
-        if (bulletPool.Count > 0)
+        if (pooledBullets.Count > 0)
         {
-            bullet = bulletPool.Dequeue();
+            bullet = pooledBullets.Dequeue();
         }
         else
         {
@@ -60,9 +66,10 @@ public class BulletPool : MonoBehaviour
             return;
         }
 
+        // 사용이 끝난 총알은 비활성화 후 다시 풀에 보관
         bullet.gameObject.SetActive(false);
         bullet.transform.SetParent(transform);
 
-        bulletPool.Enqueue(bullet);
+        pooledBullets.Enqueue(bullet);
     }
 }

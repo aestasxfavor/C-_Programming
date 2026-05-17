@@ -3,13 +3,13 @@ using UnityEngine;
 public class PlayerAttackController : MonoBehaviour
 {
     [Header("Attack State")]
-    [SerializeField] private bool canAttack = false;
+    [SerializeField] private bool isAttackUnlocked = false;
 
     [Header("Attack Settings")]
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireInterval = 0.3f;
     [SerializeField] private float bulletSpacing = 0.25f;
-    [SerializeField] private int maxBulletPerShot = 10;
+    [SerializeField] private int maxBulletsPerShot = 10;
 
     [Header("References")]
     [SerializeField] private PlayerUnitManager playerUnitManager;
@@ -43,7 +43,7 @@ public class PlayerAttackController : MonoBehaviour
 
     private void Update()
     {
-        if (!canAttack)
+        if (!isAttackUnlocked)
         {
             return;
         }
@@ -59,48 +59,44 @@ public class PlayerAttackController : MonoBehaviour
 
     public void UnlockAttack()
     {
-        canAttack = true;
+        isAttackUnlocked = true;
         fireTimer = 0f;
-
-        Debug.Log("Player Attack Unlocked");
     }
 
     private void Fire()
     {
         if (bulletPool == null)
         {
-            Debug.LogWarning("BulletPool이 비어 있어요.");
             return;
         }
 
-        int unitCount = 1;
+        int currentUnitCount = 1;
 
         if (playerUnitManager != null)
         {
-            unitCount = playerUnitManager.CurrentUnitCount;
+            currentUnitCount = playerUnitManager.CurrentUnitCount;
         }
 
-        if (unitCount <= 0)
+        if (currentUnitCount <= 0)
         {
             return;
         }
 
-        int attackDamage = 1;
+        int damage = 1;
 
         if (playerCombatStats != null)
         {
-            attackDamage = playerCombatStats.AttackDamage;
+            damage = playerCombatStats.AttackDamage;
         }
 
-        Debug.Log($"현재 발사 공격력: {attackDamage}");
-
-        int bulletCount = Mathf.Min(unitCount, maxBulletPerShot);
+        // 유닛 수만큼 발사하되, 한 번에 나가는 총알 수는 제한
+        int bulletCount = Mathf.Min(currentUnitCount, maxBulletsPerShot);
 
         for (int i = 0; i < bulletCount; i++)
         {
             Vector3 spawnPosition = GetBulletSpawnPosition(i, bulletCount);
 
-            bulletPool.GetBullet(spawnPosition, firePoint.rotation, attackDamage);
+            bulletPool.GetBullet(spawnPosition, firePoint.rotation, damage);
         }
     }
 
@@ -109,8 +105,7 @@ public class PlayerAttackController : MonoBehaviour
         float centerOffset = (totalCount - 1) * 0.5f;
         float xOffset = (index - centerOffset) * bulletSpacing;
 
-        Vector3 right = firePoint.right;
-        Vector3 spawnPosition = firePoint.position + right * xOffset;
+        Vector3 spawnPosition = firePoint.position + firePoint.right * xOffset;
 
         return spawnPosition;
     }

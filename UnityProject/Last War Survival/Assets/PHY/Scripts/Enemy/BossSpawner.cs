@@ -5,81 +5,89 @@ public class BossSpawner : MonoBehaviour
 {
     [Header("Final Boss")]
     [SerializeField] private GameObject finalBossPrefab;
-    [SerializeField] private Transform spawnPoint;
+    [SerializeField] private Transform bossSpawnPoint;
 
     [Header("References")]
     [SerializeField] private StageObjectSpawner stageObjectSpawner;
 
-    private bool hasSpawned;
-    private GameObject spawnedBossObject;
-    private Health spawnedBossHealth;
+    private bool hasSpawnedBoss;
+    private GameObject bossObject;
+    private Health bossHealth;
 
-    public bool HasSpawned => hasSpawned;
+    public bool HasSpawned => hasSpawnedBoss;
 
     public event Action OnFinalBossDied;
 
+    private void OnDestroy()
+    {
+        if (bossHealth != null)
+        {
+            bossHealth.OnDied -= HandleFinalBossDied;
+        }
+    }
+
     public void SpawnFinalBoss()
     {
-        Debug.Log("SpawnFinalBoss 호출됨");
-
-        if (hasSpawned)
+        if (hasSpawnedBoss)
         {
             return;
         }
 
         if (finalBossPrefab == null)
         {
-            Debug.LogWarning("Final Boss Prefab이 비어 있어요.");
             return;
         }
 
-        if (spawnPoint == null)
+        if (bossSpawnPoint == null)
         {
-            Debug.LogWarning("Final Boss Spawn Point가 비어 있어요.");
             return;
         }
 
-        hasSpawned = true;
+        hasSpawnedBoss = true;
 
+        // 보스 등장 전 기존 적, 아이템, 게이트 흐름을 정리
         if (stageObjectSpawner != null)
         {
             stageObjectSpawner.StopAndClearStageObjects();
         }
 
-        spawnedBossObject = Instantiate(finalBossPrefab, spawnPoint.position, spawnPoint.rotation);
+        bossObject = Instantiate(finalBossPrefab, bossSpawnPoint.position, bossSpawnPoint.rotation);
+        bossHealth = GetBossHealth(bossObject);
 
-        spawnedBossHealth = spawnedBossObject.GetComponent<Health>();
-
-        if (spawnedBossHealth == null)
+        if (bossHealth != null)
         {
-            spawnedBossHealth = spawnedBossObject.GetComponentInChildren<Health>();
+            bossHealth.OnDied += HandleFinalBossDied;
+        }
+    }
+
+    private Health GetBossHealth(GameObject targetBoss)
+    {
+        if (targetBoss == null)
+        {
+            return null;
         }
 
-        if (spawnedBossHealth != null)
+        Health health = targetBoss.GetComponent<Health>();
+
+        if (health != null)
         {
-            spawnedBossHealth.OnDied += HandleFinalBossDied;
-        }
-        else
-        {
-            Debug.LogWarning("생성된 보스에서 Health를 찾지 못했어요.");
+            return health;
         }
 
-        Debug.Log("Final Boss Spawned");
+        return targetBoss.GetComponentInChildren<Health>();
     }
 
     private void HandleFinalBossDied()
     {
-        if (spawnedBossHealth != null)
+        if (bossHealth != null)
         {
-            spawnedBossHealth.OnDied -= HandleFinalBossDied;
+            bossHealth.OnDied -= HandleFinalBossDied;
         }
 
-        if (spawnedBossObject != null)
+        if (bossObject != null)
         {
-            spawnedBossObject.SetActive(false);
+            bossObject.SetActive(false);
         }
-
-        Debug.Log("Final Boss Died");
 
         OnFinalBossDied?.Invoke();
     }

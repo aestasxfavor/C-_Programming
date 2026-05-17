@@ -3,14 +3,16 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class ObstacleBox : MonoBehaviour
 {
+    [Header("Obstacle Settings")]
     [SerializeField] private int damageReward = 5;
+    [SerializeField] private int collisionDamage = 1;
 
-    // 프리팹 참조가 비어 있을 경우 보상 지급 시 런타임에서 자동 탐색
+    [Header("References")]
     [SerializeField] private PlayerCombatStats playerStats;
 
     private Health health;
-    private bool hasCollided;
-    private bool rewardGiven;
+    private bool hasHitPlayer;
+    private bool hasGivenReward;
 
     private void Awake()
     {
@@ -19,8 +21,8 @@ public class ObstacleBox : MonoBehaviour
 
     private void OnEnable()
     {
-        hasCollided = false;
-        rewardGiven = false;
+        hasHitPlayer = false;
+        hasGivenReward = false;
 
         if (health != null)
         {
@@ -38,44 +40,42 @@ public class ObstacleBox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasCollided)
+        if (hasHitPlayer)
         {
             return;
         }
 
-        PlayerCombatStats player = other.GetComponentInParent<PlayerCombatStats>();
+        PlayerUnitManager playerUnitManager = other.GetComponentInParent<PlayerUnitManager>();
 
-        if (player == null)
+        if (playerUnitManager == null)
         {
             return;
         }
 
-        hasCollided = true;
+        hasHitPlayer = true;
 
-        if (health.CurrentHealth > 0)
-        {
-            Debug.Log($"장애물 미파괴 충돌 -> 유닛 수 -{health.CurrentHealth}");
-            player.ReduceUnitCount(health.CurrentHealth);
-        }
+        // 장애물을 부수지 못하고 직접 충돌하면 정해진 수만큼 유닛 감소
+        playerUnitManager.ReduceUnitCount(collisionDamage);
+        Debug.Log($"플레이어가 장애물에 부딪힘 -> 유닛 감소: {collisionDamage}.");
 
         gameObject.SetActive(false);
     }
 
     private void HandleDied()
     {
-        Debug.Log("장애물 파괴됨 -> 아이템 얻음");
         GiveReward();
+
         gameObject.SetActive(false);
     }
 
     private void GiveReward()
     {
-        if (rewardGiven)
+        if (hasGivenReward)
         {
             return;
         }
 
-        rewardGiven = true;
+        hasGivenReward = true;
 
         if (playerStats == null)
         {
@@ -84,11 +84,10 @@ public class ObstacleBox : MonoBehaviour
 
         if (playerStats == null)
         {
-            Debug.LogWarning("PlayerCombatStats를 찾지 못해서 공격력 보상 지급 실패");
             return;
         }
 
+        // 총알로 파괴했을 때만 공격력 보상 지급
         playerStats.IncreaseAttackDamage(damageReward);
-        Debug.Log($"공격력 +{damageReward} 보상 지급 완료");
     }
 }

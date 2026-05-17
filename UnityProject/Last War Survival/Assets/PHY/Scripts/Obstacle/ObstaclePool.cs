@@ -7,7 +7,7 @@ public class ObstaclePool : MonoBehaviour
     [SerializeField] private GameObject obstaclePrefab;
     [SerializeField] private int poolSize = 10;
 
-    private readonly List<GameObject> pool = new();
+    private readonly List<GameObject> pooledObstacles = new List<GameObject>();
 
     private void Awake()
     {
@@ -16,6 +16,12 @@ public class ObstaclePool : MonoBehaviour
 
     private void CreatePool()
     {
+        if (obstaclePrefab == null)
+        {
+            return;
+        }
+
+        // 반복해서 등장하는 장애물을 미리 생성해서 재사용
         for (int i = 0; i < poolSize; i++)
         {
             CreateObstacle();
@@ -25,8 +31,9 @@ public class ObstaclePool : MonoBehaviour
     private GameObject CreateObstacle()
     {
         GameObject obstacle = Instantiate(obstaclePrefab, transform);
+
         obstacle.SetActive(false);
-        pool.Add(obstacle);
+        pooledObstacles.Add(obstacle);
 
         return obstacle;
     }
@@ -38,6 +45,11 @@ public class ObstaclePool : MonoBehaviour
         if (obstacle == null)
         {
             obstacle = CreateObstacle();
+        }
+
+        if (obstacle == null)
+        {
+            return null;
         }
 
         obstacle.transform.SetPositionAndRotation(position, rotation);
@@ -54,11 +66,16 @@ public class ObstaclePool : MonoBehaviour
 
     private GameObject GetInactiveObstacle()
     {
-        foreach (GameObject obstacle in pool)
+        for (int i = 0; i < pooledObstacles.Count; i++)
         {
-            if (!obstacle.activeInHierarchy)
+            if (pooledObstacles[i] == null)
             {
-                return obstacle;
+                continue;
+            }
+
+            if (!pooledObstacles[i].activeSelf)
+            {
+                return pooledObstacles[i];
             }
         }
 

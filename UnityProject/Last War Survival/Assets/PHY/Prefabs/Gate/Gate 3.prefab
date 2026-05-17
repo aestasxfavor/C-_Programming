@@ -490,8 +490,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gate
   gateType: 0
-  value: 5
-  operationText: {fileID: 7101203473255835886}
+  gateValue: 3
+  gateText: {fileID: 7101203473255835886}
 --- !u!54 &6151589911418768118
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -566,7 +566,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageObjectMover
   moveSpeed: 7
-  disableZ: -12
+  deactiveZ: -8
 --- !u!1 &7793959113533038014
 GameObject:
   m_ObjectHideFlags: 0
@@ -695,8 +695,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gate
   gateType: 3
-  value: 2
-  operationText: {fileID: 642780360866005857}
+  gateValue: 2
+  gateText: {fileID: 642780360866005857}
 --- !u!54 &3942384819346456040
 Rigidbody:
   m_ObjectHideFlags: 0

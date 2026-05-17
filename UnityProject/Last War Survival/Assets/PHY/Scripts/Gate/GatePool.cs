@@ -5,9 +5,9 @@ public class GatePool : MonoBehaviour
 {
     [Header("Pool Settings")]
     [SerializeField] private GameObject[] gatePrefabs;
-    [SerializeField] private int poolSizePerPrefab = 2;
+    [SerializeField] private int poolSizePerGate = 2;
 
-    private readonly List<GameObject> pool = new();
+    private readonly List<GameObject> pooledGates = new List<GameObject>();
 
     private void Awake()
     {
@@ -18,13 +18,13 @@ public class GatePool : MonoBehaviour
     {
         if (gatePrefabs == null || gatePrefabs.Length == 0)
         {
-            Debug.LogWarning("Gate Prefabs가 비어 있습니다.");
             return;
         }
 
+        // 게이트 세트 프리팹마다 사용할 오브젝트를 미리 생성
         for (int i = 0; i < gatePrefabs.Length; i++)
         {
-            for (int j = 0; j < poolSizePerPrefab; j++)
+            for (int j = 0; j < poolSizePerGate; j++)
             {
                 CreateGate(gatePrefabs[i]);
             }
@@ -33,9 +33,15 @@ public class GatePool : MonoBehaviour
 
     private GameObject CreateGate(GameObject gatePrefab)
     {
+        if (gatePrefab == null)
+        {
+            return null;
+        }
+
         GameObject gate = Instantiate(gatePrefab, transform);
+
         gate.SetActive(false);
-        pool.Add(gate);
+        pooledGates.Add(gate);
 
         return gate;
     }
@@ -68,34 +74,58 @@ public class GatePool : MonoBehaviour
 
     private GameObject GetRandomInactiveGate()
     {
-        List<GameObject> inactiveGates = new List<GameObject>();
+        int inactiveCount = CountInactiveGates();
 
-        foreach (GameObject gate in pool)
-        {
-            if (!gate.activeInHierarchy)
-            {
-                inactiveGates.Add(gate);
-            }
-        }
-
-        if (inactiveGates.Count == 0)
+        if (inactiveCount == 0)
         {
             return null;
         }
 
-        int index = Random.Range(0, inactiveGates.Count);
-        return inactiveGates[index];
+        int randomIndex = Random.Range(0, inactiveCount);
+        int currentIndex = 0;
+
+        for (int i = 0; i < pooledGates.Count; i++)
+        {
+            if (pooledGates[i].activeSelf)
+            {
+                continue;
+            }
+
+            if (currentIndex == randomIndex)
+            {
+                return pooledGates[i];
+            }
+
+            currentIndex++;
+        }
+
+        return null;
+    }
+
+    private int CountInactiveGates()
+    {
+        int count = 0;
+
+        for (int i = 0; i < pooledGates.Count; i++)
+        {
+            if (!pooledGates[i].activeSelf)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private GameObject CreateRandomGate()
     {
         if (gatePrefabs == null || gatePrefabs.Length == 0)
         {
-            Debug.LogWarning("Gate Prefabs가 비어 있습니다.");
             return null;
         }
 
         int index = Random.Range(0, gatePrefabs.Length);
+
         return CreateGate(gatePrefabs[index]);
     }
 }

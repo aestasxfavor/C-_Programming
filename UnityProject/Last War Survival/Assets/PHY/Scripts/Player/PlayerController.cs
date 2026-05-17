@@ -9,15 +9,15 @@ public class PlayerController : MonoBehaviour
     [Header("Move Settings")]
     [SerializeField] private float moveSpeed = 8f;
     [SerializeField] private float xLimit = 4f;
-    [SerializeField] private float moveSmooth = 12f;
+    [SerializeField] private float moveSmoothSpeed = 12f;
 
     private float targetX;
-    private float fixedZ;
+    private float startZ;
 
     private void Awake()
     {
         targetX = transform.position.x;
-        fixedZ = transform.position.z;
+        startZ = transform.position.z;
     }
 
     private void OnEnable()
@@ -57,16 +57,13 @@ public class PlayerController : MonoBehaviour
 
     private void MovePlayer()
     {
-        Vector3 currentPosition = transform.position;
+        Vector3 nextPosition = transform.position;
 
-        currentPosition.x = Mathf.Lerp(
-            currentPosition.x,
-            targetX,
-            moveSmooth * Time.deltaTime
-        );
+        nextPosition.x = Mathf.Lerp(nextPosition.x, targetX, moveSmoothSpeed * Time.deltaTime);
 
-        currentPosition.z = fixedZ;
+        // 전진은 스테이지 오브젝트가 움직이므로 플레이어 Z 위치는 고정
+        nextPosition.z = startZ;
 
-        transform.position = currentPosition;
+        transform.position = nextPosition;
     }
 }

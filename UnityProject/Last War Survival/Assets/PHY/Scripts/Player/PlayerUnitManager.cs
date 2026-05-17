@@ -14,14 +14,14 @@ public class PlayerUnitManager : MonoBehaviour
 
     [Header("Unit Formation")]
     [SerializeField] private Transform unitParent;
-    [SerializeField] private int unitsPerRow = 5;
-    [SerializeField] private float spacingX = 0.6f;
-    [SerializeField] private float spacingZ = 0.8f;
+    [SerializeField] private int maxUnitsPerRow = 5;
+    [SerializeField] private float xSpacing = 0.6f;
+    [SerializeField] private float zSpacing = 0.8f;
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI unitCountText;
 
-    private readonly List<GameObject> activeUnitCopies = new();
+    private readonly List<GameObject> unitCopies = new List<GameObject>();
 
     public int CurrentUnitCount => currentUnitCount;
 
@@ -30,7 +30,7 @@ public class PlayerUnitManager : MonoBehaviour
         PrepareUnitParent();
 
         ClampUnitCount();
-        SyncUnitCopies();
+        UpdateUnitCopies();
         UpdateUnitCountUI();
     }
 
@@ -43,7 +43,6 @@ public class PlayerUnitManager : MonoBehaviour
     {
         int amount = Mathf.Abs(value);
 
-        Debug.Log($"Gate Applied: {gateType} {value}");
         switch (gateType)
         {
             case GateType.Plus:
@@ -67,18 +66,8 @@ public class PlayerUnitManager : MonoBehaviour
         }
 
         ClampUnitCount();
-
-        Debug.Log($"After Gate Unit Count: {currentUnitCount}");
-
-        SyncUnitCopies();
+        UpdateUnitCopies();
         UpdateUnitCountUI();
-
-        Debug.Log($"Player Unit Count: {currentUnitCount}");
-
-        if (currentUnitCount <= 0)
-        {
-            HandleUnitCountZero();
-        }
     }
 
     public void ReduceUnitCount(int damage)
@@ -91,20 +80,8 @@ public class PlayerUnitManager : MonoBehaviour
         currentUnitCount -= damage;
 
         ClampUnitCount();
-        SyncUnitCopies();
+        UpdateUnitCopies();
         UpdateUnitCountUI();
-
-        Debug.Log($"Player Unit Count: {currentUnitCount}");
-
-        if (currentUnitCount <= 0)
-        {
-            HandleUnitCountZero();
-        }
-    }
-
-    private void HandleUnitCountZero()
-    {
-        Debug.Log("Game Over: All player units are dead.");
     }
 
     private void PrepareUnitParent()
@@ -123,24 +100,22 @@ public class PlayerUnitManager : MonoBehaviour
         unitParent.localScale = Vector3.one;
     }
 
-    private void SyncUnitCopies()
+    private void UpdateUnitCopies()
     {
         if (playerUnitPool == null)
         {
-            Debug.LogError("PlayerUnitPool이 PlayerUnitManager에 연결되지 않았습니다.");
             return;
         }
 
-        int copyCount = Mathf.Max(0, currentUnitCount - 1);
+        // 플레이어 본체 1명은 제외하고 추가 유닛만 풀에서 관리
+        int targetCopyCount = Mathf.Max(0, currentUnitCount - 1);
 
-        Debug.Log($"Need Copy Count: {copyCount}, Current Copy Count: {activeUnitCopies.Count}");
-
-        while (activeUnitCopies.Count < copyCount)
+        while (unitCopies.Count < targetCopyCount)
         {
             AddUnitCopy();
         }
 
-        while (activeUnitCopies.Count > copyCount)
+        while (unitCopies.Count > targetCopyCount)
         {
             RemoveLastUnitCopy();
         }
@@ -157,26 +132,22 @@ public class PlayerUnitManager : MonoBehaviour
             return;
         }
 
-        activeUnitCopies.Add(unitCopy);
-
-        Debug.Log($"Unit Copy Activated: {unitCopy.name}");
+        unitCopies.Add(unitCopy);
     }
 
     private void RemoveLastUnitCopy()
     {
-        int lastIndex = activeUnitCopies.Count - 1;
+        int lastIndex = unitCopies.Count - 1;
 
         if (lastIndex < 0)
         {
             return;
         }
 
-        GameObject unitCopy = activeUnitCopies[lastIndex];
+        GameObject unitCopy = unitCopies[lastIndex];
 
-        activeUnitCopies.RemoveAt(lastIndex);
+        unitCopies.RemoveAt(lastIndex);
         playerUnitPool.ReturnUnit(unitCopy);
-
-        Debug.Log("Unit Copy Returned To Pool");
     }
 
     private void UpdateFormation()
@@ -186,29 +157,30 @@ public class PlayerUnitManager : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < activeUnitCopies.Count; i++)
+        for (int i = 0; i < unitCopies.Count; i++)
         {
-            if (activeUnitCopies[i] == null)
+            if (unitCopies[i] == null)
             {
                 continue;
             }
 
-            int row = i / unitsPerRow;
-            int column = i % unitsPerRow;
+            int row = i / maxUnitsPerRow;
+            int column = i % maxUnitsPerRow;
 
-            int rowStartIndex = row * unitsPerRow;
-            int countInThisRow = Mathf.Min(unitsPerRow, activeUnitCopies.Count - rowStartIndex);
+            int rowStartIndex = row * maxUnitsPerRow;
+            int rowUnitCount = Mathf.Min(maxUnitsPerRow, unitCopies.Count - rowStartIndex);
 
-            float centerOffset = (countInThisRow - 1) * 0.5f;
+            // 마지막 줄도 가운데 정렬되도록 행마다 중심값을 다시 계산
+            float centerOffset = (rowUnitCount - 1) * 0.5f;
 
-            float x = (column - centerOffset) * spacingX;
-            float z = -(row + 1) * spacingZ;
+            float x = (column - centerOffset) * xSpacing;
+            float z = -(row + 1) * zSpacing;
 
             Vector3 localOffset = new Vector3(x, 0f, z);
 
-            activeUnitCopies[i].transform.position = unitParent.TransformPoint(localOffset);
-            activeUnitCopies[i].transform.rotation = unitParent.rotation;
-            activeUnitCopies[i].transform.localScale = Vector3.one;
+            unitCopies[i].transform.position = unitParent.TransformPoint(localOffset);
+            unitCopies[i].transform.rotation = unitParent.rotation;
+            unitCopies[i].transform.localScale = Vector3.one;
         }
     }
 

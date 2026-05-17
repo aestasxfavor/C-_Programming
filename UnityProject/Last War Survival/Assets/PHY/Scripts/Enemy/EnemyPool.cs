@@ -5,18 +5,24 @@ public class EnemyPool : MonoBehaviour
 {
     [Header("Pool Settings")]
     [SerializeField] private GameObject enemyPrefab;
-    [SerializeField] private int initialSize = 20;
+    [SerializeField] private int poolSize = 20;
 
-    private readonly List<GameObject> enemies = new List<GameObject>();
+    private readonly List<GameObject> pooledEnemies = new List<GameObject>();
 
     private void Awake()
     {
-        CreateInitialEnemies();
+        CreatePool();
     }
 
-    private void CreateInitialEnemies()
+    private void CreatePool()
     {
-        for (int i = 0; i < initialSize; i++)
+        if (enemyPrefab == null)
+        {
+            return;
+        }
+
+        // 게임 중 반복 생성되는 적을 미리 만들어 재사용
+        for (int i = 0; i < poolSize; i++)
         {
             CreateEnemy();
         }
@@ -26,10 +32,8 @@ public class EnemyPool : MonoBehaviour
     {
         GameObject enemy = Instantiate(enemyPrefab, transform);
 
-        enemy.name = $"PooledEnemy_{enemies.Count + 1}";
         enemy.SetActive(false);
-
-        enemies.Add(enemy);
+        pooledEnemies.Add(enemy);
 
         return enemy;
     }
@@ -43,6 +47,11 @@ public class EnemyPool : MonoBehaviour
             enemy = CreateEnemy();
         }
 
+        if (enemy == null)
+        {
+            return null;
+        }
+
         enemy.transform.SetPositionAndRotation(position, rotation);
         enemy.SetActive(true);
 
@@ -51,16 +60,16 @@ public class EnemyPool : MonoBehaviour
 
     private GameObject GetInactiveEnemy()
     {
-        for (int i = 0; i < enemies.Count; i++)
+        for (int i = 0; i < pooledEnemies.Count; i++)
         {
-            if (enemies[i] == null)
+            if (pooledEnemies[i] == null)
             {
                 continue;
             }
 
-            if (!enemies[i].activeSelf)
+            if (!pooledEnemies[i].activeSelf)
             {
-                return enemies[i];
+                return pooledEnemies[i];
             }
         }
 

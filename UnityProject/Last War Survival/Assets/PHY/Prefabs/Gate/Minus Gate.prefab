@@ -308,9 +308,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f563555d41f378e44afaa5ab5e9418ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gate
-  operationType: 1
-  value: -2
-  operationText: {fileID: 4268912675306749231}
+  gateType: 1
+  gateValue: 2
+  gateText: {fileID: 4268912675306749231}
 --- !u!54 &-8683173620354402611
 Rigidbody:
   m_ObjectHideFlags: 0

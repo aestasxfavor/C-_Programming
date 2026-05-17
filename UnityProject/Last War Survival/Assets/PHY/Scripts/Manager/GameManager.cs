@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     [Header("Game Time")]
-    [SerializeField] private float playTime = 60f;
+    [SerializeField] private float stageTime = 60f;
     [SerializeField] private TextMeshProUGUI timerText;
 
     [Header("Unit UI")]
@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Final Boss")]
     [SerializeField] private BossSpawner bossSpawner;
-    [SerializeField] private float bossSpawnRemainTime = 10f;
+    [SerializeField] private float bossSpawnTime = 10f;
 
     [Header("References")]
     [SerializeField] private PlayerUnitManager playerUnitManager;
@@ -21,29 +21,29 @@ public class GameManager : MonoBehaviour
     [SerializeField] private StageObjectSpawner stageObjectSpawner;
 
     [Header("Result UI")]
-    [SerializeField] private GameObject successUI;
-    [SerializeField] private GameObject failUI;
+    [SerializeField] private GameObject winnerPanel;
+    [SerializeField] private GameObject losePanel;
 
-    private float remainTime;
-    private bool isGameEnded;
-    private bool hasRequestedFinalBoss;
+    private float remainingTime;
+    private bool isStageEnded;
+    private bool hasSpawnedBoss;
 
     private void Start()
     {
         Time.timeScale = 1f;
 
-        remainTime = playTime;
-        isGameEnded = false;
-        hasRequestedFinalBoss = false;
+        remainingTime = stageTime;
+        isStageEnded = false;
+        hasSpawnedBoss = false;
 
-        if (successUI != null)
+        if (winnerPanel != null)
         {
-            successUI.SetActive(false);
+            winnerPanel.SetActive(false);
         }
 
-        if (failUI != null)
+        if (losePanel != null)
         {
-            failUI.SetActive(false);
+            losePanel.SetActive(false);
         }
 
         if (bossSpawner != null)
@@ -65,50 +65,45 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (isGameEnded)
+        if (isStageEnded)
         {
             return;
         }
 
-        CheckUnitCount();
         CheckFinalBossSpawn();
         UpdateTimer();
         UpdateUnitUI();
+        CheckUnitCount();
     }
 
     private void CheckFinalBossSpawn()
     {
-        if (hasRequestedFinalBoss)
+        if (hasSpawnedBoss)
         {
             return;
         }
 
-        if (remainTime > bossSpawnRemainTime)
+        // 남은 시간이 기준 시간 이하가 되면 최종 보스를 한 번만 생성
+        if (remainingTime > bossSpawnTime)
         {
             return;
         }
 
-        hasRequestedFinalBoss = true;
+        hasSpawnedBoss = true;
 
         if (bossSpawner != null)
         {
             bossSpawner.SpawnFinalBoss();
         }
-        else
-        {
-            Debug.LogWarning("FinalBossSpawner가 GameManager에 연결되지 않았어요.");
-        }
     }
 
     private void UpdateTimer()
     {
-        remainTime -= Time.deltaTime;
+        remainingTime -= Time.deltaTime;
 
-        if (remainTime <= 0f)
+        if (remainingTime <= 0f)
         {
-            remainTime = 0f;
-            UpdateTimerUI();
-            return;
+            remainingTime = 0f;
         }
 
         UpdateTimerUI();
@@ -121,7 +116,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        int seconds = Mathf.CeilToInt(remainTime);
+        int seconds = Mathf.CeilToInt(remainingTime);
         timerText.text = $"{seconds}";
     }
 
@@ -155,25 +150,23 @@ public class GameManager : MonoBehaviour
 
     private void HandleFinalBossDied()
     {
-        Debug.Log("Final Boss Clear");
-
         StageClear();
     }
 
     private void StageClear()
     {
-        if (isGameEnded)
+        if (isStageEnded)
         {
             return;
         }
 
-        isGameEnded = true;
+        isStageEnded = true;
 
         StopGameFlow();
 
-        if (successUI != null)
+        if (winnerPanel != null)
         {
-            successUI.SetActive(true);
+            winnerPanel.SetActive(true);
         }
 
         Debug.Log("Stage Clear");
@@ -181,18 +174,18 @@ public class GameManager : MonoBehaviour
 
     private void StageFail()
     {
-        if (isGameEnded)
+        if (isStageEnded)
         {
             return;
         }
 
-        isGameEnded = true;
+        isStageEnded = true;
 
         StopGameFlow();
 
-        if (failUI != null)
+        if (losePanel != null)
         {
-            failUI.SetActive(true);
+            losePanel.SetActive(true);
         }
 
         Debug.Log("Stage Fail");

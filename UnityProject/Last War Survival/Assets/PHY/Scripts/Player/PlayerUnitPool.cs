@@ -7,7 +7,7 @@ public class PlayerUnitPool : MonoBehaviour
     [SerializeField] private GameObject unitPrefab;
     [SerializeField] private int poolSize = 100;
 
-    private readonly List<GameObject> pool = new();
+    private readonly List<GameObject> pooledUnits = new List<GameObject>();
 
     private void Awake()
     {
@@ -16,6 +16,11 @@ public class PlayerUnitPool : MonoBehaviour
 
     private void CreatePool()
     {
+        if (unitPrefab == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < poolSize; i++)
         {
             CreateUnit();
@@ -25,8 +30,9 @@ public class PlayerUnitPool : MonoBehaviour
     private GameObject CreateUnit()
     {
         GameObject unit = Instantiate(unitPrefab, transform);
+
         unit.SetActive(false);
-        pool.Add(unit);
+        pooledUnits.Add(unit);
 
         return unit;
     }
@@ -37,11 +43,11 @@ public class PlayerUnitPool : MonoBehaviour
 
         if (unit == null)
         {
-            Debug.LogWarning("PlayerUnitPool에 남은 비활성 유닛이 없습니다. Pool Size를 늘려야 합니다.");
             return null;
         }
 
         unit.SetActive(true);
+
         return unit;
     }
 
@@ -61,24 +67,25 @@ public class PlayerUnitPool : MonoBehaviour
 
     public void ReturnAllUnits()
     {
-        foreach (GameObject unit in pool)
+        for (int i = 0; i < pooledUnits.Count; i++)
         {
-            if (unit == null)
+            if (pooledUnits[i] == null)
             {
                 continue;
             }
 
-            ReturnUnit(unit);
+            ReturnUnit(pooledUnits[i]);
         }
     }
 
     private GameObject GetInactiveUnit()
     {
-        foreach (GameObject unit in pool)
+        // 미리 만들어둔 유닛 중 현재 사용하지 않는 오브젝트를 재사용
+        for (int i = 0; i < pooledUnits.Count; i++)
         {
-            if (!unit.activeSelf)
+            if (!pooledUnits[i].activeSelf)
             {
-                return unit;
+                return pooledUnits[i];
             }
         }
 

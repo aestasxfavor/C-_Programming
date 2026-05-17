@@ -19,75 +19,98 @@ public class StageObjectSpawner : MonoBehaviour
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
-    [Header("Spawn Settings")]
-    [SerializeField] private float spawnInterval = 2.2f;
+    [Header("Wave Settings")]
+    [SerializeField] private float waveInterval = 2.2f;
     [SerializeField] private int minEnemyCount = 2;
     [SerializeField] private int maxEnemyCount = 3;
 
     [Range(0f, 1f)]
-    [SerializeField] private float obstacleSpawnChance = 0.15f;
+    [SerializeField] private float obstacleChance = 0.15f;
 
-    [Header("Intro Spawn Settings")]
-    [SerializeField] private bool useIntroSequence = true;
-    [SerializeField] private float firstGateDelay = 3f;
-    [SerializeField] private float bulletBoxDelayAfterGate = 2f;
-    [SerializeField] private float normalWaveDelayAfterBulletBox = 1f;
-    [SerializeField] private float introBulletBoxZOffset = -8f;
+    [Header("Intro Settings")]
+    [SerializeField] private bool useIntro = true;
+    [SerializeField] private float introGateDelay = 3f;
+    [SerializeField] private float introBoxDelay = 2f;
+    [SerializeField] private float waveStartDelay = 1f;
+    [SerializeField] private float introBoxZOffset = -8f;
 
-    [Header("Gate Spawn Settings")]
+    [Header("Gate Settings")]
     [Range(0f, 1f)]
-    [SerializeField] private float gateSpawnChance = 0.2f;
-    [SerializeField] private int minWavesBetweenGates = 3;
+    [SerializeField] private float gateChance = 0.2f;
+    [SerializeField] private int gateWaveGap = 3;
 
-    private int wavesSinceLastGate;
-    private Coroutine spawnRoutine;
+    private int waveCountAfterGate;
+    private Coroutine spawnCoroutine;
 
     private void OnEnable()
     {
-        spawnRoutine = StartCoroutine(SpawnLoop());
+        spawnCoroutine = StartCoroutine(SpawnLoop());
     }
 
     private void OnDisable()
     {
-        if (spawnRoutine != null)
-        {
-            StopCoroutine(spawnRoutine);
-            spawnRoutine = null;
-        }
+        StopSpawnLoop();
     }
 
     private IEnumerator SpawnLoop()
     {
-        if (useIntroSequence)
+        // 시작 구간에서 게이트와 BulletBox를 먼저 보여준 뒤 일반 웨이브를 시작함
+        if (useIntro)
         {
-            yield return new WaitForSeconds(firstGateDelay);
+            yield return new WaitForSeconds(introGateDelay);
 
             SpawnIntroGate();
 
-            yield return new WaitForSeconds(bulletBoxDelayAfterGate);
+            yield return new WaitForSeconds(introBoxDelay);
 
             SpawnIntroBulletBox();
 
-            yield return new WaitForSeconds(normalWaveDelayAfterBulletBox);
+            yield return new WaitForSeconds(waveStartDelay);
         }
 
         while (true)
         {
             SpawnWave();
 
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSeconds(waveInterval);
         }
+    }
+
+    private void StopSpawnLoop()
+    {
+        if (spawnCoroutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(spawnCoroutine);
+        spawnCoroutine = null;
+    }
+
+    private void SpawnIntroGate()
+    {
+        int laneIndex = GetMiddleLaneIndex();
+
+        SpawnGate(laneIndex);
+
+        waveCountAfterGate = 0;
+    }
+
+    private void SpawnIntroBulletBox()
+    {
+        int laneIndex = GetMiddleLaneIndex();
+
+        SpawnBulletBox(laneIndex, introBoxZOffset);
     }
 
     private void SpawnWave()
     {
-        if (spawnPoints == null || spawnPoints.Length == 0)
+        if (!HasSpawnPoints())
         {
-            Debug.LogWarning("Spawn Points가 비어 있습니다.");
             return;
         }
 
-        wavesSinceLastGate++;
+        waveCountAfterGate++;
 
         if (CanSpawnGate())
         {
@@ -95,7 +118,7 @@ public class StageObjectSpawner : MonoBehaviour
             return;
         }
 
-        SpawnEnemyObstacleWave();
+        SpawnNormalWave();
     }
 
     private bool CanSpawnGate()
@@ -105,63 +128,25 @@ public class StageObjectSpawner : MonoBehaviour
             return false;
         }
 
-        if (wavesSinceLastGate < minWavesBetweenGates)
+        // 게이트가 너무 자주 나오지 않도록 일정 웨이브 간격을 둠
+        if (waveCountAfterGate < gateWaveGap)
         {
             return false;
         }
 
-        return Random.value <= gateSpawnChance;
-    }
-
-    private void SpawnIntroGate()
-    {
-        int laneIndex = GetCenterLaneIndex();
-
-        SpawnGate(laneIndex);
-
-        wavesSinceLastGate = 0;
-
-        Debug.Log("Intro Gate Spawned");
-    }
-
-    private void SpawnIntroBulletBox()
-    {
-        int laneIndex = GetCenterLaneIndex();
-
-        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
-        {
-            Debug.LogError("BulletBox를 생성할 Lane Index가 잘못되었습니다.");
-            return;
-        }
-
-        if (bulletBoxPool == null)
-        {
-            Debug.LogError("BulletBoxPool이 StageObjectSpawner에 연결되지 않았습니다.");
-            return;
-        }
-
-        Transform spawnPoint = spawnPoints[laneIndex];
-
-        Vector3 spawnPosition = spawnPoint.position;
-        spawnPosition.z += introBulletBoxZOffset;
-
-        bulletBoxPool.GetBulletBox(spawnPosition, spawnPoint.rotation);
-
-        Debug.Log($"Intro BulletBox Spawned / Position: {spawnPosition}");
+        return Random.value <= gateChance;
     }
 
     private void SpawnGateWave()
     {
-        int laneIndex = GetCenterLaneIndex();
+        int laneIndex = GetMiddleLaneIndex();
 
         SpawnGate(laneIndex);
 
-        wavesSinceLastGate = 0;
-
-        Debug.Log("Gate Spawned");
+        waveCountAfterGate = 0;
     }
 
-    private void SpawnEnemyObstacleWave()
+    private void SpawnNormalWave()
     {
         List<int> usedLanes = new List<int>();
 
@@ -176,27 +161,29 @@ public class StageObjectSpawner : MonoBehaviour
             usedLanes.Add(enemyLanes[i]);
         }
 
-        if (Random.value <= obstacleSpawnChance)
+        if (Random.value > obstacleChance)
         {
-            int obstacleLane = GetUnusedRandomLane(usedLanes);
+            return;
+        }
 
-            if (obstacleLane != -1)
-            {
-                SpawnObstacle(obstacleLane);
-            }
+        // 적이 생성된 라인을 피해서 장애물 위치를 고름
+        int obstacleLane = GetUnusedLaneIndex(usedLanes);
+
+        if (obstacleLane != -1)
+        {
+            SpawnObstacle(obstacleLane);
         }
     }
 
     private void SpawnGate(int laneIndex)
     {
-        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
+        if (!IsValidLaneIndex(laneIndex))
         {
             return;
         }
 
         if (gatePool == null)
         {
-            Debug.LogError("GatePool이 StageObjectSpawner에 연결되지 않았습니다.");
             return;
         }
 
@@ -207,14 +194,13 @@ public class StageObjectSpawner : MonoBehaviour
 
     private void SpawnEnemy(int laneIndex)
     {
-        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
+        if (!IsValidLaneIndex(laneIndex))
         {
             return;
         }
 
         if (enemyPool == null)
         {
-            Debug.LogError("EnemyPool이 StageObjectSpawner에 연결되지 않았습니다.");
             return;
         }
 
@@ -225,14 +211,13 @@ public class StageObjectSpawner : MonoBehaviour
 
     private void SpawnObstacle(int laneIndex)
     {
-        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
+        if (!IsValidLaneIndex(laneIndex))
         {
             return;
         }
 
         if (obstaclePool == null)
         {
-            Debug.LogError("ObstaclePool이 StageObjectSpawner에 연결되지 않았습니다.");
             return;
         }
 
@@ -241,22 +226,24 @@ public class StageObjectSpawner : MonoBehaviour
         obstaclePool.GetObstacle(spawnPoint.position, spawnPoint.rotation);
     }
 
-    private void SpawnBulletBox(int laneIndex)
+    private void SpawnBulletBox(int laneIndex, float zOffset = 0f)
     {
-        if (laneIndex < 0 || laneIndex >= spawnPoints.Length)
+        if (!IsValidLaneIndex(laneIndex))
         {
             return;
         }
 
         if (bulletBoxPool == null)
         {
-            Debug.LogError("BulletBoxPool이 StageObjectSpawner에 연결되지 않았습니다.");
             return;
         }
 
         Transform spawnPoint = spawnPoints[laneIndex];
 
-        bulletBoxPool.GetBulletBox(spawnPoint.position, spawnPoint.rotation);
+        Vector3 spawnPosition = spawnPoint.position;
+        spawnPosition.z += zOffset;
+
+        bulletBoxPool.GetBulletBox(spawnPosition, spawnPoint.rotation);
     }
 
     private List<int> GetRandomLaneIndices(int count)
@@ -285,30 +272,31 @@ public class StageObjectSpawner : MonoBehaviour
         return lanes;
     }
 
-    private int GetUnusedRandomLane(List<int> usedLanes)
+    private int GetUnusedLaneIndex(List<int> usedLanes)
     {
-        List<int> availableLanes = new List<int>();
+        List<int> unusedLanes = new List<int>();
 
         for (int i = 0; i < spawnPoints.Length; i++)
         {
             if (!usedLanes.Contains(i))
             {
-                availableLanes.Add(i);
+                unusedLanes.Add(i);
             }
         }
 
-        if (availableLanes.Count == 0)
+        if (unusedLanes.Count == 0)
         {
             return -1;
         }
 
-        int index = Random.Range(0, availableLanes.Count);
-        return availableLanes[index];
+        int randomIndex = Random.Range(0, unusedLanes.Count);
+
+        return unusedLanes[randomIndex];
     }
 
-    private int GetCenterLaneIndex()
+    private int GetMiddleLaneIndex()
     {
-        if (spawnPoints == null || spawnPoints.Length == 0)
+        if (!HasSpawnPoints())
         {
             return -1;
         }
@@ -316,13 +304,24 @@ public class StageObjectSpawner : MonoBehaviour
         return spawnPoints.Length / 2;
     }
 
+    private bool HasSpawnPoints()
+    {
+        return spawnPoints != null && spawnPoints.Length > 0;
+    }
+
+    private bool IsValidLaneIndex(int laneIndex)
+    {
+        if (!HasSpawnPoints())
+        {
+            return false;
+        }
+
+        return laneIndex >= 0 && laneIndex < spawnPoints.Length;
+    }
+
     public void StopAndClearStageObjects()
     {
-        if (spawnRoutine != null)
-        {
-            StopCoroutine(spawnRoutine);
-            spawnRoutine = null;
-        }
+        StopSpawnLoop();
 
         StageObjectMover[] movers = FindObjectsByType<StageObjectMover>(FindObjectsSortMode.None);
 
@@ -336,8 +335,7 @@ public class StageObjectSpawner : MonoBehaviour
             movers[i].gameObject.SetActive(false);
         }
 
+        // 보스 등장 전 일반 스테이지 오브젝트 스폰을 완전히 멈춤
         enabled = false;
-
-        Debug.Log("Stage Objects Cleared");
     }
 }

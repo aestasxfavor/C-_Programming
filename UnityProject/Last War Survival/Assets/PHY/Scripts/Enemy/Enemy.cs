@@ -49,8 +49,6 @@ public class Enemy : MonoBehaviour
 
         playerUnitManager.ReduceUnitCount(collisionDamage);
 
-        //Debug.Log($"Enemy hit player unit. Damage: {collisionDamage}");
-
         gameObject.SetActive(false);
     }
 

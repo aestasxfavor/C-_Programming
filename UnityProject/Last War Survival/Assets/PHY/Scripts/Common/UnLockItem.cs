@@ -1,17 +1,17 @@
 using UnityEngine;
 
-public class UnLockItem : MonoBehaviour
+public class UnlockItem : MonoBehaviour
 {
-    private bool hasCollected;
+    private bool isCollected;
 
     private void OnEnable()
     {
-        hasCollected = false;
+        isCollected = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasCollected)
+        if (isCollected)
         {
             return;
         }
@@ -23,13 +23,9 @@ public class UnLockItem : MonoBehaviour
             return;
         }
 
-        hasCollected = true;
-
+        isCollected = true;
         attackController.UnlockAttack();
-
-        Debug.Log("Attack Item Collected. Auto attack unlocked.");
 
         gameObject.SetActive(false);
     }
-
 }

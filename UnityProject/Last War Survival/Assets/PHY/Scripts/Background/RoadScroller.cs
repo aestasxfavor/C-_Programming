@@ -8,7 +8,7 @@ public class RoadScroller : MonoBehaviour
     [Header("Scroll Settings")]
     [SerializeField] private float scrollSpeed = 8f;
     [SerializeField] private float chunkLength = 15f;
-    [SerializeField] private float resetZ = -15f;
+    [SerializeField] private float recycleZ = -15f;
 
     [Header("State")]
     [SerializeField] private bool canScroll = true;
@@ -16,6 +16,11 @@ public class RoadScroller : MonoBehaviour
     private void Update()
     {
         if (!canScroll)
+        {
+            return;
+        }
+
+        if (!HasRoadChunks())
         {
             return;
         }
@@ -28,6 +33,11 @@ public class RoadScroller : MonoBehaviour
     {
         for (int i = 0; i < roadChunks.Length; i++)
         {
+            if (roadChunks[i] == null)
+            {
+                continue;
+            }
+
             roadChunks[i].position += Vector3.back * scrollSpeed * Time.deltaTime;
         }
     }
@@ -36,7 +46,12 @@ public class RoadScroller : MonoBehaviour
     {
         for (int i = 0; i < roadChunks.Length; i++)
         {
-            if (roadChunks[i].position.z <= resetZ)
+            if (roadChunks[i] == null)
+            {
+                continue;
+            }
+
+            if (roadChunks[i].position.z <= recycleZ)
             {
                 MoveChunkToFront(roadChunks[i]);
             }
@@ -47,24 +62,35 @@ public class RoadScroller : MonoBehaviour
     {
         float frontZ = GetFrontChunkZ();
 
-        Vector3 newPosition = chunk.position;
-        newPosition.z = frontZ + chunkLength;
-        chunk.position = newPosition;
+        Vector3 nextPosition = chunk.position;
+        nextPosition.z = frontZ + chunkLength;
+
+        chunk.position = nextPosition;
     }
 
     private float GetFrontChunkZ()
     {
-        float maxZ = roadChunks[0].position.z;
+        float frontZ = roadChunks[0].position.z;
 
         for (int i = 1; i < roadChunks.Length; i++)
         {
-            if (roadChunks[i].position.z > maxZ)
+            if (roadChunks[i] == null)
             {
-                maxZ = roadChunks[i].position.z;
+                continue;
+            }
+
+            if (roadChunks[i].position.z > frontZ)
+            {
+                frontZ = roadChunks[i].position.z;
             }
         }
 
-        return maxZ;
+        return frontZ;
+    }
+
+    private bool HasRoadChunks()
+    {
+        return roadChunks != null && roadChunks.Length > 0 && roadChunks[0] != null;
     }
 
     public void StopScroll()

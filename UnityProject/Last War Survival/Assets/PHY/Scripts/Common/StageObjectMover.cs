@@ -4,7 +4,7 @@ public class StageObjectMover : MonoBehaviour
 {
     [Header("Move Settings")]
     [SerializeField] private float moveSpeed = 7f;
-    [SerializeField] private float disableZ = -8f;
+    [SerializeField] private float deactiveZ = -8f;
 
     private bool canMove = true;
 
@@ -22,7 +22,7 @@ public class StageObjectMover : MonoBehaviour
 
         transform.position += Vector3.back * moveSpeed * Time.deltaTime;
 
-        if (transform.position.z <= disableZ)
+        if (transform.position.z <= deactiveZ)
         {
             gameObject.SetActive(false);
         }

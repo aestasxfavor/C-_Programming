@@ -7,7 +7,7 @@ public class BulletBoxPool : MonoBehaviour
     [SerializeField] private GameObject bulletBoxPrefab;
     [SerializeField] private int poolSize = 1;
 
-    private readonly List<GameObject> pool = new();
+    private readonly List<GameObject> pooledBulletBoxes = new List<GameObject>();
 
     private void Awake()
     {
@@ -16,6 +16,12 @@ public class BulletBoxPool : MonoBehaviour
 
     private void CreatePool()
     {
+        if (bulletBoxPrefab == null)
+        {
+            return;
+        }
+
+        // 시작 아이템은 자주 생성되지 않지만, 풀링 구조를 맞추기 위해 미리 생성
         for (int i = 0; i < poolSize; i++)
         {
             CreateBulletBox();
@@ -25,8 +31,9 @@ public class BulletBoxPool : MonoBehaviour
     private GameObject CreateBulletBox()
     {
         GameObject bulletBox = Instantiate(bulletBoxPrefab, transform);
+
         bulletBox.SetActive(false);
-        pool.Add(bulletBox);
+        pooledBulletBoxes.Add(bulletBox);
 
         return bulletBox;
     }
@@ -54,11 +61,11 @@ public class BulletBoxPool : MonoBehaviour
 
     private GameObject GetInactiveBulletBox()
     {
-        foreach (GameObject bulletBox in pool)
+        for (int i = 0; i < pooledBulletBoxes.Count; i++)
         {
-            if (!bulletBox.activeInHierarchy)
+            if (!pooledBulletBoxes[i].activeSelf)
             {
-                return bulletBox;
+                return pooledBulletBoxes[i];
             }
         }
 

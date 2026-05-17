@@ -5,22 +5,22 @@ public class Gate : MonoBehaviour
 {
     [Header("Gate Settings")]
     [SerializeField] private GateType gateType;
-    [SerializeField] private int value = 1;
+    [SerializeField] private int gateValue = 1;
 
     [Header("References")]
-    [SerializeField] private TextMeshPro operationText;
+    [SerializeField] private TextMeshPro gateText;
 
-    private bool isUsed;
+    private bool hasTriggered;
 
     private void OnEnable()
     {
-        isUsed = false;
+        hasTriggered = false;
         UpdateGateText();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (isUsed)
+        if (hasTriggered)
         {
             return;
         }
@@ -32,54 +32,55 @@ public class Gate : MonoBehaviour
             return;
         }
 
-        isUsed = true;
+        hasTriggered = true;
 
-        playerUnitManager.ApplyGate(gateType, value);
+        playerUnitManager.ApplyGate(gateType, gateValue);
 
-        DisableGateSet();
-    }
-
-    private void DisableGateSet()
-    {
-        StageObjectMover gateSetMover = GetComponentInParent<StageObjectMover>();
-
-        if (gateSetMover != null)
-        {
-            gateSetMover.gameObject.SetActive(false);
-            return;
-        }
-
-        transform.root.gameObject.SetActive(false);
+        DisableGateGroup();
     }
 
     private void UpdateGateText()
     {
-        if (operationText == null)
+        if (gateText == null)
         {
             return;
         }
 
-        operationText.text = GetOperationText();
+        gateText.text = GetGateText();
     }
 
-    private string GetOperationText()
+    private string GetGateText()
     {
         switch (gateType)
         {
             case GateType.Plus:
-                return $"+{value}";
+                return $"+{gateValue}";
 
             case GateType.Minus:
-                return $"-{value}";
+                return $"-{gateValue}";
 
             case GateType.Multiply:
-                return $"×{value}";
+                return $"×{gateValue}";
 
             case GateType.Divide:
-                return $"÷{value}";
+                return $"÷{gateValue}";
 
             default:
                 return "";
         }
+    }
+
+    private void DisableGateGroup()
+    {
+        StageObjectMover gateGroupMover = GetComponentInParent<StageObjectMover>();
+
+        if (gateGroupMover != null)
+        {
+            // 자식 게이트만 끄면 풀 재사용 때 한쪽 게이트만 남을 수 있음
+            gateGroupMover.gameObject.SetActive(false);
+            return;
+        }
+
+        transform.root.gameObject.SetActive(false);
     }
 }

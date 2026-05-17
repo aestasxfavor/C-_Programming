@@ -66,8 +66,6 @@ public class Bullet : MonoBehaviour
 
         targetHealth.TakeDamage(damage);
 
-        //Debug.Log($"Bullet Hit: {other.name}, Damage: {damage}");
-
         ReturnToPool();
     }
 
