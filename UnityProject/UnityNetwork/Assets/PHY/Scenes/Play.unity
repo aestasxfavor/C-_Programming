@@ -2415,7 +2415,7 @@ MonoBehaviour:
   btnSendMsg: {fileID: 618359625}
   inputFieldMsg: {fileID: 1045665049}
   messeageText: {fileID: 323601593}
-  IPAddress: 127.0.0.1
+  IpAddress: 127.0.0.1
   portNumber: 7777
 --- !u!1 &1806470362
 GameObject:
