@@ -15,8 +15,8 @@ using System.IO;
 [Serializable]
 public class DataClass
 {
-    public string name;
-    public string message;
+    public string Name;
+    public string Msg;
 }
 
 public class TCPChatManager : MonoBehaviour
@@ -24,12 +24,13 @@ public class TCPChatManager : MonoBehaviour
     [SerializeField] private Button btnServer;
     [SerializeField] private Button btnClient;
     [SerializeField] private Button btnSendMsg;
+    [SerializeField] private Button btnDisconnectMsg;
     [SerializeField] private TMP_InputField inputFieldMsg;
     [SerializeField] private TextMeshProUGUI messeageText;
 
     [SerializeField] private string IpAddress = "127.0.0.1"; // 나 자신의 ip 주소
     [SerializeField] private int portNumber = 7777;         // 테스트를 하기위한 고유 포트 번호
-    
+
     // 서버를 열고 클라가 접속하고 연결하는 통로
     private TcpClient client;
     private TcpListener listener;
@@ -43,22 +44,34 @@ public class TCPChatManager : MonoBehaviour
     private bool isConnect = false;
     private bool isRunning = false;
 
-    private void Awake()
+    [SerializeField] private string myName;
+
+    private void OnEnable()
     {
         btnServer.onClick.AddListener(() => { _ = StartServerAsync(); });
         btnClient.onClick.AddListener(() => { _ = ConnectClientAsync(); });
-        
+        btnSendMsg.onClick.AddListener(SendDataEvent);
+        inputFieldMsg.onSubmit.AddListener((s) => { SendDataEvent(); });
+    }
+
+    private void OnDisable()
+    {
+        btnServer.onClick.RemoveAllListeners();
+        btnClient.onClick.RemoveAllListeners();
+        btnDisconnectMsg.onClick.RemoveAllListeners();
+        inputFieldMsg.onSubmit.RemoveAllListeners();
     }
 
     // 서버를 열어서 대기함
     private async Task StartServerAsync()
     {
-       
+
         if (isRunning) return;
         isRunning = true;
 
         try
         {
+            myName = "서버";
             // 소켓 생성에서 바인딩까지
             listener = new TcpListener(IPAddress.Parse(IpAddress), portNumber);
             listener.Start();
@@ -66,14 +79,16 @@ public class TCPChatManager : MonoBehaviour
 
             // 연결 대기 
             client = await listener.AcceptTcpClientAsync(); // 메인이 아닌 서버에서 대기한다.
-            
+
             // 연결 완료하고 연결통로 받기
             stream = client.GetStream();    // 연결을 받아온다.
             AppendMessage("유저와 연결 완료 되었습니다.");
-            
+            isConnect = true;
+
             // 데이터를 읽고 쓰기 위해, 데이터를 송수신하기위해 미리 세팅함
             reader = new StreamReader(stream, Encoding.UTF8);
             writer = new StreamWriter(stream, Encoding.UTF8);
+            writer.AutoFlush = true;
 
             // 상대가 보내는 데이터를 받기 위해 비동기 함수로 호출
             await RecieveDataAsync();
@@ -88,29 +103,113 @@ public class TCPChatManager : MonoBehaviour
     // 서버에 접속하는 비동기 함수
     private async Task ConnectClientAsync()
     {
+        if (isRunning) return;
+        isRunning = true;
+
+        try
+        {
+            myName = "클라";
+            client = new TcpClient();
+
+            AppendMessage("서버에 연결중입니다.");
+            await client.ConnectAsync(IpAddress, portNumber);
+
+            stream = client.GetStream();
+            AppendMessage("서버와 연결 되었습니다.");
+            isConnect = true;
+
+            reader = new StreamReader(stream, Encoding.UTF8);
+            writer = new StreamWriter(stream, Encoding.UTF8);
+            writer.AutoFlush = true;
+
+            await RecieveDataAsync();
+        }
+        catch (Exception e)
+        {
+            AppendMessage(e);
+        }
 
     }
 
     // 데이터를 수신하는 비동기 함수
     private async Task RecieveDataAsync()
     {
+        while (reader != null)
+        {
+            string json = await reader.ReadLineAsync();
 
+            DataClass recieveData = JsonUtility.FromJson<DataClass>(json);
+            AppendMessage(recieveData.Name + " : " + recieveData.Msg);
+        }
+    }
+
+    private void SendDataEvent()
+    {
+        if (inputFieldMsg.text == "") return;
+
+        DataClass dataClass = new();
+
+        dataClass.Name = myName;
+        dataClass.Msg = inputFieldMsg.text;
+        inputFieldMsg.text = "";
+
+        _ = SendDataAsync(dataClass);
     }
 
     // 데이터를 송신하는 비동기 함수
     private async Task SendDataAsync(DataClass data)
     {
+        string json = JsonUtility.ToJson(data);
+        await writer.WriteLineAsync(json);
+        AppendMessage(data.Name + " : " + data.Msg);
+    }
 
+    private void CloseConnect()
+    {
+        if (!isRunning) return;
+
+        isRunning = false;
+
+        if (listener != null) { listener.Stop(); listener = null; }
+
+
+        if (client != null)
+        {
+            client.Close();
+            client = null;
+        }
+
+        if (stream != null)
+        {
+            stream.Close();
+            stream = null;
+        }
+
+        if (reader != null)
+        {
+            reader.Close();
+            reader = null;
+        }
+
+        if (writer != null)
+        {
+            writer.Close();
+            writer = null;
+        }
+
+        AppendMessage("연결을 종료하였습니다.");
     }
 
     private void AppendMessage(string s)
     {
         Debug.Log(s);
+        messeageText.text += "\n" + s;
     }
 
     private void AppendMessage(Exception e)
     {
         Debug.LogException(e);
+        messeageText.text += "\n" + e;
     }
 
 
