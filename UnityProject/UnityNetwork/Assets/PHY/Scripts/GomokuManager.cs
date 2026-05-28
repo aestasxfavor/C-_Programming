@@ -8,36 +8,91 @@ public enum StoneType
     white
 }
 
+public enum GameModeType
+{
+    single = 0,
+    multi
+}
+
+public enum MyStoneType
+{
+    black = 0,
+    white
+}
+
+
+
 public class GomokuManager : MonoBehaviour
 {
+    private static GomokuManager instance;
+    public static GomokuManager Instance { get { return instance; } }
+
 
     public GameObject stonePF;
 
-    private bool blackTurn;
+    private bool blackTurn = true;
 
     private StoneType[,] stones = new StoneType[19, 19];
+    //private GameModeType gameMode = GameModeType.single;
+    //public GameModeType GameMode { get { return gameMode; }  set { gameMode = value; } }
+    public GameModeType GameMode { get; set; }
 
+    public MyStoneType MyStone { get; set; }
+
+
+
+    public bool IsRunning { get; set; }
+
+
+    private void Awake()
+    {
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(this.gameObject);
+    }
 
     private void Update()
     {
+        if (!IsRunning)
+            return;
+
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 Pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             int x = Mathf.RoundToInt(Pos.x);
             int y = Mathf.RoundToInt(Pos.y);
 
+            // 바둑판 영역 밖이면 돌을 두지 않고 리턴한다.
             if (x < 0 || x >= 19 || y < 0 || y >= 19)
                 return;
-            if (stones[x, y] == StoneType.empty)
-            {
-                PutStone(x, y);
-            }
 
+
+            if (GameMode == GameModeType.single)
+            {
+                if (stones[x, y] == StoneType.empty)
+                {
+                    PutStone(x, y);
+                }
+            }
+            else if (GameMode == GameModeType.multi)
+            {
+                // 너의 턴이 아니기에 리턴한다.
+                if ((MyStone == MyStoneType.black && !blackTurn) ||
+                    (MyStone == MyStoneType.white && blackTurn))
+                    return;
+
+                if (stones[x, y] == StoneType.empty)
+                {
+                    PutStone(x, y);
+                    ChatManager.Instance.SendGomokuDataEvent(x, y);
+                }
+            }
 
         }
     }
 
-    private void PutStone(int _x, int _y)
+    public void PutStone(int _x, int _y)
     {
         GameObject stone = Instantiate(stonePF, new Vector3(_x, _y, 0f), Quaternion.identity);
         stone.GetComponent<Stone>().SetInit(blackTurn);
@@ -76,10 +131,12 @@ public class GomokuManager : MonoBehaviour
     private int GetCheckCount(int _x, int _y, int _dirX, int _dirY, StoneType _putStone)
     {
         int count = 0;
-        int dx = _x + _dirX;
-        int dy = _y + _dirY;
-        while (dx >= 0)
+        int dx = _x;
+        int dy = _y;
+        while (true)
         {
+            dx += _dirX;
+            dy += _dirY;
             //영역 밖으로 나가면 반복문 끝낸다.
             if (dx < 0 || dx >= 19 || dy < 0 || dy >= 19)
                 break;
@@ -88,8 +145,6 @@ public class GomokuManager : MonoBehaviour
                 count++;
             else
                 break;
-            dx += _dirX;
-            dy += _dirY;
         }
         return count;
     }
@@ -97,6 +152,7 @@ public class GomokuManager : MonoBehaviour
     {
         string str = blackTurn ? "흑돌의 승리입니다." : "백돌의 승리입니다.";
         Debug.Log(str);
+        IsRunning = false;
     }
 
 }

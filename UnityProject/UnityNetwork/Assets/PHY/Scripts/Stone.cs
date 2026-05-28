@@ -2,20 +2,15 @@ using UnityEngine;
 
 public class Stone : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    // 흑돌과 백돌의 색 머터리얼
+    public Material[] colorMaterials;
+    public bool SetInit(bool isBlack)
     {
-        
-    }
+        Material[] mats = new Material[1];
+        mats[0] = colorMaterials[isBlack ? 0 : 1];
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+        GetComponent<MeshRenderer>().materials = mats;
 
-    public bool SetInit(bool blackTurn)
-    {
-        return blackTurn;
+        return isBlack;
     }
 }
