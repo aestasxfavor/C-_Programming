@@ -172,6 +172,12 @@ public class BoardView : MonoBehaviour
     #region 함선 배치
     public void SelectShip(int shipID)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배 선택 불가");
+            return;
+        }
+
         Debug.Log($"[BoardView] SelectShip 호출됨: {shipID}");
 
         if (ships == null)
@@ -272,6 +278,12 @@ public class BoardView : MonoBehaviour
 
     public bool TryPlaceSelectedShipAt(BoardCell cell)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 불가");
+            return false;
+        }
+
         if (cell == null)
         {
             return false;
@@ -311,6 +323,12 @@ public class BoardView : MonoBehaviour
     // 함선 클릭 후 배치
     private void OnClickCell(BoardCell cell)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 불가");
+            return;
+        }
+
         CellState state = boardStates[cell.X, cell.Y];
 
         Debug.Log($"Clicked Cell: X={cell.X}, Y={cell.Y}, State={cell.State}");
@@ -328,6 +346,12 @@ public class BoardView : MonoBehaviour
     {
         if (selectedShipID == -1)
         {
+            return;
+        }
+
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 불가");
             return;
         }
 
@@ -576,6 +600,12 @@ public class BoardView : MonoBehaviour
 
     private void SelectPlacedShipFromBoard(int x, int y)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 불가");
+            return;
+        }
+
         int shipID = shipIDByCell[x, y];
 
         if (shipID < 0 || shipID >= ships.Length)
@@ -631,6 +661,12 @@ public class BoardView : MonoBehaviour
 
     private void OnDropCell(BoardCell cell, PointerEventData eventData)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 불가");
+            return;
+        }
+
         if (eventData.pointerDrag == null)
         {
             return;
@@ -754,7 +790,7 @@ public class BoardView : MonoBehaviour
         previewPositions.Clear();
     }
 
-    private bool IsAllShipsPlaced()
+    public bool IsAllShipsPlaced()
     {
         for (int i = 0; i < ships.Length; i++)
         {
@@ -777,15 +813,9 @@ public class BoardView : MonoBehaviour
         readyButton.interactable = IsAllShipsPlaced();
     }
 
-    public void OnClickReady()
+    private bool IsPlacementLocked()
     {
-        if (!IsAllShipsPlaced())
-        {
-            Debug.LogWarning("[BoardView] 아직 모든 배가 배치되지 않았음.");
-            return;
-        }
-
-        Debug.Log("[BoardView] Ready 완료");
+        return GameManager.Instance != null && GameManager.Instance.IsPlacementLocked;
     }
 
     #region 상대 보드 UI 표시 / 상대 보드 클릭 좌표 변환

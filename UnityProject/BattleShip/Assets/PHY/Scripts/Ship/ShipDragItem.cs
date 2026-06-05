@@ -25,8 +25,19 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
     }
 
+    private bool IsPlacementLocked()
+    {
+        return GameManager.Instance != null && GameManager.Instance.IsPlacementLocked;
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 드래그 시작 불가");
+            return;
+        }
+
         isDroppedSuccessfully = false;
         startAnchoredPosition = rectTransform.anchoredPosition;
 
@@ -38,11 +49,22 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (IsPlacementLocked())
+        {
+            return;
+        }
+
         rectTransform.anchoredPosition += eventData.delta / rootCanvas.scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (IsPlacementLocked())
+        {
+            canvasGroup.blocksRaycasts = true;
+            return;
+        }
+
         canvasGroup.blocksRaycasts = true;
 
         if (isDroppedSuccessfully)
