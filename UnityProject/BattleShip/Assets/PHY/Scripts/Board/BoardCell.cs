@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IDropHandler
 {
     [SerializeField] private Image backgroundImage;
     [SerializeField] private TMP_Text markText;     // x, o Ç¥½Ã
@@ -13,6 +13,7 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
     private Action<BoardCell> onRightClick;
     private Action<BoardCell> onPointerEnter;
     private Action<BoardCell> onPointerExit;
+    private Action<BoardCell, PointerEventData> onDrop;
 
     public int X {  get; private set; }
     public int Y { get; private set; }
@@ -21,7 +22,8 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
 
     public void Init(int x, int y, 
         Action<BoardCell> _onLeftClick, Action<BoardCell> _onRightClick,
-        Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPoinerExit)
+        Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPoinerExit,
+        Action<BoardCell, PointerEventData> _onDrop)
     {
         X = x;
         Y = y;
@@ -30,6 +32,7 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
         onRightClick = _onRightClick;
         onPointerEnter = _onPointerEnter;
         onPointerExit = _onPoinerExit;
+        onDrop = _onDrop;
 
         SetState(CellState.Empty);
     }
@@ -54,6 +57,11 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
     public void OnPointerExit(PointerEventData eventData)
     {
         onPointerExit?.Invoke(this);
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        onDrop?.Invoke(this, eventData);
     }
 
     public void SetState(CellState state)
@@ -82,5 +90,5 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
         }
     }
 
-    
+  
 }

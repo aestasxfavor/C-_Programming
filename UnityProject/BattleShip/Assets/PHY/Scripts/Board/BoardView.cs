@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class BoardView : MonoBehaviour
 {
@@ -31,6 +32,8 @@ public class BoardView : MonoBehaviour
     private ShipData[] ships;
     private int selectedShipID = -1;
     private int selectedShipSize = 0;
+
+    [SerializeField] private Button readyButton;
 
     private ShipDirection currentDirection = ShipDirection.Horizontal;
 
@@ -89,6 +92,8 @@ public class BoardView : MonoBehaviour
         InitBoardState();
         ApplyLandTiles();
         RefreshCells();
+
+        UpdateReadyButton();
     }
 
     private void CreateBoard()
@@ -103,7 +108,7 @@ public class BoardView : MonoBehaviour
 
                 cell.gameObject.SetActive(true);
 
-                cell.Init(x, y, OnClickCell, OnRightClickCell, OnPointerEnterCell, OnPointerExitCell);
+                cell.Init(x, y, OnClickCell, OnRightClickCell, OnPointerEnterCell, OnPointerExitCell, OnDropCell);
 
                 cells[x, y] = cell;
             }
@@ -265,6 +270,43 @@ public class BoardView : MonoBehaviour
         return x >= 0 && x < BoardSize && y >= 0 && y < BoardSize;
     }
 
+    public bool TryPlaceSelectedShipAt(BoardCell cell)
+    {
+        if (cell == null)
+        {
+            return false;
+        }
+
+        if (selectedShipID == -1)
+        {
+            Debug.LogWarning("[경고] 함선을 먼저 선택해야 함");
+            return false;
+        }
+
+        Vector2Int startPosition = GetClampedStartPosition(
+            cell.X,
+            cell.Y,
+            selectedShipSize,
+            currentDirection
+        );
+
+        List<Vector2Int> positions = GetShipPositions(
+            startPosition.x,
+            startPosition.y,
+            selectedShipSize,
+            currentDirection
+        );
+
+        if (!CanPlaceShip(positions))
+        {
+            return false;
+        }
+
+        ClearPreview();
+        PlaceShip(selectedShipID, positions);
+
+        return true;
+    }
 
     // 함선 클릭 후 배치
     private void OnClickCell(BoardCell cell)
@@ -279,28 +321,7 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        if(selectedShipID == -1)
-        {
-            Debug.LogWarning("[경고] 함선을 먼저 선택해야 함");
-            return;
-        }
-
-        Debug.Log($"[BoardView] 배치 시도: ShipID={selectedShipID}, Size={selectedShipSize}, Direction={currentDirection}");
-
-        Vector2Int startPosition = GetClampedStartPosition(cell.X, cell.Y, 
-            selectedShipSize, currentDirection);
-
-        List<Vector2Int> positions = GetShipPositions(startPosition.x, startPosition.y, 
-            selectedShipSize, currentDirection);
-
-        if (!CanPlaceShip(positions))
-        {
-            return;
-        }
-
-        ClearPreview();
-        PlaceShip(selectedShipID, positions);
-
+        TryPlaceSelectedShipAt(cell);
     }
 
     private void OnRightClickCell(BoardCell cell)
@@ -403,15 +424,15 @@ public class BoardView : MonoBehaviour
                 return false;
             }
 
-            if (isShipSpacingRuleEnabled && IsAdjacentToOtherShip(position, positions))
-            {
-                if(showLog)
-                {
-                Debug.LogWarning($"[BoardView] 배치 실패: 다른 배와 8방향 인접 X={position.x}, Y={position.y}");
+            //if (isShipSpacingRuleEnabled && IsAdjacentToOtherShip(position, positions))
+            //{
+            //    if(showLog)
+            //    {
+            //    Debug.LogWarning($"[BoardView] 배치 실패: 다른 배와 8방향 인접 X={position.x}, Y={position.y}");
 
-                }
-                return false;
-            }
+            //    }
+            //    return false;
+            //}
         }
 
         return true;
@@ -464,13 +485,16 @@ public class BoardView : MonoBehaviour
         ship.positions.AddRange(positions);
         ship.isPlaced = true;
 
+        RebuildBlockedCells();
         RefreshCells();
 
         selectedShipID = -1;
         selectedShipSize = 0;
         currentDirection = ShipDirection.Horizontal;
 
+        UpdateReadyButton();
         Debug.Log($"[BoardView] 배치 완료: ShipID={shipID}, Size={ship.size}");
+
     }
 
     private void RemovePlacedShip(ShipData ship)
@@ -491,9 +515,12 @@ public class BoardView : MonoBehaviour
         ship.positions.Clear();
         ship.isPlaced= false;
 
+        RebuildBlockedCells();
         RefreshCells();
 
+        UpdateReadyButton();
         Debug.Log($"[BoardView] 기존 배 위치 제거: ID={ship.shipID}, Size={ship.size}");
+
     }
 
     // 주변 프리뷰 좌표 구하기
@@ -602,28 +629,31 @@ public class BoardView : MonoBehaviour
         ClearPreview();
     }
 
+    private void OnDropCell(BoardCell cell, PointerEventData eventData)
+    {
+        if (eventData.pointerDrag == null)
+        {
+            return;
+        }
+
+        ShipDragItem dragItem = eventData.pointerDrag.GetComponent<ShipDragItem>();
+
+        if (dragItem == null)
+        {
+            return;
+        }
+
+        bool success = TryPlaceSelectedShipAt(cell);
+
+        if (success)
+        {
+            dragItem.MarkDroppedSuccessfully();
+        }
+    }
+
     private void ShowPreview(List<Vector2Int> positions, bool canPlace)
     {
         previewPositions.Clear();
-
-        List<Vector2Int> aroundPositions = GetAroundShipPositions(positions);
-
-        for (int i = 0; i < aroundPositions.Count; i++)
-        {
-            Vector2Int position = aroundPositions[i];
-
-            if (!IsInsideBoard(position.x, position.y))
-            {
-                continue;
-            }
-
-            previewPositions.Add(position);
-
-            if (spacingPreviewSprite != null)
-            {
-                cells[position.x, position.y].SetSprite(spacingPreviewSprite);
-            }
-        }
 
         Sprite previewSprite = canPlace ? previewShipSprite : invalidPreviewSprite;
 
@@ -646,6 +676,67 @@ public class BoardView : MonoBehaviour
         }
     }
 
+    private void MarkBlockedAroundShip(List<Vector2Int> shipPositions)
+    {
+        for (int i = 0; i < shipPositions.Count; i++)
+        {
+            Vector2Int shipPosition = shipPositions[i];
+
+            for (int y = -1; y <= 1; y++)
+            {
+                for (int x = -1; x <= 1; x++)
+                {
+                    if (x == 0 && y == 0)
+                    {
+                        continue;
+                    }
+
+                    int checkX = shipPosition.x + x;
+                    int checkY = shipPosition.y + y;
+
+                    if (!IsInsideBoard(checkX, checkY))
+                    {
+                        continue;
+                    }
+
+                    if (boardStates[checkX, checkY] == CellState.Empty)
+                    {
+                        boardStates[checkX, checkY] = CellState.Blocked;
+                    }
+                }
+            }
+        }
+    }
+
+    private void ClearBlockedCells()
+    {
+        for (int y = 0; y < BoardSize; y++)
+        {
+            for (int x = 0; x < BoardSize; x++)
+            {
+                if (boardStates[x, y] == CellState.Blocked)
+                {
+                    boardStates[x, y] = CellState.Empty;
+                }
+            }
+        }
+    }
+
+    private void RebuildBlockedCells()
+    {
+        ClearBlockedCells();
+
+        for (int i = 0; i < ships.Length; i++)
+        {
+            if (!ships[i].isPlaced)
+            {
+                continue;
+            }
+
+            MarkBlockedAroundShip(ships[i].positions);
+        }
+    }
+
     private void ClearPreview()
     {
         for (int i = 0; i < previewPositions.Count; i++)
@@ -663,6 +754,39 @@ public class BoardView : MonoBehaviour
         previewPositions.Clear();
     }
 
+    private bool IsAllShipsPlaced()
+    {
+        for (int i = 0; i < ships.Length; i++)
+        {
+            if (!ships[i].isPlaced)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void UpdateReadyButton()
+    {
+        if (readyButton == null)
+        {
+            return;
+        }
+
+        readyButton.interactable = IsAllShipsPlaced();
+    }
+
+    public void OnClickReady()
+    {
+        if (!IsAllShipsPlaced())
+        {
+            Debug.LogWarning("[BoardView] 아직 모든 배가 배치되지 않았음.");
+            return;
+        }
+
+        Debug.Log("[BoardView] Ready 완료");
+    }
 
     #region 상대 보드 UI 표시 / 상대 보드 클릭 좌표 변환
     // Todo : 나중에 기본적인 시스템이 안정화 된 이후 작업예정
