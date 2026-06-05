@@ -1,16 +1,19 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-public class ShipData : MonoBehaviour
+[System.Serializable]
+public class ShipData
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public int shipID;
+    public int size;
+    public List<Vector2Int> positions = new List<Vector2Int>();
+    public bool isPlaced;
+
+    public ShipData(int _shipID, int _size)
     {
-        
+        shipID = _shipID;
+        size = _size;
+        isPlaced = false;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

@@ -1,36 +1,59 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class BoardCell : MonoBehaviour
+public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image backgroundImage;
     [SerializeField] private TMP_Text markText;     // x, o 표시
-    [SerializeField] private Button button;         // 마우스 클릭으로 판단
+
+    private Action<BoardCell> onLeftClick;
+    private Action<BoardCell> onRightClick;
+    private Action<BoardCell> onPointerEnter;
+    private Action<BoardCell> onPointerExit;
 
     public int X {  get; private set; }
     public int Y { get; private set; }
 
     public CellState State { get; private set; }
 
-    private Action<BoardCell> onClick;
-
-    public void Init(int x, int y, Action<BoardCell> _onClick)
+    public void Init(int x, int y, 
+        Action<BoardCell> _onLeftClick, Action<BoardCell> _onRightClick,
+        Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPoinerExit)
     {
         X = x;
         Y = y;
-        onClick = _onClick;
-
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(HandleClick);
+        
+        onLeftClick = _onLeftClick;
+        onRightClick = _onRightClick;
+        onPointerEnter = _onPointerEnter;
+        onPointerExit = _onPoinerExit;
 
         SetState(CellState.Empty);
     }
 
-    private void HandleClick()
+    public void OnPointerClick(PointerEventData eventData)
     {
-        onClick?.Invoke(this);
+        if(eventData.button == PointerEventData.InputButton.Left)
+        {
+            onLeftClick?.Invoke(this);
+        }
+        else
+        {
+            onRightClick?.Invoke(this);
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+       onPointerEnter?.Invoke(this);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        onPointerExit?.Invoke(this);
     }
 
     public void SetState(CellState state)
@@ -58,4 +81,6 @@ public class BoardCell : MonoBehaviour
             markText.text = mark;
         }
     }
+
+    
 }
