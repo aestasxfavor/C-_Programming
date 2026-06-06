@@ -10,3 +10,11 @@ public enum CellState
     Miss        // ºø³ª°¨ ¤·
 }
 
+public enum AttackResult
+{
+    Invalid,
+    Hit,
+    Miss,
+    Sunk,
+    GameOver
+}
