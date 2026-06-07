@@ -1,8 +1,12 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    #region Inspector Fields
 
     [Header("게임 상태")]
     [SerializeField] private GameState gameState = GameState.None;
@@ -31,9 +35,39 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool isWaitingResult;
     [SerializeField] private bool isGameOver;
 
+    [Header("재시작 상태")]
+    [SerializeField] private bool isMyReplayReady;
+    [SerializeField] private bool isOpponentReplayReady;
+
+    [Header("게임 종료 UI")]
+    [SerializeField] private GameObject winCanvas;
+    [SerializeField] private GameObject loseCanvas;
+
+    [Header("턴 시간 제한")]
+    [SerializeField] private float turnTimeLimit = 15f;
+    [SerializeField] private float turnTimer;
+    [SerializeField] private bool isTurnTimerRunning;
+
+    [Header("턴 시간 UI")]
+    [SerializeField] private TextMeshProUGUI turnTimerText;
+
+    [Header("씬 이름")]
+    [SerializeField] private string titleSceneName = "Title";
+    [SerializeField] private string battleSceneName = "Game";
+
+    [SerializeField] private bool isPendingReadySend;
+
+    #endregion
+
+    #region Properties
+
     public bool IsPlacementLocked => isPlacementLocked;
     public bool IsBattle => gameState == GameState.Battle;
     public GameState CurrentState => gameState;
+
+    #endregion
+
+    #region Unity Event Methods
 
     private void Awake()
     {
@@ -51,9 +85,21 @@ public class GameManager : MonoBehaviour
         gameState = GameState.Placement;
 
         ShowPlacementUI();
+        HideGameOverUI();
+        UpdateTurnTimerUI();
 
         Debug.Log("[GameManager] Placement 단계 시작");
     }
+
+    private void Update()
+    {
+        UpdateTurnTimer();
+        TrySendPendingReady();
+    }
+
+    #endregion
+
+    #region Ready Flow
 
     public void OnClickReadyButton()
     {
@@ -87,7 +133,63 @@ public class GameManager : MonoBehaviour
 
         gameState = GameState.WaitingReady;
 
+        if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
+        {
+            TrySendPacket(PacketProtocol.READY);
+            isPendingReadySend = false;
+
+            Debug.Log("[Ready] READY 패킷 즉시 전송");
+        }
+        else
+        {
+            isPendingReadySend = true;
+
+            Debug.Log("[Ready] TCP 연결 전이라 READY 패킷 전송 예약");
+        }
+
+        TryStartBattle();
+    }
+
+    private void OnOpponentReady()
+    {
+        if (isOpponentReady)
+        {
+            return;
+        }
+
+        isOpponentReady = true;
+
+        Debug.Log("[Ready] 상대 Ready 수신");
+
+        TryStartBattle();
+    }
+
+    private void TrySendPendingReady()
+    {
+        if (!isPendingReadySend)
+        {
+            return;
+        }
+
+        if (useLocalBattleTest)
+        {
+            return;
+        }
+
+        if (!isMyReady)
+        {
+            return;
+        }
+
+        if (TCPManager.Instance == null || !TCPManager.Instance.IsConnected)
+        {
+            return;
+        }
+
         TrySendPacket(PacketProtocol.READY);
+        isPendingReadySend = false;
+
+        Debug.Log("[Ready] 예약된 READY 패킷 전송 완료");
 
         TryStartBattle();
     }
@@ -102,6 +204,61 @@ public class GameManager : MonoBehaviour
 
         return myBoardView.IsAllShipsPlaced();
     }
+
+    private void TryStartBattle()
+    {
+        if (!isMyReady)
+        {
+            Debug.Log("[Ready] 내 Ready 대기 중");
+            return;
+        }
+
+        if (!isOpponentReady)
+        {
+            Debug.Log("[Ready] 상대 Ready 대기 중");
+            return;
+        }
+
+        if (gameState == GameState.Battle)
+        {
+            return;
+        }
+
+        gameState = GameState.Battle;
+
+        isGameOver = false;
+        isWaitingResult = false;
+        isMyReplayReady = false;
+        isOpponentReplayReady = false;
+
+        if (useLocalBattleTest)
+        {
+            isMyTurn = true;
+        }
+        else
+        {
+            isMyTurn = TCPManager.Instance != null && TCPManager.Instance.IsHost;
+        }
+
+        ShowBattleUI();
+
+        Debug.Log("[Battle] 양쪽 Ready 완료, 전투 단계 진입");
+
+        if (isMyTurn)
+        {
+            Debug.Log("[Turn] 내 턴 시작");
+            StartTurnTimer();
+        }
+        else
+        {
+            Debug.Log("[Turn] 상대 턴 대기");
+            StopTurnTimer();
+        }
+    }
+
+    #endregion
+
+    #region Packet Receive Flow
 
     public void OnReceivePacket(string packet)
     {
@@ -132,135 +289,22 @@ public class GameManager : MonoBehaviour
                 OnReceiveGameOverPacket();
                 break;
 
+            case PacketProtocol.TURN_TIMEOUT:
+                OnReceiveTurnTimeoutPacket();
+                break;
+
+            case PacketProtocol.REPLAY_READY:
+                OnReceiveReplayReadyPacket();
+                break;
+
+            case PacketProtocol.LEAVE:
+                OnReceiveLeavePacket();
+                break;
+
             default:
                 Debug.LogWarning($"[Packet] 알 수 없는 패킷: {packet}");
                 break;
         }
-    }
-
-    private void OnOpponentReady()
-    {
-        if (isOpponentReady)
-        {
-            return;
-        }
-
-        isOpponentReady = true;
-
-        Debug.Log("[Ready] 상대 Ready 수신");
-
-        TryStartBattle();
-    }
-
-    private void TryStartBattle()
-    {
-        if (!isMyReady)
-        {
-            Debug.Log("[Ready] 내 Ready 대기 중");
-            return;
-        }
-
-        if (!isOpponentReady)
-        {
-            Debug.Log("[Ready] 상대 Ready 대기 중");
-            return;
-        }
-
-        if (gameState == GameState.Battle)
-        {
-            return;
-        }
-
-        gameState = GameState.Battle;
-
-        isGameOver = false;
-        isWaitingResult = false;
-
-        if (useLocalBattleTest)
-        {
-            isMyTurn = true;
-        }
-        else
-        {
-            isMyTurn = TCPManager.Instance != null && TCPManager.Instance.IsHost;
-        }
-
-        ShowBattleUI();
-
-        Debug.Log("[Battle] 양쪽 Ready 완료, 전투 단계 진입");
-
-        if (isMyTurn)
-        {
-            Debug.Log("[Turn] 내 턴 시작");
-        }
-        else
-        {
-            Debug.Log("[Turn] 상대 턴 대기");
-        }
-    }
-
-    public void TryAttackEnemyBoard(int x, int y)
-    {
-        if (gameState != GameState.Battle)
-        {
-            Debug.Log("[Battle] 전투 단계가 아니라 공격 불가");
-            return;
-        }
-
-        if (isGameOver)
-        {
-            Debug.Log("[Battle] 이미 게임 종료 상태");
-            return;
-        }
-
-        if (enemyBoardView == null)
-        {
-            Debug.LogError("[Battle] enemyBoardView 연결 필요");
-            return;
-        }
-
-        if (!enemyBoardView.CanRequestAttack(x, y))
-        {
-            Debug.Log($"[Battle] 공격 불가 칸 X={x}, Y={y}");
-            return;
-        }
-
-        if (useLocalBattleTest)
-        {
-            AttackResult localResult = enemyBoardView.ReceiveAttack(x, y);
-
-            Debug.Log($"[Battle] 로컬 공격 결과: {localResult}, X={x}, Y={y}");
-
-            if (localResult == AttackResult.GameOver)
-            {
-                SetGameOver(true);
-            }
-
-            return;
-        }
-
-        if (!isMyTurn)
-        {
-            Debug.Log("[Turn] 내 턴이 아니라 공격 불가");
-            return;
-        }
-
-        if (isWaitingResult)
-        {
-            Debug.Log("[Turn] 이전 공격 결과 대기 중");
-            return;
-        }
-
-        string packet = $"{PacketProtocol.ATTACK}|{x}|{y}";
-
-        if (!TrySendPacket(packet))
-        {
-            return;
-        }
-
-        isWaitingResult = true;
-
-        Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
     }
 
     private void OnReceiveAttackPacket(string[] split)
@@ -330,10 +374,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        isMyTurn = true;
         isWaitingResult = false;
 
-        Debug.Log("[Turn] 내 턴 시작");
+        if (result == AttackResult.Miss)
+        {
+            isMyTurn = true;
+
+            Debug.Log("[Turn] 상대 공격이 빗나감, 내 턴 시작");
+
+            StartTurnTimer();
+        }
+        else if (result == AttackResult.Hit || result == AttackResult.Sunk)
+        {
+            isMyTurn = false;
+
+            Debug.Log("[Turn] 상대 공격이 명중함, 상대 턴 유지");
+
+            StopTurnTimer();
+        }
     }
 
     private void OnReceiveResultPacket(string[] split)
@@ -360,7 +418,10 @@ public class GameManager : MonoBehaviour
         if (resultText == "INVALID")
         {
             isMyTurn = true;
+
             Debug.Log("[Result] INVALID 수신, 내 턴 유지");
+
+            StartTurnTimer();
             return;
         }
 
@@ -372,15 +433,29 @@ public class GameManager : MonoBehaviour
 
         enemyBoardView.ApplyAttackResult(x, y, resultText, aroundPositionsText);
 
+
         if (resultText == "GAME_OVER")
         {
             SetGameOver(true);
             return;
         }
 
-        isMyTurn = false;
+        if (resultText == "MISS")
+        {
+            isMyTurn = false;
 
-        Debug.Log("[Turn] 상대 턴 대기");
+            Debug.Log("[Turn] 공격 실패, 상대 턴 대기");
+
+            StopTurnTimer();
+        }
+        else if (resultText == "HIT" || resultText == "SUNK")
+        {
+            isMyTurn = true;
+
+            Debug.Log("[Turn] 공격 성공, 내 턴 유지");
+
+            StartTurnTimer();
+        }
     }
 
     private void OnReceiveGameOverPacket()
@@ -393,50 +468,133 @@ public class GameManager : MonoBehaviour
         SetGameOver(true);
     }
 
-    private string ConvertAttackResultToPacketText(AttackResult result)
+    private void OnReceiveTurnTimeoutPacket()
     {
-        switch (result)
+        if (gameState != GameState.Battle)
         {
-            case AttackResult.Hit:
-                return "HIT";
-
-            case AttackResult.Miss:
-                return "MISS";
-
-            case AttackResult.Sunk:
-                return "SUNK";
-
-            case AttackResult.GameOver:
-                return "GAME_OVER";
-
-            default:
-                return "INVALID";
+            return;
         }
+
+        if (isGameOver)
+        {
+            return;
+        }
+
+        isMyTurn = true;
+        isWaitingResult = false;
+
+        Debug.Log("[TurnTimer] 상대 시간 초과, 내 턴 시작");
+
+        StartTurnTimer();
     }
 
-    private bool TrySendPacket(string packet)
+    private void OnReceiveReplayReadyPacket()
     {
+        if (gameState != GameState.GameOver)
+        {
+            Debug.Log("[Replay] 게임 종료 상태가 아니라 REPLAY_READY 무시");
+            return;
+        }
+
+        if (isOpponentReplayReady)
+        {
+            return;
+        }
+
+        isOpponentReplayReady = true;
+
+        Debug.Log("[Replay] 상대 재시작 Ready 수신");
+
+        TryRestartBattleScene();
+    }
+
+    private void OnReceiveLeavePacket()
+    {
+        Debug.Log("[Network] 상대가 게임에서 나감, 타이틀로 이동");
+
+        StopTurnTimer();
+
+        SceneManager.LoadScene(titleSceneName);
+    }
+
+    #endregion
+
+    #region Attack Flow
+
+    public void TryAttackEnemyBoard(int x, int y)
+    {
+        if (gameState != GameState.Battle)
+        {
+            Debug.Log("[Battle] 전투 단계가 아니라 공격 불가");
+            return;
+        }
+
+        if (isGameOver)
+        {
+            Debug.Log("[Battle] 이미 게임 종료 상태");
+            return;
+        }
+
+        if (enemyBoardView == null)
+        {
+            Debug.LogError("[Battle] enemyBoardView 연결 필요");
+            return;
+        }
+
         if (useLocalBattleTest)
         {
-            Debug.Log($"[Packet Send] 로컬 테스트 모드라 패킷 전송 생략: {packet}");
-            return false;
+            if (!enemyBoardView.CanRequestAttack(x, y))
+            {
+                Debug.Log($"[Battle] 공격 불가 칸 X={x}, Y={y}");
+                return;
+            }
+
+            AttackResult localResult = enemyBoardView.ReceiveAttack(x, y);
+
+            Debug.Log($"[Battle] 로컬 공격 결과: {localResult}, X={x}, Y={y}");
+
+            if (localResult == AttackResult.GameOver)
+            {
+                SetGameOver(true);
+            }
+
+            return;
         }
 
-        if (TCPManager.Instance == null)
+        if (!isMyTurn)
         {
-            Debug.LogWarning($"[Packet Send] TCPManager.Instance 없음: {packet}");
-            return false;
+            Debug.Log("[Turn] 내 턴이 아니라 공격 불가");
+            return;
         }
 
-        if (!TCPManager.Instance.IsConnected)
+        if (isWaitingResult)
         {
-            Debug.LogWarning($"[Packet Send] TCP 연결 안 됨: {packet}");
-            return false;
+            Debug.Log("[Turn] 이전 공격 결과 대기 중");
+            return;
         }
 
-        TCPManager.Instance.Send(packet);
-        return true;
+        if (!enemyBoardView.CanRequestAttack(x, y))
+        {
+            Debug.Log($"[Battle] 공격 불가 칸 X={x}, Y={y}");
+            return;
+        }
+
+        string packet = $"{PacketProtocol.ATTACK}|{x}|{y}";
+
+        if (!TrySendPacket(packet))
+        {
+            return;
+        }
+
+        isWaitingResult = true;
+        StopTurnTimer();
+
+        Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
     }
+
+    #endregion
+
+    #region Game Over Flow
 
     private void SetGameOver(bool isWin)
     {
@@ -444,7 +602,11 @@ public class GameManager : MonoBehaviour
         isMyTurn = false;
         isWaitingResult = false;
 
+        StopTurnTimer();
+
         gameState = GameState.GameOver;
+
+        ShowGameOverUI(isWin);
 
         if (isWin)
         {
@@ -455,6 +617,65 @@ public class GameManager : MonoBehaviour
             Debug.Log("[GameOver] 패배");
         }
     }
+
+    public void OnClickReplayButton()
+    {
+        if (gameState != GameState.GameOver)
+        {
+            Debug.Log("[Replay] 게임 종료 상태가 아니라 재시작 불가");
+            return;
+        }
+
+        if (isMyReplayReady)
+        {
+            Debug.Log("[Replay] 이미 재시작 Ready 상태");
+            return;
+        }
+
+        isMyReplayReady = true;
+
+        Debug.Log("[Replay] 내 재시작 Ready");
+
+        TrySendPacket(PacketProtocol.REPLAY_READY);
+
+        TryRestartBattleScene();
+    }
+
+    public void OnClickExitButton()
+    {
+        Debug.Log("[UI] Exit 버튼 클릭");
+
+        TrySendPacket(PacketProtocol.LEAVE);
+
+        StopTurnTimer();
+
+        SceneManager.LoadScene(titleSceneName);
+    }
+
+    private void TryRestartBattleScene()
+    {
+        if (!isMyReplayReady)
+        {
+            Debug.Log("[Replay] 내 재시작 Ready 대기");
+            return;
+        }
+
+        if (!isOpponentReplayReady)
+        {
+            Debug.Log("[Replay] 상대 재시작 Ready 대기");
+            return;
+        }
+
+        Debug.Log("[Replay] 양쪽 재시작 Ready 완료, BattleScene 재시작");
+
+        StopTurnTimer();
+
+        SceneManager.LoadScene(battleSceneName);
+    }
+
+    #endregion
+
+    #region UI Flow
 
     private void ShowPlacementUI()
     {
@@ -482,6 +703,217 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void HideGameOverUI()
+    {
+        if (winCanvas != null)
+        {
+            winCanvas.SetActive(false);
+        }
+
+        if (loseCanvas != null)
+        {
+            loseCanvas.SetActive(false);
+        }
+    }
+
+    private void ShowGameOverUI(bool isWin)
+    {
+        if (winCanvas != null)
+        {
+            winCanvas.SetActive(isWin);
+        }
+
+        if (loseCanvas != null)
+        {
+            loseCanvas.SetActive(!isWin);
+        }
+    }
+
+    #endregion
+
+    #region Turn Timer Flow
+
+    private void StartTurnTimer()
+    {
+        if (useLocalBattleTest)
+        {
+            return;
+        }
+
+        if (gameState != GameState.Battle)
+        {
+            return;
+        }
+
+        if (isGameOver)
+        {
+            return;
+        }
+
+        if (!isMyTurn)
+        {
+            return;
+        }
+
+        turnTimer = turnTimeLimit;
+        isTurnTimerRunning = true;
+
+        UpdateTurnTimerUI();
+
+        Debug.Log($"[TurnTimer] 턴 타이머 시작: {turnTimeLimit}초");
+    }
+
+    private void StopTurnTimer()
+    {
+        isTurnTimerRunning = false;
+        UpdateTurnTimerUI();
+    }
+
+    private void UpdateTurnTimer()
+    {
+        if (!isTurnTimerRunning)
+        {
+            UpdateTurnTimerUI();
+            return;
+        }
+
+        if (gameState != GameState.Battle)
+        {
+            StopTurnTimer();
+            return;
+        }
+
+        if (isGameOver)
+        {
+            StopTurnTimer();
+            return;
+        }
+
+        if (!isMyTurn)
+        {
+            StopTurnTimer();
+            return;
+        }
+
+        if (isWaitingResult)
+        {
+            UpdateTurnTimerUI();
+            return;
+        }
+
+        turnTimer -= Time.deltaTime;
+        UpdateTurnTimerUI();
+
+        if (turnTimer <= 0f)
+        {
+            OnTurnTimeout();
+        }
+    }
+
+    private void UpdateTurnTimerUI()
+    {
+        if (turnTimerText == null)
+        {
+            return;
+        }
+
+        if (gameState != GameState.Battle || isGameOver)
+        {
+            turnTimerText.text = "";
+            return;
+        }
+
+        if (!isMyTurn)
+        {
+            turnTimerText.text = "상대 턴 대기 중";
+            return;
+        }
+
+        int displayTime = Mathf.CeilToInt(turnTimer);
+        turnTimerText.text = $"남은 시간: {displayTime}";
+    }
+
+    private void OnTurnTimeout()
+    {
+        if (!isMyTurn)
+        {
+            return;
+        }
+
+        if (isWaitingResult)
+        {
+            return;
+        }
+
+        Debug.Log("[TurnTimer] 제한 시간 초과, 턴 넘김");
+
+        isMyTurn = false;
+        isWaitingResult = false;
+
+        StopTurnTimer();
+
+        TrySendPacket(PacketProtocol.TURN_TIMEOUT);
+
+        Debug.Log("[Turn] 시간 초과로 상대 턴 대기");
+    }
+
+    #endregion
+
+    #region Network Send Flow
+
+    private bool TrySendPacket(string packet)
+    {
+        if (useLocalBattleTest)
+        {
+            Debug.Log($"[Packet Send] 로컬 테스트 모드라 패킷 전송 생략: {packet}");
+            return false;
+        }
+
+        if (TCPManager.Instance == null)
+        {
+            Debug.LogWarning($"[Packet Send] TCPManager.Instance 없음: {packet}");
+            return false;
+        }
+
+        if (!TCPManager.Instance.IsConnected)
+        {
+            Debug.LogWarning($"[Packet Send] TCP 연결 안 됨: {packet}");
+            return false;
+        }
+
+        TCPManager.Instance.Send(packet);
+        return true;
+    }
+
+    #endregion
+
+    #region Utility
+
+    private string ConvertAttackResultToPacketText(AttackResult result)
+    {
+        switch (result)
+        {
+            case AttackResult.Hit:
+                return "HIT";
+
+            case AttackResult.Miss:
+                return "MISS";
+
+            case AttackResult.Sunk:
+                return "SUNK";
+
+            case AttackResult.GameOver:
+                return "GAME_OVER";
+
+            default:
+                return "INVALID";
+        }
+    }
+
+    #endregion
+
+    #region Debug
+
     [ContextMenu("Debug Start Battle")]
     private void DebugStartBattle()
     {
@@ -493,9 +925,16 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         isWaitingResult = false;
         isMyTurn = true;
+        isMyReplayReady = false;
+        isOpponentReplayReady = false;
 
+        HideGameOverUI();
         ShowBattleUI();
 
         Debug.Log("[Debug] 강제 Battle 단계 진입");
+
+        StartTurnTimer();
     }
+
+    #endregion
 }

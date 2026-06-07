@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
@@ -67,11 +68,11 @@ public class TCPManager : MonoBehaviour
 
     private void Update()
     {
-        while(receiveQueue.TryDequeue(out string message))
+        while (receiveQueue.TryDequeue(out string message))
         {
             Debug.Log($"[TCP] 처리할 패킷: {message}");
-         
-            if(GameManager.Instance != null)
+
+            if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnReceivePacket(message);
             }
@@ -80,6 +81,12 @@ public class TCPManager : MonoBehaviour
 
     public async void StartHost()
     {
+        if (isConnected || listener != null)
+        {
+            Debug.LogWarning("[TCP] 이미 Host 실행 중");
+            return;
+        }
+
         IsHost = true;
 
         Debug.Log("[TCP] Host 시작");
@@ -103,13 +110,30 @@ public class TCPManager : MonoBehaviour
 
         Debug.Log("[TCP] Client 접속 시도");
 
-        client = new TcpClient();
-        await client.ConnectAsync(hostIP, port);
+        while (!isConnected)
+        {
+            try
+            {
+                client = new TcpClient();
+                await client.ConnectAsync(hostIP, port);
 
-        Debug.Log("[TCP] Host 접속 완료");
+                Debug.Log("[TCP] Host 접속 완료");
 
-        SetupStream();
-        _ = ReceiveLoop();
+                SetupStream();
+                _ = ReceiveLoop();
+
+                return;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[TCP] Client 접속 실패, 재시도 예정: {e.Message}");
+
+                client?.Close();
+                client = null;
+
+                await Task.Delay(1000);
+            }
+        }
     }
 
     private void SetupStream()
