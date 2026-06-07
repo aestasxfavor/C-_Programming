@@ -13,20 +13,56 @@ public class TCPManager : MonoBehaviour
     [SerializeField] private int port = 7777;
     [SerializeField] private string hostIP = "127.0.0.1";
 
+    [Header("자동 연결 테스트")]
+    [SerializeField] private bool autoConnectOnStart = true;
+    [SerializeField] private bool editorIsHost = true;
+
     private TcpListener listener;
     private TcpClient client;
     private StreamReader reader;
     private StreamWriter writer;
 
     private bool isConnected;
+    public bool IsConnected => isConnected;
+
+    public bool IsHost { get; private set; }
 
     private readonly ConcurrentQueue<string> receiveQueue = new ConcurrentQueue<string>();
 
-    public bool IsConnected => isConnected;
 
     private void Awake()
     {
         Instance = this;
+    }
+
+    private void Start()
+    {
+        Application.runInBackground = true;
+
+        if (!autoConnectOnStart)
+        {
+            return;
+        }
+
+#if UNITY_EDITOR
+        if (editorIsHost)
+        {
+            StartHost();
+        }
+        else
+        {
+            StartClient();
+        }
+#else
+    if (editorIsHost)
+    {
+        StartClient();
+    }
+    else
+    {
+        StartHost();
+    }
+#endif
     }
 
     private void Update()
@@ -44,6 +80,8 @@ public class TCPManager : MonoBehaviour
 
     public async void StartHost()
     {
+        IsHost = true;
+
         Debug.Log("[TCP] Host 시작");
 
         listener = new TcpListener(IPAddress.Any, port);
@@ -61,6 +99,8 @@ public class TCPManager : MonoBehaviour
 
     public async void StartClient()
     {
+        IsHost = false;
+
         Debug.Log("[TCP] Client 접속 시도");
 
         client = new TcpClient();
@@ -91,6 +131,9 @@ public class TCPManager : MonoBehaviour
         {
             string message = await reader.ReadLineAsync();
 
+            // Todo: 연결 종료 시 ReadLineAsync가 null을 반환할 수 있음
+            // 현재는 빈 문자열과 null을 같이 무시하지만,
+            // 추후 TCP 안정화 단계에서 null 수신 시 연결 종료 처리로 분리할 것
             if (string.IsNullOrEmpty(message))
             {
                 continue;

@@ -42,6 +42,7 @@ public class BoardView : MonoBehaviour
     [SerializeField] private Sprite spacingPreviewSprite;
 
     private List<Vector2Int> previewPositions = new List<Vector2Int>();
+    private string lastSunkAroundPositionsText = "";
 
     [Header("함선 세팅")]
     private ShipData[] ships;
@@ -425,6 +426,8 @@ public class BoardView : MonoBehaviour
 
     public AttackResult ReceiveAttack(int x, int y)
     {
+        lastSunkAroundPositionsText = "";
+
         if (!CanAttackCell(x, y))
         {
             return AttackResult.Invalid;
@@ -521,12 +524,16 @@ public class BoardView : MonoBehaviour
 
     private void MarkMissAroundSunkShip(int shipID)
     {
+        lastSunkAroundPositionsText = "";
+
         if (shipID < 0 || shipID >= ships.Length)
         {
             return;
         }
 
         ShipData ship = ships[shipID];
+
+        HashSet<Vector2Int> aroundMissPositions = new HashSet<Vector2Int>();
 
         for (int i = 0; i < ship.positions.Count; i++)
         {
@@ -570,10 +577,31 @@ public class BoardView : MonoBehaviour
                     {
                         boardStates[checkX, checkY] = CellState.Miss;
                         RefreshCell(checkX, checkY);
+
+                        aroundMissPositions.Add(new Vector2Int(checkX, checkY));
                     }
                 }
             }
         }
+
+        lastSunkAroundPositionsText = ConvertPositionsToPacketText(aroundMissPositions);
+    }
+
+    private string ConvertPositionsToPacketText(HashSet<Vector2Int> positions)
+    {
+        if (positions == null || positions.Count == 0)
+        {
+            return "";
+        }
+
+        List<string> positionTexts = new List<string>();
+
+        foreach (Vector2Int position in positions)
+        {
+            positionTexts.Add($"{position.x},{position.y}");
+        }
+
+        return string.Join(";", positionTexts);
     }
 
     private bool IsAllShipsSunk()
@@ -592,6 +620,115 @@ public class BoardView : MonoBehaviour
         }
 
         return true;
+    }
+
+    public void ApplyAttackResult(int x, int y, string resultText, string aroundPositionsText)
+    {
+        if (!IsInsideBoard(x, y))
+        {
+            Debug.LogWarning($"[Result] 결과 적용 실패: 보드 밖 좌표 X={x}, Y={y}");
+            return;
+        }
+
+        switch (resultText)
+        {
+            case "HIT":
+                ApplyHitResult(x, y);
+                break;
+
+            case "MISS":
+                ApplyMissResult(x, y);
+                break;
+
+            case "SUNK":
+                ApplyHitResult(x, y);
+                ApplyAroundMissPositions(aroundPositionsText);
+                break;
+
+            case "GAME_OVER":
+                ApplyHitResult(x, y);
+                ApplyAroundMissPositions(aroundPositionsText);
+                break;
+
+            default:
+                Debug.LogWarning($"[Result] 알 수 없는 결과 타입: {resultText}");
+                break;
+        }
+    }
+
+    private void ApplyHitResult(int x, int y)
+    {
+        boardStates[x, y] = CellState.Hit;
+        RefreshCell(x, y);
+
+        Debug.Log($"[EnemyBoard] Hit 표시 X={x}, Y={y}");
+    }
+
+    private void ApplyMissResult(int x, int y)
+    {
+        boardStates[x, y] = CellState.Miss;
+        RefreshCell(x, y);
+
+        Debug.Log($"[EnemyBoard] Miss 표시 X={x}, Y={y}");
+    }
+
+    private void ApplyAroundMissPositions(string aroundPositionsText)
+    {
+        if (string.IsNullOrEmpty(aroundPositionsText))
+        {
+            return;
+        }
+
+        string[] positions = aroundPositionsText.Split(';');
+
+        for (int i = 0; i < positions.Length; i++)
+        {
+            string positionText = positions[i];
+
+            if (string.IsNullOrEmpty(positionText))
+            {
+                continue;
+            }
+
+            string[] xy = positionText.Split(',');
+
+            if (xy.Length < 2)
+            {
+                continue;
+            }
+
+            if (!int.TryParse(xy[0], out int x) || !int.TryParse(xy[1], out int y))
+            {
+                continue;
+            }
+
+            if (!IsInsideBoard(x, y))
+            {
+                continue;
+            }
+
+            CellState state = boardStates[x, y];
+
+            if (state == CellState.Hit || state == CellState.Miss || state == CellState.Land)
+            {
+                continue;
+            }
+
+            boardStates[x, y] = CellState.Miss;
+            RefreshCell(x, y);
+
+            Debug.Log($"[EnemyBoard] 침몰 주변 Miss 표시 X={x}, Y={y}");
+        }
+    }
+
+    public string GetLastSunkAroundPositionsText()
+{
+    return lastSunkAroundPositionsText;
+}
+
+    public bool CanRequestAttack(int x, int y)
+    {
+        return CanAttackCell(x, y);
     }
 
     #endregion

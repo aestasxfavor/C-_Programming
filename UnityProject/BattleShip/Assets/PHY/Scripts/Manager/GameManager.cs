@@ -26,6 +26,11 @@ public class GameManager : MonoBehaviour
     // 체크 OFF : 기존 TCP READY 패킷 송수신 흐름 사용
     [SerializeField] private bool useLocalBattleTest;
 
+    [Header("전투 턴 상태")]
+    [SerializeField] private bool isMyTurn;
+    [SerializeField] private bool isWaitingResult;
+    [SerializeField] private bool isGameOver;
+
     public bool IsPlacementLocked => isPlacementLocked;
     public bool IsBattle => gameState == GameState.Battle;
     public GameState CurrentState => gameState;
@@ -70,9 +75,6 @@ public class GameManager : MonoBehaviour
         Debug.Log("[Ready] 내 Ready 완료");
         Debug.Log("[Placement] 배치 수정 잠금");
 
-        // 로컬 전투 테스트 전용 분기
-        // TCP 연결 없이 전투 판정, UI 전환, Hit/Miss/Sunk/GameOver를 확인하기 위한 임시 흐름
-        // 실제 TCP 전투 테스트 시 useLocalBattleTest 체크 해제
         if (useLocalBattleTest)
         {
             Debug.Log("[Ready] 로컬 전투 테스트 모드라 바로 Battle 진입");
@@ -85,14 +87,7 @@ public class GameManager : MonoBehaviour
 
         gameState = GameState.WaitingReady;
 
-        if (TCPManager.Instance != null)
-        {
-            TCPManager.Instance.Send(PacketProtocol.READY);
-        }
-        else
-        {
-            Debug.LogWarning("[Ready] TCPManager.Instance가 없어 READY 패킷 전송 생략");
-        }
+        TrySendPacket(PacketProtocol.READY);
 
         TryStartBattle();
     }
@@ -125,14 +120,21 @@ public class GameManager : MonoBehaviour
                 OnOpponentReady();
                 break;
 
-                // TCP 전투 연결 시 추가 위치
-                // case PacketProtocol.ATTACK:
-                //     OnReceiveAttackPacket(split);
-                //     break;
-                //
-                // case PacketProtocol.RESULT:
-                //     OnReceiveResultPacket(split);
-                //     break;
+            case PacketProtocol.ATTACK:
+                OnReceiveAttackPacket(split);
+                break;
+
+            case PacketProtocol.RESULT:
+                OnReceiveResultPacket(split);
+                break;
+
+            case PacketProtocol.GAME_OVER:
+                OnReceiveGameOverPacket();
+                break;
+
+            default:
+                Debug.LogWarning($"[Packet] 알 수 없는 패킷: {packet}");
+                break;
         }
     }
 
@@ -164,11 +166,37 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (gameState == GameState.Battle)
+        {
+            return;
+        }
+
         gameState = GameState.Battle;
+
+        isGameOver = false;
+        isWaitingResult = false;
+
+        if (useLocalBattleTest)
+        {
+            isMyTurn = true;
+        }
+        else
+        {
+            isMyTurn = TCPManager.Instance != null && TCPManager.Instance.IsHost;
+        }
 
         ShowBattleUI();
 
         Debug.Log("[Battle] 양쪽 Ready 완료, 전투 단계 진입");
+
+        if (isMyTurn)
+        {
+            Debug.Log("[Turn] 내 턴 시작");
+        }
+        else
+        {
+            Debug.Log("[Turn] 상대 턴 대기");
+        }
     }
 
     public void TryAttackEnemyBoard(int x, int y)
@@ -179,32 +207,243 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isGameOver)
+        {
+            Debug.Log("[Battle] 이미 게임 종료 상태");
+            return;
+        }
+
         if (enemyBoardView == null)
         {
             Debug.LogError("[Battle] enemyBoardView 연결 필요");
             return;
         }
 
-        // 현재는 로컬 전투 테스트용으로 enemyBoardView에서 직접 판정
-        // TCP 연결 후에는 ATTACK 패킷 전송 → 상대 myBoardView에서 ReceiveAttack 판정 → RESULT 수신 흐름으로 변경 예정
-        AttackResult result = enemyBoardView.ReceiveAttack(x, y);
-
-        if (result == AttackResult.Invalid)
+        if (!enemyBoardView.CanRequestAttack(x, y))
         {
             Debug.Log($"[Battle] 공격 불가 칸 X={x}, Y={y}");
             return;
         }
 
-        Debug.Log($"[Battle] 공격 결과: {result}, X={x}, Y={y}");
+        if (useLocalBattleTest)
+        {
+            AttackResult localResult = enemyBoardView.ReceiveAttack(x, y);
+
+            Debug.Log($"[Battle] 로컬 공격 결과: {localResult}, X={x}, Y={y}");
+
+            if (localResult == AttackResult.GameOver)
+            {
+                SetGameOver(true);
+            }
+
+            return;
+        }
+
+        if (!isMyTurn)
+        {
+            Debug.Log("[Turn] 내 턴이 아니라 공격 불가");
+            return;
+        }
+
+        if (isWaitingResult)
+        {
+            Debug.Log("[Turn] 이전 공격 결과 대기 중");
+            return;
+        }
+
+        string packet = $"{PacketProtocol.ATTACK}|{x}|{y}";
+
+        if (!TrySendPacket(packet))
+        {
+            return;
+        }
+
+        isWaitingResult = true;
+
+        Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
+    }
+
+    private void OnReceiveAttackPacket(string[] split)
+    {
+        if (split.Length < 3)
+        {
+            Debug.LogWarning("[Attack] ATTACK 패킷 형식 오류");
+            return;
+        }
+
+        if (gameState != GameState.Battle)
+        {
+            Debug.Log("[Attack] Battle 단계가 아니라 ATTACK 무시");
+            return;
+        }
+
+        if (isGameOver)
+        {
+            Debug.Log("[Attack] 이미 게임 종료 상태라 ATTACK 무시");
+            return;
+        }
+
+        if (myBoardView == null)
+        {
+            Debug.LogError("[Attack] myBoardView 연결 필요");
+            return;
+        }
+
+        if (!int.TryParse(split[1], out int x) || !int.TryParse(split[2], out int y))
+        {
+            Debug.LogWarning("[Attack] 좌표 파싱 실패");
+            return;
+        }
+
+        Debug.Log($"[Attack] 공격 패킷 수신 X={x}, Y={y}");
+
+        AttackResult result = myBoardView.ReceiveAttack(x, y);
+        string resultText = ConvertAttackResultToPacketText(result);
+
+        string aroundPositionsText = "";
+
+        if (result == AttackResult.Sunk || result == AttackResult.GameOver)
+        {
+            aroundPositionsText = myBoardView.GetLastSunkAroundPositionsText();
+        }
+
+        string resultPacket = $"{PacketProtocol.RESULT}|{x}|{y}|{resultText}";
+
+        if (!string.IsNullOrEmpty(aroundPositionsText))
+        {
+            resultPacket += $"|{aroundPositionsText}";
+        }
+
+        TrySendPacket(resultPacket);
+
+        Debug.Log($"[Result] 결과 패킷 전송 {resultText}, X={x}, Y={y}");
+
+        if (result == AttackResult.Invalid)
+        {
+            Debug.Log("[Attack] 유효하지 않은 공격이라 턴 변경 없음");
+            return;
+        }
 
         if (result == AttackResult.GameOver)
         {
-            SetGameOver(true);
+            SetGameOver(false);
+            return;
         }
+
+        isMyTurn = true;
+        isWaitingResult = false;
+
+        Debug.Log("[Turn] 내 턴 시작");
+    }
+
+    private void OnReceiveResultPacket(string[] split)
+    {
+        if (split.Length < 4)
+        {
+            Debug.LogWarning("[Result] RESULT 패킷 형식 오류");
+            return;
+        }
+
+        if (!int.TryParse(split[1], out int x) || !int.TryParse(split[2], out int y))
+        {
+            Debug.LogWarning("[Result] 좌표 파싱 실패");
+            return;
+        }
+
+        string resultText = split[3];
+        string aroundPositionsText = split.Length >= 5 ? split[4] : "";
+
+        Debug.Log($"[Result] 결과 수신 {resultText}, X={x}, Y={y}");
+
+        isWaitingResult = false;
+
+        if (resultText == "INVALID")
+        {
+            isMyTurn = true;
+            Debug.Log("[Result] INVALID 수신, 내 턴 유지");
+            return;
+        }
+
+        if (enemyBoardView == null)
+        {
+            Debug.LogError("[Result] enemyBoardView 연결 필요");
+            return;
+        }
+
+        enemyBoardView.ApplyAttackResult(x, y, resultText, aroundPositionsText);
+
+        if (resultText == "GAME_OVER")
+        {
+            SetGameOver(true);
+            return;
+        }
+
+        isMyTurn = false;
+
+        Debug.Log("[Turn] 상대 턴 대기");
+    }
+
+    private void OnReceiveGameOverPacket()
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+
+        SetGameOver(true);
+    }
+
+    private string ConvertAttackResultToPacketText(AttackResult result)
+    {
+        switch (result)
+        {
+            case AttackResult.Hit:
+                return "HIT";
+
+            case AttackResult.Miss:
+                return "MISS";
+
+            case AttackResult.Sunk:
+                return "SUNK";
+
+            case AttackResult.GameOver:
+                return "GAME_OVER";
+
+            default:
+                return "INVALID";
+        }
+    }
+
+    private bool TrySendPacket(string packet)
+    {
+        if (useLocalBattleTest)
+        {
+            Debug.Log($"[Packet Send] 로컬 테스트 모드라 패킷 전송 생략: {packet}");
+            return false;
+        }
+
+        if (TCPManager.Instance == null)
+        {
+            Debug.LogWarning($"[Packet Send] TCPManager.Instance 없음: {packet}");
+            return false;
+        }
+
+        if (!TCPManager.Instance.IsConnected)
+        {
+            Debug.LogWarning($"[Packet Send] TCP 연결 안 됨: {packet}");
+            return false;
+        }
+
+        TCPManager.Instance.Send(packet);
+        return true;
     }
 
     private void SetGameOver(bool isWin)
     {
+        isGameOver = true;
+        isMyTurn = false;
+        isWaitingResult = false;
+
         gameState = GameState.GameOver;
 
         if (isWin)
@@ -250,6 +489,10 @@ public class GameManager : MonoBehaviour
         isOpponentReady = true;
         isPlacementLocked = true;
         gameState = GameState.Battle;
+
+        isGameOver = false;
+        isWaitingResult = false;
+        isMyTurn = true;
 
         ShowBattleUI();
 

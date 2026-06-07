@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public static class PacketProtocol
 {
     public const string READY = "READY";
