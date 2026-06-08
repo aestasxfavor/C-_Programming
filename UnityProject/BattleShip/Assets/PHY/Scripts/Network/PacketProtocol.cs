@@ -10,6 +10,7 @@ public static class PacketProtocol
     public const string TURN_TIMEOUT = "TURN_TIMEOUT";
 
     public const string REPLAY_READY = "REPLAY_READY";
-    public const string LEAVE = "LEAVE";
+    public const string REPLAY_START = "REPLAY_START";
 
+    public const string LEAVE = "LEAVE";
 }

@@ -12,6 +12,7 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     private Vector2 startAnchoredPosition;
     private bool isDroppedSuccessfully;
+    private bool hasStartPosition;
 
     private void Awake()
     {
@@ -23,6 +24,29 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
+
+        SaveStartPosition();
+    }
+
+    private void Start()
+    {
+        SaveStartPosition();
+    }
+
+    private void SaveStartPosition()
+    {
+        if (rectTransform == null)
+        {
+            return;
+        }
+
+        if (hasStartPosition)
+        {
+            return;
+        }
+
+        startAnchoredPosition = rectTransform.anchoredPosition;
+        hasStartPosition = true;
     }
 
     private bool IsPlacementLocked()
@@ -38,8 +62,9 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
         }
 
+        SaveStartPosition();
+
         isDroppedSuccessfully = false;
-        startAnchoredPosition = rectTransform.anchoredPosition;
 
         boardView.SelectShip(shipID);
 
@@ -80,5 +105,28 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         isDroppedSuccessfully = true;
         Debug.Log("[ShipDragItem] 靛而 己傍 贸府");
+    }
+
+    public void ResetDragItem()
+    {
+        SaveStartPosition();
+
+        isDroppedSuccessfully = false;
+
+        gameObject.SetActive(true);
+
+        if (rectTransform != null)
+        {
+            rectTransform.anchoredPosition = startAnchoredPosition;
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+        }
+
+        Debug.Log($"[ShipDragItem] 府悸 肯丰: ShipID={shipID}");
     }
 }

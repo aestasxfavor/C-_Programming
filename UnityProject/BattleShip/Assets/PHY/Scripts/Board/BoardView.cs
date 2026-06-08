@@ -23,9 +23,6 @@ public class BoardView : MonoBehaviour
     [SerializeField] private BoardRole boardRole = BoardRole.MyBoard;
 
     [Header("전투 테스트")]
-    // 로컬 전투 테스트 전용
-    // EnemyBoardPanel에 테스트용 상대 배 5척을 자동 배치해서 Hit/Sunk/GameOver 확인용으로 사용
-    // 실제 TCP 전투 테스트 시 EnemyBoardPanel에서 체크 해제
     [SerializeField] private bool autoPlaceTestShipForEnemyBoard;
 
     [Header("타일 스프라이트")]
@@ -41,6 +38,22 @@ public class BoardView : MonoBehaviour
     [SerializeField] private Sprite invalidPreviewSprite;
     [SerializeField] private Sprite spacingPreviewSprite;
 
+    [Header("배 이미지 오버레이")]
+    [SerializeField] private bool useShipVisualOverlay;
+    [SerializeField] private RectTransform shipVisualRoot;
+    [SerializeField] private Image shipVisualTemplate;
+    [SerializeField] private Sprite shipSize2VisualSprite;
+    [SerializeField] private Sprite shipSize3VisualSprite;
+    [SerializeField] private Sprite shipSize4VisualSprite;
+    [SerializeField] private Sprite shipSize5VisualSprite;
+    [SerializeField] private Vector2 shipVisualPadding = Vector2.zero;
+    [SerializeField] private bool hideCellShipSpriteWhenUsingOverlay = true;
+
+    [Header("전투 표시 옵션")]
+    [SerializeField] private bool hideBlockedCellsOnBattle = true;
+
+    private readonly Dictionary<int, Image> shipVisualsByID = new Dictionary<int, Image>();
+
     private List<Vector2Int> previewPositions = new List<Vector2Int>();
     private string lastSunkAroundPositionsText = "";
 
@@ -51,9 +64,14 @@ public class BoardView : MonoBehaviour
 
     [SerializeField] private Button readyButton;
 
+    [Header("배 선택 UI")]
+    [SerializeField] private ShipDragItem[] shipDragItems;
+
     private ShipDirection currentDirection = ShipDirection.Horizontal;
 
     [SerializeField] private bool isShipSpacingRuleEnabled = true;
+
+    private bool lastBattleState;
 
     private void Start()
     {
@@ -64,10 +82,8 @@ public class BoardView : MonoBehaviour
         CreateBoard();
         InitBoardState();
         ApplyLandTiles();
+        InitShipVisualOverlay();
 
-        // 로컬 전투 테스트 전용
-        // EnemyBoardPanel에만 테스트용 배 5척 자동 배치
-        // 실제 TCP 전투에서는 상대 배 정보를 직접 알면 안 되므로 체크 해제 필요
         if (autoPlaceTestShipForEnemyBoard)
         {
             PlaceTestShipsForEnemyBoard();
@@ -76,6 +92,25 @@ public class BoardView : MonoBehaviour
         RefreshCells();
 
         UpdateReadyButton();
+    }
+
+    private void Update()
+    {
+        UpdateBattleVisualState();
+    }
+
+    private void UpdateBattleVisualState()
+    {
+        bool currentBattleState = GameManager.Instance != null && GameManager.Instance.IsBattle;
+
+        if (currentBattleState == lastBattleState)
+        {
+            return;
+        }
+
+        lastBattleState = currentBattleState;
+
+        RefreshCells();
     }
 
     private void InitShips()
@@ -303,9 +338,19 @@ public class BoardView : MonoBehaviour
                 return landSprite;
 
             case CellState.Ship:
+                if (ShouldHideCellShipSprite())
+                {
+                    return waterSprite;
+                }
+
                 return shipSprite;
 
             case CellState.Blocked:
+                if (ShouldHideBlockedSprite())
+                {
+                    return waterSprite;
+                }
+
                 return blockedSprite;
 
             case CellState.Hit:
@@ -319,13 +364,324 @@ public class BoardView : MonoBehaviour
         }
     }
 
+    private bool ShouldHideBlockedSprite()
+    {
+        if (!hideBlockedCellsOnBattle)
+        {
+            return false;
+        }
+
+        if (boardRole != BoardRole.MyBoard)
+        {
+            return false;
+        }
+
+        return GameManager.Instance != null && GameManager.Instance.IsBattle;
+    }
+
+    #endregion
+
+    #region 배 이미지 오버레이
+
+    private void InitShipVisualOverlay()
+    {
+        if (shipVisualTemplate != null)
+        {
+            shipVisualTemplate.gameObject.SetActive(false);
+            shipVisualTemplate.raycastTarget = false;
+        }
+
+        SetupShipVisualRootRect();
+        EnsureShipVisualRootIgnoresLayout();
+        MoveShipVisualRootToFront();
+    }
+
+    private void SetupShipVisualRootRect()
+    {
+        if (shipVisualRoot == null)
+        {
+            return;
+        }
+
+        shipVisualRoot.anchorMin = Vector2.zero;
+        shipVisualRoot.anchorMax = Vector2.one;
+        shipVisualRoot.offsetMin = Vector2.zero;
+        shipVisualRoot.offsetMax = Vector2.zero;
+        shipVisualRoot.pivot = new Vector2(0.5f, 0.5f);
+        shipVisualRoot.localScale = Vector3.one;
+        shipVisualRoot.localRotation = Quaternion.identity;
+    }
+
+    private void EnsureShipVisualRootIgnoresLayout()
+    {
+        if (shipVisualRoot == null)
+        {
+            return;
+        }
+
+        LayoutElement layoutElement = shipVisualRoot.GetComponent<LayoutElement>();
+
+        if (layoutElement == null)
+        {
+            layoutElement = shipVisualRoot.gameObject.AddComponent<LayoutElement>();
+        }
+
+        layoutElement.ignoreLayout = true;
+    }
+
+    private void MoveShipVisualRootToFront()
+    {
+        if (shipVisualRoot == null)
+        {
+            return;
+        }
+
+        shipVisualRoot.SetAsLastSibling();
+    }
+
+    private bool IsShipVisualOverlayEnabled()
+    {
+        if (!useShipVisualOverlay)
+        {
+            return false;
+        }
+
+        if (boardRole != BoardRole.MyBoard)
+        {
+            return false;
+        }
+
+        if (shipVisualRoot == null)
+        {
+            return false;
+        }
+
+        if (shipVisualTemplate == null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ShouldHideCellShipSprite()
+    {
+        if (!hideCellShipSpriteWhenUsingOverlay)
+        {
+            return false;
+        }
+
+        return IsShipVisualOverlayEnabled();
+    }
+
+    private void CreateShipVisual(ShipData ship)
+    {
+        if (!IsShipVisualOverlayEnabled())
+        {
+            return;
+        }
+
+        if (ship == null)
+        {
+            return;
+        }
+
+        if (ship.positions == null || ship.positions.Count == 0)
+        {
+            return;
+        }
+
+        Sprite visualSprite = GetShipVisualSprite(ship.size);
+
+        if (visualSprite == null)
+        {
+            Debug.LogWarning($"[ShipVisual] Size={ship.size} 배 이미지 스프라이트가 없음");
+            return;
+        }
+
+        MoveShipVisualRootToFront();
+        RemoveShipVisual(ship.shipID);
+
+        Image visual = Instantiate(shipVisualTemplate, shipVisualRoot);
+
+        visual.gameObject.name = $"ShipVisual_{ship.shipID}_Size{ship.size}";
+        visual.sprite = visualSprite;
+        visual.raycastTarget = false;
+        visual.gameObject.SetActive(true);
+
+        RectTransform visualRect = visual.rectTransform;
+
+        visualRect.anchorMin = new Vector2(0.5f, 0.5f);
+        visualRect.anchorMax = new Vector2(0.5f, 0.5f);
+        visualRect.pivot = new Vector2(0.5f, 0.5f);
+        visualRect.localScale = Vector3.one;
+
+        Vector2Int firstPosition = ship.positions[0];
+        Vector2Int lastPosition = ship.positions[ship.positions.Count - 1];
+
+        RectTransform firstCellRect = GetCellRect(firstPosition);
+        RectTransform lastCellRect = GetCellRect(lastPosition);
+
+        if (firstCellRect == null || lastCellRect == null)
+        {
+            Destroy(visual.gameObject);
+            return;
+        }
+
+        Vector3 centerWorldPosition = (firstCellRect.position + lastCellRect.position) * 0.5f;
+        Vector2 centerLocalPosition = WorldToShipVisualRootLocalPoint(centerWorldPosition);
+        Vector2 cellSize = GetCellSizeInShipVisualRoot(firstCellRect);
+
+        bool isHorizontal = IsHorizontalShip(ship.positions);
+
+        float length;
+        float thickness;
+
+        if (isHorizontal)
+        {
+            length = cellSize.x * ship.size + shipVisualPadding.x;
+            thickness = cellSize.y + shipVisualPadding.y;
+            visualRect.localRotation = Quaternion.identity;
+        }
+        else
+        {
+            length = cellSize.y * ship.size + shipVisualPadding.y;
+            thickness = cellSize.x + shipVisualPadding.x;
+            visualRect.localRotation = Quaternion.Euler(0f, 0f, 90f);
+        }
+
+        visualRect.anchoredPosition = centerLocalPosition;
+        visualRect.sizeDelta = new Vector2(length, thickness);
+
+        visualRect.SetAsLastSibling();
+        MoveShipVisualRootToFront();
+
+        shipVisualsByID[ship.shipID] = visual;
+
+        Debug.Log($"[ShipVisual] 생성 완료: ShipID={ship.shipID}, Size={ship.size}, Direction={(isHorizontal ? "Horizontal" : "Vertical")}");
+    }
+
+    private void RemoveShipVisual(int shipID)
+    {
+        if (!shipVisualsByID.TryGetValue(shipID, out Image visual))
+        {
+            return;
+        }
+
+        if (visual != null)
+        {
+            Destroy(visual.gameObject);
+        }
+
+        shipVisualsByID.Remove(shipID);
+
+        Debug.Log($"[ShipVisual] 제거 완료: ShipID={shipID}");
+    }
+
+    private void ClearAllShipVisuals()
+    {
+        foreach (KeyValuePair<int, Image> pair in shipVisualsByID)
+        {
+            if (pair.Value != null)
+            {
+                Destroy(pair.Value.gameObject);
+            }
+        }
+
+        shipVisualsByID.Clear();
+    }
+
+    private Sprite GetShipVisualSprite(int shipSize)
+    {
+        switch (shipSize)
+        {
+            case 2:
+                return shipSize2VisualSprite;
+
+            case 3:
+                return shipSize3VisualSprite;
+
+            case 4:
+                return shipSize4VisualSprite;
+
+            case 5:
+                return shipSize5VisualSprite;
+
+            default:
+                return null;
+        }
+    }
+
+    private RectTransform GetCellRect(Vector2Int position)
+    {
+        if (!IsInsideBoard(position.x, position.y))
+        {
+            return null;
+        }
+
+        if (cells[position.x, position.y] == null)
+        {
+            return null;
+        }
+
+        return cells[position.x, position.y].GetComponent<RectTransform>();
+    }
+
+    private bool IsHorizontalShip(List<Vector2Int> positions)
+    {
+        if (positions == null || positions.Count <= 1)
+        {
+            return true;
+        }
+
+        return positions[0].y == positions[positions.Count - 1].y;
+    }
+
+    private Vector2 WorldToShipVisualRootLocalPoint(Vector3 worldPosition)
+    {
+        Canvas canvas = shipVisualRoot.GetComponentInParent<Canvas>();
+        Camera camera = null;
+
+        if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+        {
+            camera = canvas.worldCamera;
+        }
+
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(camera, worldPosition);
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            shipVisualRoot,
+            screenPoint,
+            camera,
+            out Vector2 localPoint
+        );
+
+        return localPoint;
+    }
+
+    private Vector2 GetCellSizeInShipVisualRoot(RectTransform cellRect)
+    {
+        if (cellRect == null)
+        {
+            return Vector2.zero;
+        }
+
+        Vector3[] worldCorners = new Vector3[4];
+        cellRect.GetWorldCorners(worldCorners);
+
+        Vector2 bottomLeft = WorldToShipVisualRootLocalPoint(worldCorners[0]);
+        Vector2 topRight = WorldToShipVisualRootLocalPoint(worldCorners[2]);
+
+        float width = Mathf.Abs(topRight.x - bottomLeft.x);
+        float height = Mathf.Abs(topRight.y - bottomLeft.y);
+
+        return new Vector2(width, height);
+    }
+
     #endregion
 
     #region 로컬 전투 테스트 전용 배 자동 배치
 
-    // TCP 연결 전까지 Hit / Sunk / GameOver 판정 확인용
-    // EnemyBoardPanel에서만 사용
-    // 실제 TCP 전투 테스트 시 autoPlaceTestShipForEnemyBoard 체크 해제
     private void PlaceTestShipsForEnemyBoard()
     {
         if (boardRole != BoardRole.EnemyBoard)
@@ -339,8 +695,8 @@ public class BoardView : MonoBehaviour
             0,
             new List<Vector2Int>
             {
-            new Vector2Int(0, 0),
-            new Vector2Int(1, 0)
+                new Vector2Int(0, 0),
+                new Vector2Int(1, 0)
             }
         );
 
@@ -348,9 +704,9 @@ public class BoardView : MonoBehaviour
             1,
             new List<Vector2Int>
             {
-            new Vector2Int(10, 0),
-            new Vector2Int(10, 1),
-            new Vector2Int(10, 2)
+                new Vector2Int(10, 0),
+                new Vector2Int(10, 1),
+                new Vector2Int(10, 2)
             }
         );
 
@@ -358,9 +714,9 @@ public class BoardView : MonoBehaviour
             2,
             new List<Vector2Int>
             {
-            new Vector2Int(0, 6),
-            new Vector2Int(1, 6),
-            new Vector2Int(2, 6)
+                new Vector2Int(0, 6),
+                new Vector2Int(1, 6),
+                new Vector2Int(2, 6)
             }
         );
 
@@ -368,10 +724,10 @@ public class BoardView : MonoBehaviour
             3,
             new List<Vector2Int>
             {
-            new Vector2Int(5, 10),
-            new Vector2Int(6, 10),
-            new Vector2Int(7, 10),
-            new Vector2Int(8, 10)
+                new Vector2Int(5, 10),
+                new Vector2Int(6, 10),
+                new Vector2Int(7, 10),
+                new Vector2Int(8, 10)
             }
         );
 
@@ -379,11 +735,11 @@ public class BoardView : MonoBehaviour
             4,
             new List<Vector2Int>
             {
-            new Vector2Int(10, 5),
-            new Vector2Int(10, 6),
-            new Vector2Int(10, 7),
-            new Vector2Int(10, 8),
-            new Vector2Int(10, 9)
+                new Vector2Int(10, 5),
+                new Vector2Int(10, 6),
+                new Vector2Int(10, 7),
+                new Vector2Int(10, 8),
+                new Vector2Int(10, 9)
             }
         );
 
@@ -397,8 +753,6 @@ public class BoardView : MonoBehaviour
         }
     }
 
-    // 로컬 전투 테스트용 배 1척 배치 함수
-    // 실제 플레이용 배치 함수가 아니라, 정해진 좌표에 테스트 배를 심기 위한 함수
     private bool TryPlaceTestShip(int shipID, List<Vector2Int> positions)
     {
         if (shipID < 0 || shipID >= ships.Length)
@@ -722,9 +1076,9 @@ public class BoardView : MonoBehaviour
     }
 
     public string GetLastSunkAroundPositionsText()
-{
-    return lastSunkAroundPositionsText;
-}
+    {
+        return lastSunkAroundPositionsText;
+    }
 
     public bool CanRequestAttack(int x, int y)
     {
@@ -966,6 +1320,7 @@ public class BoardView : MonoBehaviour
 
         RebuildBlockedCells();
         RefreshCells();
+        CreateShipVisual(ship);
 
         selectedShipID = -1;
         selectedShipSize = 0;
@@ -978,6 +1333,8 @@ public class BoardView : MonoBehaviour
 
     private void RemovePlacedShip(ShipData ship)
     {
+        RemoveShipVisual(ship.shipID);
+
         for (int i = 0; i < ship.positions.Count; i++)
         {
             Vector2Int position = ship.positions[i];
@@ -1036,6 +1393,79 @@ public class BoardView : MonoBehaviour
 
         Debug.Log($"[BoardView] 배 재배치 선택: ID={selectedShipID}, Size={selectedShipSize}");
         Debug.Log($"[BoardView] Direction: {currentDirection}");
+    }
+
+    #endregion
+
+    #region 함선 배치 리셋
+
+    public void OnClickResetPlacementButton()
+    {
+        if (boardRole != BoardRole.MyBoard)
+        {
+            return;
+        }
+
+        if (IsPlacementLocked())
+        {
+            Debug.Log("[Placement] Ready 이후 배치 리셋 불가");
+            return;
+        }
+
+        ResetPlacement();
+    }
+
+    private void ResetPlacement()
+    {
+        ClearPreview();
+        ClearAllShipVisuals();
+
+        for (int y = 0; y < BoardSize; y++)
+        {
+            for (int x = 0; x < BoardSize; x++)
+            {
+                if (boardStates[x, y] == CellState.Ship || boardStates[x, y] == CellState.Blocked)
+                {
+                    boardStates[x, y] = CellState.Empty;
+                }
+
+                shipIDByCell[x, y] = -1;
+            }
+        }
+
+        for (int i = 0; i < ships.Length; i++)
+        {
+            ships[i].positions.Clear();
+            ships[i].isPlaced = false;
+        }
+
+        selectedShipID = -1;
+        selectedShipSize = 0;
+        currentDirection = ShipDirection.Horizontal;
+
+        RefreshCells();
+        UpdateReadyButton();
+        ResetShipDragItems();
+
+        Debug.Log("[Placement] 배치 전체 리셋 완료");
+    }
+
+    private void ResetShipDragItems()
+    {
+        if (shipDragItems == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < shipDragItems.Length; i++)
+        {
+            if (shipDragItems[i] == null)
+            {
+                continue;
+            }
+
+            shipDragItems[i].ResetDragItem();
+        }
     }
 
     #endregion
@@ -1292,7 +1722,7 @@ public class BoardView : MonoBehaviour
 
     //private Vector2Int ConvertToOriginalPosition(Vector2Int displayPosition)
     //{
-    //    return displayPosition;
+    //    return originalPosition;
     //}
 
     #endregion

@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    private static bool isReplaySceneReloading;
+
     #region Inspector Fields
 
     [Header("게임 상태")]
@@ -36,6 +38,11 @@ public class GameManager : MonoBehaviour
     [Header("재시작 상태")]
     [SerializeField] private bool isMyReplayReady;
     [SerializeField] private bool isOpponentReplayReady;
+    [SerializeField] private bool isRestartingByReplay;
+    [SerializeField] private bool isClearingReplayReloadFlag;
+
+    [Header("나가기 상태")]
+    [SerializeField] private bool isReturningToTitleByLeave;
 
     [Header("게임 종료 UI")]
     [SerializeField] private GameObject winCanvas;
@@ -85,12 +92,21 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         gameState = GameState.Placement;
+
         isNetworkDisconnected = false;
+        isRestartingByReplay = isReplaySceneReloading;
+        isReturningToTitleByLeave = false;
+        isClearingReplayReloadFlag = false;
 
         ShowPlacementUI();
         HideGameOverUI();
         HideDisconnectUI();
         UpdateTurnTimerUI();
+
+        if (isRestartingByReplay)
+        {
+            Debug.Log("[Replay] Replay 씬 재시작 상태 유지 중");
+        }
 
         Debug.Log("[GameManager] Placement 단계 시작");
     }
@@ -99,6 +115,7 @@ public class GameManager : MonoBehaviour
     {
         UpdateTurnTimer();
         TrySendPendingReady();
+        TryClearReplaySceneReloadFlagWhenReconnected();
     }
 
     #endregion
@@ -110,6 +127,12 @@ public class GameManager : MonoBehaviour
         if (isNetworkDisconnected)
         {
             Debug.Log("[Network] 연결 끊김 상태라 Ready 불가");
+            return;
+        }
+
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            Debug.Log("[Ready] 씬 전환 중이라 Ready 불가");
             return;
         }
 
@@ -181,6 +204,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         if (!isPendingReadySend)
         {
             return;
@@ -227,6 +255,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         if (!isMyReady)
         {
             Debug.Log("[Ready] 내 Ready 대기 중");
@@ -250,6 +283,8 @@ public class GameManager : MonoBehaviour
         isWaitingResult = false;
         isMyReplayReady = false;
         isOpponentReplayReady = false;
+        isRestartingByReplay = false;
+        isReturningToTitleByLeave = false;
 
         if (useLocalBattleTest)
         {
@@ -274,6 +309,63 @@ public class GameManager : MonoBehaviour
             Debug.Log("[Turn] 상대 턴 대기");
             StopTurnTimer();
         }
+    }
+
+    #endregion
+
+    #region Replay Reload Guard Flow
+
+    private void MarkReplaySceneReloading()
+    {
+        isReplaySceneReloading = true;
+        isRestartingByReplay = true;
+        isClearingReplayReloadFlag = false;
+
+        Debug.Log("[Replay] Replay 씬 재시작 플래그 설정");
+    }
+
+    private void TryClearReplaySceneReloadFlagWhenReconnected()
+    {
+        if (!isReplaySceneReloading)
+        {
+            return;
+        }
+
+        if (isClearingReplayReloadFlag)
+        {
+            return;
+        }
+
+        if (TCPManager.Instance == null)
+        {
+            return;
+        }
+
+        if (!TCPManager.Instance.IsConnected)
+        {
+            return;
+        }
+
+        StartCoroutine(ClearReplaySceneReloadFlagAfterDelay());
+    }
+
+    private IEnumerator ClearReplaySceneReloadFlagAfterDelay()
+    {
+        isClearingReplayReloadFlag = true;
+
+        yield return new WaitForSecondsRealtime(0.7f);
+
+        if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
+        {
+            isReplaySceneReloading = false;
+            isRestartingByReplay = false;
+            isClearingReplayReloadFlag = false;
+
+            Debug.Log("[Replay] TCP 재연결 확인, Replay 씬 재시작 플래그 해제");
+            yield break;
+        }
+
+        isClearingReplayReloadFlag = false;
     }
 
     #endregion
@@ -323,6 +415,10 @@ public class GameManager : MonoBehaviour
                 OnReceiveReplayReadyPacket();
                 break;
 
+            case PacketProtocol.REPLAY_START:
+                OnReceiveReplayStartPacket();
+                break;
+
             case PacketProtocol.LEAVE:
                 OnReceiveLeavePacket();
                 break;
@@ -350,6 +446,12 @@ public class GameManager : MonoBehaviour
         if (isGameOver)
         {
             Debug.Log("[Attack] 이미 게임 종료 상태라 ATTACK 무시");
+            return;
+        }
+
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            Debug.Log("[Attack] 씬 전환 중이라 ATTACK 무시");
             return;
         }
 
@@ -505,6 +607,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         isMyTurn = true;
         isWaitingResult = false;
 
@@ -533,9 +640,32 @@ public class GameManager : MonoBehaviour
         TryRestartBattleScene();
     }
 
+    private void OnReceiveReplayStartPacket()
+    {
+        if (isRestartingByReplay)
+        {
+            return;
+        }
+
+        Debug.Log("[Replay] 재시작 시작 패킷 수신");
+
+        MarkReplaySceneReloading();
+
+        StopTurnTimer();
+
+        StartCoroutine(RestartBattleSceneAfterDelay());
+    }
+
     private void OnReceiveLeavePacket()
     {
+        if (isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         Debug.Log("[Network] 상대가 게임에서 나감, 타이틀로 이동");
+
+        isReturningToTitleByLeave = true;
 
         StopTurnTimer();
 
@@ -548,6 +678,18 @@ public class GameManager : MonoBehaviour
 
     public void OnNetworkDisconnected()
     {
+        if (isReplaySceneReloading || isRestartingByReplay)
+        {
+            Debug.Log("[Network] Replay 씬 재시작 중이라 연결 끊김 알림 무시");
+            return;
+        }
+
+        if (isReturningToTitleByLeave)
+        {
+            Debug.Log("[Network] Leave 처리 중이라 연결 끊김 알림 무시");
+            return;
+        }
+
         if (isNetworkDisconnected)
         {
             return;
@@ -610,6 +752,12 @@ public class GameManager : MonoBehaviour
         if (isNetworkDisconnected)
         {
             Debug.Log("[Network] 연결 끊김 상태라 공격 불가");
+            return;
+        }
+
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            Debug.Log("[Battle] 씬 전환 중이라 공격 불가");
             return;
         }
 
@@ -693,6 +841,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         isGameOver = true;
         isMyTurn = false;
         isWaitingResult = false;
@@ -718,6 +871,18 @@ public class GameManager : MonoBehaviour
         if (isNetworkDisconnected)
         {
             Debug.Log("[Network] 연결 끊김 상태라 Replay 불가");
+            return;
+        }
+
+        if (isReturningToTitleByLeave)
+        {
+            Debug.Log("[Replay] 타이틀 복귀 중이라 Replay 불가");
+            return;
+        }
+
+        if (isRestartingByReplay)
+        {
+            Debug.Log("[Replay] 이미 재시작 진행 중");
             return;
         }
 
@@ -750,7 +915,14 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         Debug.Log("[UI] Exit 버튼 클릭");
+
+        isReturningToTitleByLeave = true;
 
         TrySendPacket(PacketProtocol.LEAVE);
 
@@ -762,6 +934,11 @@ public class GameManager : MonoBehaviour
     private void TryRestartBattleScene()
     {
         if (isNetworkDisconnected)
+        {
+            return;
+        }
+
+        if (isReturningToTitleByLeave)
         {
             return;
         }
@@ -778,9 +955,25 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("[Replay] 양쪽 재시작 Ready 완료, BattleScene 재시작");
+        if (isRestartingByReplay)
+        {
+            return;
+        }
+
+        Debug.Log("[Replay] 양쪽 재시작 Ready 완료, BattleScene 재시작 준비");
+
+        MarkReplaySceneReloading();
+
+        TrySendPacket(PacketProtocol.REPLAY_START);
 
         StopTurnTimer();
+
+        StartCoroutine(RestartBattleSceneAfterDelay());
+    }
+
+    private IEnumerator RestartBattleSceneAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
 
         SceneManager.LoadScene(battleSceneName);
     }
@@ -852,6 +1045,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay || isReturningToTitleByLeave)
+        {
+            return;
+        }
+
         if (useLocalBattleTest)
         {
             return;
@@ -889,6 +1087,12 @@ public class GameManager : MonoBehaviour
     private void UpdateTurnTimer()
     {
         if (isNetworkDisconnected)
+        {
+            StopTurnTimer();
+            return;
+        }
+
+        if (isRestartingByReplay || isReturningToTitleByLeave)
         {
             StopTurnTimer();
             return;
@@ -946,6 +1150,18 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isRestartingByReplay)
+        {
+            turnTimerText.text = "";
+            return;
+        }
+
+        if (isReturningToTitleByLeave)
+        {
+            turnTimerText.text = "";
+            return;
+        }
+
         if (gameState != GameState.Battle || isGameOver)
         {
             turnTimerText.text = "";
@@ -965,6 +1181,11 @@ public class GameManager : MonoBehaviour
     private void OnTurnTimeout()
     {
         if (isNetworkDisconnected)
+        {
+            return;
+        }
+
+        if (isRestartingByReplay || isReturningToTitleByLeave)
         {
             return;
         }
@@ -1057,6 +1278,8 @@ public class GameManager : MonoBehaviour
     [ContextMenu("Debug Start Battle")]
     private void DebugStartBattle()
     {
+        isReplaySceneReloading = false;
+
         isMyReady = true;
         isOpponentReady = true;
         isPlacementLocked = true;
@@ -1068,6 +1291,9 @@ public class GameManager : MonoBehaviour
         isMyReplayReady = false;
         isOpponentReplayReady = false;
         isNetworkDisconnected = false;
+        isRestartingByReplay = false;
+        isReturningToTitleByLeave = false;
+        isClearingReplayReloadFlag = false;
 
         HideGameOverUI();
         HideDisconnectUI();
