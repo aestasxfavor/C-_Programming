@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,9 +26,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject enemyBoardPanel;
 
     [Header("로컬 테스트")]
-    // TCP 없이 Editor 단독으로 전투 판정 테스트할 때만 사용
-    // 체크 ON  : Ready 클릭 시 상대도 Ready 한 것으로 처리하고 바로 Battle 진입
-    // 체크 OFF : 기존 TCP READY 패킷 송수신 흐름 사용
     [SerializeField] private bool useLocalBattleTest;
 
     [Header("전투 턴 상태")]
@@ -42,6 +40,10 @@ public class GameManager : MonoBehaviour
     [Header("게임 종료 UI")]
     [SerializeField] private GameObject winCanvas;
     [SerializeField] private GameObject loseCanvas;
+
+    [Header("연결 끊김 UI")]
+    [SerializeField] private GameObject disconnectPanel;
+    [SerializeField] private bool isNetworkDisconnected;
 
     [Header("턴 시간 제한")]
     [SerializeField] private float turnTimeLimit = 15f;
@@ -83,9 +85,11 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         gameState = GameState.Placement;
+        isNetworkDisconnected = false;
 
         ShowPlacementUI();
         HideGameOverUI();
+        HideDisconnectUI();
         UpdateTurnTimerUI();
 
         Debug.Log("[GameManager] Placement 단계 시작");
@@ -103,6 +107,12 @@ public class GameManager : MonoBehaviour
 
     public void OnClickReadyButton()
     {
+        if (isNetworkDisconnected)
+        {
+            Debug.Log("[Network] 연결 끊김 상태라 Ready 불가");
+            return;
+        }
+
         if (isMyReady)
         {
             Debug.Log("[Ready] 이미 Ready 상태");
@@ -166,6 +176,11 @@ public class GameManager : MonoBehaviour
 
     private void TrySendPendingReady()
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         if (!isPendingReadySend)
         {
             return;
@@ -207,6 +222,11 @@ public class GameManager : MonoBehaviour
 
     private void TryStartBattle()
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         if (!isMyReady)
         {
             Debug.Log("[Ready] 내 Ready 대기 중");
@@ -264,6 +284,12 @@ public class GameManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(packet))
         {
+            return;
+        }
+
+        if (isNetworkDisconnected)
+        {
+            Debug.Log($"[Packet] 연결 끊김 상태라 패킷 무시: {packet}");
             return;
         }
 
@@ -433,7 +459,6 @@ public class GameManager : MonoBehaviour
 
         enemyBoardView.ApplyAttackResult(x, y, resultText, aroundPositionsText);
 
-
         if (resultText == "GAME_OVER")
         {
             SetGameOver(true);
@@ -519,10 +544,75 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
+    #region Network Disconnect Flow
+
+    public void OnNetworkDisconnected()
+    {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
+        if (useLocalBattleTest)
+        {
+            return;
+        }
+
+        isNetworkDisconnected = true;
+
+        Debug.Log("[Network] 상대와의 연결이 끊김");
+
+        isMyTurn = false;
+        isWaitingResult = false;
+        isGameOver = true;
+        isPlacementLocked = true;
+        isPendingReadySend = false;
+        isMyReplayReady = false;
+        isOpponentReplayReady = false;
+
+        StopTurnTimer();
+
+        HideGameOverUI();
+        ShowDisconnectUI();
+
+        StartCoroutine(ReturnToTitleAfterDisconnect());
+    }
+
+    private IEnumerator ReturnToTitleAfterDisconnect()
+    {
+        yield return new WaitForSecondsRealtime(2f);
+
+        SceneManager.LoadScene(titleSceneName);
+    }
+
+    private void ShowDisconnectUI()
+    {
+        if (disconnectPanel != null)
+        {
+            disconnectPanel.SetActive(true);
+        }
+    }
+
+    private void HideDisconnectUI()
+    {
+        if (disconnectPanel != null)
+        {
+            disconnectPanel.SetActive(false);
+        }
+    }
+
+    #endregion
+
     #region Attack Flow
 
     public void TryAttackEnemyBoard(int x, int y)
     {
+        if (isNetworkDisconnected)
+        {
+            Debug.Log("[Network] 연결 끊김 상태라 공격 불가");
+            return;
+        }
+
         if (gameState != GameState.Battle)
         {
             Debug.Log("[Battle] 전투 단계가 아니라 공격 불가");
@@ -598,6 +688,11 @@ public class GameManager : MonoBehaviour
 
     private void SetGameOver(bool isWin)
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         isGameOver = true;
         isMyTurn = false;
         isWaitingResult = false;
@@ -620,6 +715,12 @@ public class GameManager : MonoBehaviour
 
     public void OnClickReplayButton()
     {
+        if (isNetworkDisconnected)
+        {
+            Debug.Log("[Network] 연결 끊김 상태라 Replay 불가");
+            return;
+        }
+
         if (gameState != GameState.GameOver)
         {
             Debug.Log("[Replay] 게임 종료 상태가 아니라 재시작 불가");
@@ -643,6 +744,12 @@ public class GameManager : MonoBehaviour
 
     public void OnClickExitButton()
     {
+        if (isNetworkDisconnected)
+        {
+            Debug.Log("[Network] 연결 끊김 상태라 Exit 무시");
+            return;
+        }
+
         Debug.Log("[UI] Exit 버튼 클릭");
 
         TrySendPacket(PacketProtocol.LEAVE);
@@ -654,6 +761,11 @@ public class GameManager : MonoBehaviour
 
     private void TryRestartBattleScene()
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         if (!isMyReplayReady)
         {
             Debug.Log("[Replay] 내 재시작 Ready 대기");
@@ -735,6 +847,11 @@ public class GameManager : MonoBehaviour
 
     private void StartTurnTimer()
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         if (useLocalBattleTest)
         {
             return;
@@ -771,6 +888,12 @@ public class GameManager : MonoBehaviour
 
     private void UpdateTurnTimer()
     {
+        if (isNetworkDisconnected)
+        {
+            StopTurnTimer();
+            return;
+        }
+
         if (!isTurnTimerRunning)
         {
             UpdateTurnTimerUI();
@@ -817,6 +940,12 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (isNetworkDisconnected)
+        {
+            turnTimerText.text = "";
+            return;
+        }
+
         if (gameState != GameState.Battle || isGameOver)
         {
             turnTimerText.text = "";
@@ -835,6 +964,11 @@ public class GameManager : MonoBehaviour
 
     private void OnTurnTimeout()
     {
+        if (isNetworkDisconnected)
+        {
+            return;
+        }
+
         if (!isMyTurn)
         {
             return;
@@ -866,6 +1000,12 @@ public class GameManager : MonoBehaviour
         if (useLocalBattleTest)
         {
             Debug.Log($"[Packet Send] 로컬 테스트 모드라 패킷 전송 생략: {packet}");
+            return false;
+        }
+
+        if (isNetworkDisconnected)
+        {
+            Debug.LogWarning($"[Packet Send] 연결 끊김 상태라 패킷 전송 생략: {packet}");
             return false;
         }
 
@@ -927,8 +1067,10 @@ public class GameManager : MonoBehaviour
         isMyTurn = true;
         isMyReplayReady = false;
         isOpponentReplayReady = false;
+        isNetworkDisconnected = false;
 
         HideGameOverUI();
+        HideDisconnectUI();
         ShowBattleUI();
 
         Debug.Log("[Debug] 강제 Battle 단계 진입");

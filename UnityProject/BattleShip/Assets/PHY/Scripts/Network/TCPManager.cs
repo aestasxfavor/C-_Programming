@@ -30,6 +30,10 @@ public class TCPManager : MonoBehaviour
 
     private readonly ConcurrentQueue<string> receiveQueue = new ConcurrentQueue<string>();
 
+    private bool disconnectPending;
+    private bool disconnectNotified;
+    private bool isClosingByOwner;
+
 
     private void Awake()
     {
@@ -55,14 +59,14 @@ public class TCPManager : MonoBehaviour
             StartClient();
         }
 #else
-    if (editorIsHost)
-    {
-        StartClient();
-    }
-    else
-    {
-        StartHost();
-    }
+        if (editorIsHost)
+        {
+            StartClient();
+        }
+        else
+        {
+            StartHost();
+        }
 #endif
     }
 
@@ -77,6 +81,16 @@ public class TCPManager : MonoBehaviour
                 GameManager.Instance.OnReceivePacket(message);
             }
         }
+
+        if (disconnectPending)
+        {
+            disconnectPending = false;
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnNetworkDisconnected();
+            }
+        }
     }
 
     public async void StartHost()
@@ -87,35 +101,66 @@ public class TCPManager : MonoBehaviour
             return;
         }
 
+        ResetDisconnectState();
+
         IsHost = true;
 
         Debug.Log("[TCP] Host 시작");
 
-        listener = new TcpListener(IPAddress.Any, port);
-        listener.Start();
+        try
+        {
+            listener = new TcpListener(IPAddress.Any, port);
+            listener.Start();
 
-        Debug.Log("[TCP] Client 접속 대기 중");
+            Debug.Log("[TCP] Client 접속 대기 중");
 
-        client = await listener.AcceptTcpClientAsync();
+            client = await listener.AcceptTcpClientAsync();
 
-        Debug.Log("[TCP] Client 접속 완료");
+            if (isClosingByOwner)
+            {
+                return;
+            }
 
-        SetupStream();
-        _ = ReceiveLoop();
+            Debug.Log("[TCP] Client 접속 완료");
+
+            SetupStream();
+            _ = ReceiveLoop();
+        }
+        catch (Exception e)
+        {
+            if (!isClosingByOwner)
+            {
+                Debug.LogWarning($"[TCP] Host 시작 또는 접속 대기 중 오류: {e.Message}");
+                MarkDisconnected();
+            }
+        }
     }
 
     public async void StartClient()
     {
+        if (isConnected || client != null)
+        {
+            Debug.LogWarning("[TCP] 이미 Client 실행 중");
+            return;
+        }
+
+        ResetDisconnectState();
+
         IsHost = false;
 
         Debug.Log("[TCP] Client 접속 시도");
 
-        while (!isConnected)
+        while (!isConnected && !isClosingByOwner)
         {
             try
             {
                 client = new TcpClient();
                 await client.ConnectAsync(hostIP, port);
+
+                if (isClosingByOwner)
+                {
+                    return;
+                }
 
                 Debug.Log("[TCP] Host 접속 완료");
 
@@ -126,6 +171,11 @@ public class TCPManager : MonoBehaviour
             }
             catch (Exception e)
             {
+                if (isClosingByOwner)
+                {
+                    return;
+                }
+
                 Debug.LogWarning($"[TCP] Client 접속 실패, 재시도 예정: {e.Message}");
 
                 client?.Close();
@@ -151,21 +201,36 @@ public class TCPManager : MonoBehaviour
 
     private async Task ReceiveLoop()
     {
-        while (isConnected && client != null && client.Connected)
+        try
         {
-            string message = await reader.ReadLineAsync();
-
-            // Todo: 연결 종료 시 ReadLineAsync가 null을 반환할 수 있음
-            // 현재는 빈 문자열과 null을 같이 무시하지만,
-            // 추후 TCP 안정화 단계에서 null 수신 시 연결 종료 처리로 분리할 것
-            if (string.IsNullOrEmpty(message))
+            while (isConnected && client != null)
             {
-                continue;
+                string message = await reader.ReadLineAsync();
+
+                if (message == null)
+                {
+                    Debug.Log("[TCP] 연결 종료 감지");
+                    MarkDisconnected();
+                    break;
+                }
+
+                if (message.Length == 0)
+                {
+                    continue;
+                }
+
+                Debug.Log($"[TCP] 수신: {message}");
+
+                EnqueueReceivedMessage(message);
             }
-
-            Debug.Log($"[TCP] 수신: {message}");
-
-            EnqueueReceivedMessage(message);
+        }
+        catch (Exception e)
+        {
+            if (!isClosingByOwner)
+            {
+                Debug.LogWarning($"[TCP] 수신 중 연결 끊김 감지: {e.Message}");
+                MarkDisconnected();
+            }
         }
     }
 
@@ -184,16 +249,86 @@ public class TCPManager : MonoBehaviour
 
         Debug.Log($"[TCP] 송신: {message}");
 
-        writer.WriteLine(message);
+        try
+        {
+            writer.WriteLine(message);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[TCP] 송신 중 연결 끊김 감지: {e.Message}");
+            MarkDisconnected();
+        }
+    }
+
+    private void MarkDisconnected()
+    {
+        if (isClosingByOwner)
+        {
+            return;
+        }
+
+        if (disconnectNotified)
+        {
+            return;
+        }
+
+        disconnectNotified = true;
+        disconnectPending = true;
+        isConnected = false;
+
+        CloseConnection();
+    }
+
+    private void ResetDisconnectState()
+    {
+        isClosingByOwner = false;
+        disconnectPending = false;
+        disconnectNotified = false;
+        isConnected = false;
+    }
+
+    private void CloseConnection()
+    {
+        try
+        {
+            writer?.Close();
+        }
+        catch { }
+
+        try
+        {
+            reader?.Close();
+        }
+        catch { }
+
+        try
+        {
+            client?.Close();
+        }
+        catch { }
+
+        try
+        {
+            listener?.Stop();
+        }
+        catch { }
+
+        writer = null;
+        reader = null;
+        client = null;
+        listener = null;
     }
 
     private void OnDestroy()
     {
+        isClosingByOwner = true;
         isConnected = false;
 
-        writer?.Close();
-        reader?.Close();
-        client?.Close();
-        listener?.Stop();
+        CloseConnection();
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 }
