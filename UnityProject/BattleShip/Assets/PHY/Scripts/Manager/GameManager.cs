@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     [Header("UI 컨트롤러")]
     [SerializeField] private BattleUIController battleUIController;
 
-    [Header("Match 컨트롤러")]
+    [Header("매치 컨트롤러")]
     [SerializeField] private MatchController matchController;
 
     [Header("Ready 컨트롤러")]
@@ -23,6 +23,9 @@ public class GameManager : MonoBehaviour
 
     [Header("전투 컨트롤러")]
     [SerializeField] private BattleController battleController;
+
+    [Header("네트워크 패킷 핸들러")]
+    [SerializeField] private BattleNetworkHandler battleNetworkHandler;
 
     [Header("재시작 상태")]
     [SerializeField] private bool isMyReplayReady;
@@ -76,6 +79,11 @@ public class GameManager : MonoBehaviour
         if (battleController == null)
         {
             battleController = GetComponent<BattleController>();
+        }
+
+        if (battleNetworkHandler == null)
+        {
+            battleNetworkHandler = GetComponent<BattleNetworkHandler>();
         }
     }
 
@@ -149,6 +157,21 @@ public class GameManager : MonoBehaviour
             );
 
             battleController.ResetBattle();
+        }
+
+        if (battleNetworkHandler != null)
+        {
+            battleNetworkHandler.Setup(
+                () => IsDisconnected,
+                ReceiveOpponentReady,
+                ReceiveAttackPacket,
+                ReceiveResultPacket,
+                ReceiveGameOverPacket,
+                ReceiveTurnTimeoutPacket,
+                ReceiveReplayReadyPacket,
+                ReceiveReplayStartPacket,
+                ReceiveLeavePacket
+            );
         }
     }
 
@@ -287,71 +310,57 @@ public class GameManager : MonoBehaviour
 
     public void OnReceivePacket(string packet)
     {
-        if (string.IsNullOrEmpty(packet))
+        if (battleNetworkHandler == null)
         {
+            Debug.LogError("[Packet] BattleNetworkHandler 연결 필요");
             return;
         }
 
-        if (IsDisconnected)
+        battleNetworkHandler.ReceivePacket(packet);
+    }
+
+    private void ReceiveAttackPacket(string[] split)
+    {
+        if (battleController == null)
         {
-            Debug.Log($"[Packet] 연결 끊김 상태라 패킷 무시: {packet}");
+            Debug.LogError("[Battle] BattleController 연결 필요");
             return;
         }
 
-        Debug.Log($"[Packet Received] {packet}");
+        battleController.ReceiveAttackPacket(split);
+    }
 
-        string[] split = packet.Split('|');
-
-        switch (split[0])
+    private void ReceiveResultPacket(string[] split)
+    {
+        if (battleController == null)
         {
-            case PacketProtocol.READY:
-                ReceiveOpponentReady();
-                break;
-
-            case PacketProtocol.ATTACK:
-                if (battleController != null)
-                {
-                    battleController.ReceiveAttackPacket(split);
-                }
-                break;
-
-            case PacketProtocol.RESULT:
-                if (battleController != null)
-                {
-                    battleController.ReceiveResultPacket(split);
-                }
-                break;
-
-            case PacketProtocol.GAME_OVER:
-                if (battleController != null)
-                {
-                    battleController.ReceiveGameOverPacket();
-                }
-                break;
-
-            case PacketProtocol.TURN_TIMEOUT:
-                if (battleController != null)
-                {
-                    battleController.ReceiveTurnTimeoutPacket();
-                }
-                break;
-
-            case PacketProtocol.REPLAY_READY:
-                ReceiveReplayReadyPacket();
-                break;
-
-            case PacketProtocol.REPLAY_START:
-                ReceiveReplayStartPacket();
-                break;
-
-            case PacketProtocol.LEAVE:
-                ReceiveLeavePacket();
-                break;
-
-            default:
-                Debug.LogWarning($"[Packet] 알 수 없는 패킷: {packet}");
-                break;
+            Debug.LogError("[Battle] BattleController 연결 필요");
+            return;
         }
+
+        battleController.ReceiveResultPacket(split);
+    }
+
+    private void ReceiveGameOverPacket()
+    {
+        if (battleController == null)
+        {
+            Debug.LogError("[Battle] BattleController 연결 필요");
+            return;
+        }
+
+        battleController.ReceiveGameOverPacket();
+    }
+
+    private void ReceiveTurnTimeoutPacket()
+    {
+        if (battleController == null)
+        {
+            Debug.LogError("[Battle] BattleController 연결 필요");
+            return;
+        }
+
+        battleController.ReceiveTurnTimeoutPacket();
     }
 
     private void ReceiveReplayReadyPacket()

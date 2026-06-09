@@ -5175,6 +5175,7 @@ GameObject:
   - component: {fileID: 1546513620}
   - component: {fileID: 1546513621}
   - component: {fileID: 1546513622}
+  - component: {fileID: 1546513623}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5200,6 +5201,7 @@ MonoBehaviour:
   matchController: {fileID: 1546513620}
   readyController: {fileID: 1546513621}
   battleController: {fileID: 1546513622}
+  battleNetworkHandler: {fileID: 1546513623}
   isMyReplayReady: 0
   isOpponentReplayReady: 0
 --- !u!4 &1546513618
@@ -5302,6 +5304,18 @@ MonoBehaviour:
   isMyTurn: 0
   isWaitingResult: 0
   isGameOver: 0
+--- !u!114 &1546513623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d508fcaabc78bfe45a844185ef1ac426, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleNetworkHandler
 --- !u!1 &1550360847
 GameObject:
   m_ObjectHideFlags: 0
