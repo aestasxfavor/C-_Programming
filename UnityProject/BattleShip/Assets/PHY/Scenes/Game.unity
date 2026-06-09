@@ -1042,7 +1042,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Ready
+  m_text: "\uC900\uBE44"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ebc9d77799186fd4d96ee22f8206cd09, type: 2}
   m_sharedMaterial: {fileID: -7121567128209638663, guid: ebc9d77799186fd4d96ee22f8206cd09, type: 2}
@@ -2704,7 +2704,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Reset
+  m_text: "\uCD08\uAE30\uD654"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ebc9d77799186fd4d96ee22f8206cd09, type: 2}
   m_sharedMaterial: {fileID: -7121567128209638663, guid: ebc9d77799186fd4d96ee22f8206cd09, type: 2}
@@ -5174,6 +5174,7 @@ GameObject:
   - component: {fileID: 1546513619}
   - component: {fileID: 1546513620}
   - component: {fileID: 1546513621}
+  - component: {fileID: 1546513622}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5195,18 +5196,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   gameState: 0
   myBoardView: {fileID: 6633546089630634731}
-  enemyBoardView: {fileID: 44838544}
   battleUIController: {fileID: 1546513619}
   matchController: {fileID: 1546513620}
   readyController: {fileID: 1546513621}
-  isMyTurn: 0
-  isWaitingResult: 0
-  isGameOver: 0
+  battleController: {fileID: 1546513622}
   isMyReplayReady: 0
   isOpponentReplayReady: 0
-  turnTimeLimit: 15
-  turnTimer: 0
-  isTurnTimerRunning: 0
 --- !u!4 &1546513618
 Transform:
   m_ObjectHideFlags: 0
@@ -5286,6 +5281,27 @@ MonoBehaviour:
   isOpponentReady: 0
   isPlacementLocked: 0
   isWaitingReadySend: 0
+--- !u!114 &1546513622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3065a633869047f46aed1cfb4d28bfb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattelController
+  myBoardView: {fileID: 6633546089630634731}
+  enemyBoardView: {fileID: 44838544}
+  battleUIController: {fileID: 1546513619}
+  turnTimeLimit: 15
+  turnTimer: 0
+  isTurnTimerRunning: 0
+  isMyTurn: 0
+  isWaitingResult: 0
+  isGameOver: 0
 --- !u!1 &1550360847
 GameObject:
   m_ObjectHideFlags: 0
