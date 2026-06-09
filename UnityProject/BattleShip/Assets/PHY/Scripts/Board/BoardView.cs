@@ -56,6 +56,7 @@ public class BoardView : MonoBehaviour
 
     private List<Vector2Int> previewPositions = new List<Vector2Int>();
     private string lastSunkAroundPositionsText = "";
+    private string lastSunkShipId = "";
 
     [Header("함선 세팅")]
     private ShipData[] ships;
@@ -780,6 +781,7 @@ public class BoardView : MonoBehaviour
 
     public AttackResult ReceiveAttack(int x, int y)
     {
+        lastSunkShipId = "";
         lastSunkAroundPositionsText = "";
 
         if (!CanAttackCell(x, y))
@@ -800,15 +802,17 @@ public class BoardView : MonoBehaviour
 
             if (IsShipSunk(shipID))
             {
+                lastSunkShipId = ConvertShipIdToStatusId(shipID);
+
                 MarkMissAroundSunkShip(shipID);
 
                 if (IsAllShipsSunk())
                 {
-                    Debug.Log("[Battle] 모든 함선 침몰");
+                    Debug.Log($"[Battle] 모든 함선 침몰, LastSunkShip={lastSunkShipId}");
                     return AttackResult.GameOver;
                 }
 
-                Debug.Log($"[Battle] Sunk ShipID={shipID}");
+                Debug.Log($"[Battle] Sunk ShipID={shipID}, LastSunkShip={lastSunkShipId}");
                 return AttackResult.Sunk;
             }
 
@@ -1078,6 +1082,11 @@ public class BoardView : MonoBehaviour
     public string GetLastSunkAroundPositionsText()
     {
         return lastSunkAroundPositionsText;
+    }
+
+    public string GetLastSunkShipId()
+    {
+        return lastSunkShipId;
     }
 
     public bool CanRequestAttack(int x, int y)
@@ -1417,6 +1426,9 @@ public class BoardView : MonoBehaviour
 
     private void ResetPlacement()
     {
+        lastSunkShipId = "";
+        lastSunkAroundPositionsText = "";
+
         ClearPreview();
         ClearAllShipVisuals();
 
@@ -1705,6 +1717,30 @@ public class BoardView : MonoBehaviour
     private bool IsInsideBoard(int x, int y)
     {
         return x >= 0 && x < BoardSize && y >= 0 && y < BoardSize;
+    }
+
+    private string ConvertShipIdToStatusId(int shipID)
+    {
+        switch (shipID)
+        {
+            case 0:
+                return "Ship2";
+
+            case 1:
+                return "Ship3A";
+
+            case 2:
+                return "Ship3B";
+
+            case 3:
+                return "Ship4";
+
+            case 4:
+                return "Ship5";
+
+            default:
+                return "";
+        }
     }
 
     #endregion

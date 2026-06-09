@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -60,6 +61,16 @@ public class GameManager : MonoBehaviour
     [Header("턴 시간 UI")]
     [SerializeField] private TextMeshProUGUI turnTimerText;
 
+    [Header("상태 UI")]
+    [SerializeField] private TextMeshProUGUI statusText;
+
+    [Header("함선 상태 UI")]
+    [SerializeField] private GameObject shipStatusHeader;
+    [SerializeField] private Image[] myShipIcons;
+    [SerializeField] private Image[] enemyShipIcons;
+    [SerializeField] private Color normalShipColor = Color.white;
+    [SerializeField] private Color sunkShipColor = new Color(0.35f, 0.35f, 0.35f, 1f);
+
     [Header("씬 이름")]
     [SerializeField] private string titleSceneName = "Title";
     [SerializeField] private string battleSceneName = "Game";
@@ -101,11 +112,14 @@ public class GameManager : MonoBehaviour
         ShowPlacementUI();
         HideGameOverUI();
         HideDisconnectUI();
+        ResetShipStatusUI();
         UpdateTurnTimerUI();
+        UpdateStatusText();
 
         if (isRestartingByReplay)
         {
             Debug.Log("[Replay] Replay 씬 재시작 상태 유지 중");
+            StartCoroutine(ClearReplayStateAfterSceneReload());
         }
 
         Debug.Log("[GameManager] Placement 단계 시작");
@@ -165,6 +179,7 @@ public class GameManager : MonoBehaviour
         }
 
         gameState = GameState.WaitingReady;
+        UpdateStatusText();
 
         if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
         {
@@ -191,6 +206,7 @@ public class GameManager : MonoBehaviour
         }
 
         isOpponentReady = true;
+        UpdateStatusText();
 
         Debug.Log("[Ready] 상대 Ready 수신");
 
@@ -307,6 +323,7 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("[Turn] 상대 턴 대기");
+            UpdateStatusText();
             StopTurnTimer();
         }
     }
@@ -321,7 +338,27 @@ public class GameManager : MonoBehaviour
         isRestartingByReplay = true;
         isClearingReplayReloadFlag = false;
 
+        UpdateStatusText();
+
         Debug.Log("[Replay] Replay 씬 재시작 플래그 설정");
+    }
+
+    private IEnumerator ClearReplayStateAfterSceneReload()
+    {
+        yield return new WaitForSecondsRealtime(0.7f);
+
+        if (gameState != GameState.Placement)
+        {
+            yield break;
+        }
+
+        isReplaySceneReloading = false;
+        isRestartingByReplay = false;
+        isClearingReplayReloadFlag = false;
+
+        UpdateStatusText();
+
+        Debug.Log("[Replay] 씬 재시작 후 Placement 상태로 전환 완료");
     }
 
     private void TryClearReplaySceneReloadFlagWhenReconnected()
@@ -360,6 +397,8 @@ public class GameManager : MonoBehaviour
             isReplaySceneReloading = false;
             isRestartingByReplay = false;
             isClearingReplayReloadFlag = false;
+
+            UpdateStatusText();
 
             Debug.Log("[Replay] TCP 재연결 확인, Replay 씬 재시작 플래그 해제");
             yield break;
@@ -472,23 +511,32 @@ public class GameManager : MonoBehaviour
         AttackResult result = myBoardView.ReceiveAttack(x, y);
         string resultText = ConvertAttackResultToPacketText(result);
 
-        string aroundPositionsText = "";
+        string sunkShipId = "-";
+        string aroundPositionsText = "-";
 
         if (result == AttackResult.Sunk || result == AttackResult.GameOver)
         {
+            sunkShipId = myBoardView.GetLastSunkShipId();
             aroundPositionsText = myBoardView.GetLastSunkAroundPositionsText();
+
+            if (string.IsNullOrEmpty(sunkShipId))
+            {
+                sunkShipId = "-";
+            }
+
+            if (string.IsNullOrEmpty(aroundPositionsText))
+            {
+                aroundPositionsText = "-";
+            }
+
+            MarkMyShipSunk(sunkShipId);
         }
 
-        string resultPacket = $"{PacketProtocol.RESULT}|{x}|{y}|{resultText}";
-
-        if (!string.IsNullOrEmpty(aroundPositionsText))
-        {
-            resultPacket += $"|{aroundPositionsText}";
-        }
+        string resultPacket = $"{PacketProtocol.RESULT}|{x}|{y}|{resultText}|{sunkShipId}|{aroundPositionsText}";
 
         TrySendPacket(resultPacket);
 
-        Debug.Log($"[Result] 결과 패킷 전송 {resultText}, X={x}, Y={y}");
+        Debug.Log($"[Result] 결과 패킷 전송 {resultText}, X={x}, Y={y}, Ship={sunkShipId}");
 
         if (result == AttackResult.Invalid)
         {
@@ -510,6 +558,7 @@ public class GameManager : MonoBehaviour
 
             Debug.Log("[Turn] 상대 공격이 빗나감, 내 턴 시작");
 
+            UpdateStatusText();
             StartTurnTimer();
         }
         else if (result == AttackResult.Hit || result == AttackResult.Sunk)
@@ -518,13 +567,14 @@ public class GameManager : MonoBehaviour
 
             Debug.Log("[Turn] 상대 공격이 명중함, 상대 턴 유지");
 
+            UpdateStatusText();
             StopTurnTimer();
         }
     }
 
     private void OnReceiveResultPacket(string[] split)
     {
-        if (split.Length < 4)
+        if (split.Length < 6)
         {
             Debug.LogWarning("[Result] RESULT 패킷 형식 오류");
             return;
@@ -537,9 +587,20 @@ public class GameManager : MonoBehaviour
         }
 
         string resultText = split[3];
-        string aroundPositionsText = split.Length >= 5 ? split[4] : "";
+        string sunkShipId = split[4];
+        string aroundPositionsText = split[5];
 
-        Debug.Log($"[Result] 결과 수신 {resultText}, X={x}, Y={y}");
+        if (sunkShipId == "-")
+        {
+            sunkShipId = "";
+        }
+
+        if (aroundPositionsText == "-")
+        {
+            aroundPositionsText = "";
+        }
+
+        Debug.Log($"[Result] 결과 수신 {resultText}, X={x}, Y={y}, Ship={sunkShipId}");
 
         isWaitingResult = false;
 
@@ -549,6 +610,7 @@ public class GameManager : MonoBehaviour
 
             Debug.Log("[Result] INVALID 수신, 내 턴 유지");
 
+            UpdateStatusText();
             StartTurnTimer();
             return;
         }
@@ -560,6 +622,11 @@ public class GameManager : MonoBehaviour
         }
 
         enemyBoardView.ApplyAttackResult(x, y, resultText, aroundPositionsText);
+
+        if (!string.IsNullOrEmpty(sunkShipId))
+        {
+            MarkEnemyShipSunk(sunkShipId);
+        }
 
         if (resultText == "GAME_OVER")
         {
@@ -573,6 +640,7 @@ public class GameManager : MonoBehaviour
 
             Debug.Log("[Turn] 공격 실패, 상대 턴 대기");
 
+            UpdateStatusText();
             StopTurnTimer();
         }
         else if (resultText == "HIT" || resultText == "SUNK")
@@ -581,6 +649,7 @@ public class GameManager : MonoBehaviour
 
             Debug.Log("[Turn] 공격 성공, 내 턴 유지");
 
+            UpdateStatusText();
             StartTurnTimer();
         }
     }
@@ -617,6 +686,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("[TurnTimer] 상대 시간 초과, 내 턴 시작");
 
+        UpdateStatusText();
         StartTurnTimer();
     }
 
@@ -663,13 +733,25 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("[Network] 상대가 게임에서 나감, 타이틀로 이동");
+        Debug.Log("[Network] 상대가 매치에서 나감");
 
         isReturningToTitleByLeave = true;
+        isNetworkDisconnected = true;
+        isMyTurn = false;
+        isWaitingResult = false;
+        isGameOver = true;
+        isPlacementLocked = true;
+        isPendingReadySend = false;
+        isMyReplayReady = false;
+        isOpponentReplayReady = false;
 
+        UpdateStatusText();
         StopTurnTimer();
 
-        SceneManager.LoadScene(titleSceneName);
+        HideGameOverUI();
+        ShowDisconnectUI();
+
+        StartCoroutine(ReturnToTitleAfterLeave());
     }
 
     #endregion
@@ -712,6 +794,7 @@ public class GameManager : MonoBehaviour
         isMyReplayReady = false;
         isOpponentReplayReady = false;
 
+        UpdateStatusText();
         StopTurnTimer();
 
         HideGameOverUI();
@@ -727,12 +810,28 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(titleSceneName);
     }
 
+    private IEnumerator ReturnToTitleAfterLeave()
+    {
+        yield return new WaitForSecondsRealtime(2f);
+
+        SceneManager.LoadScene(titleSceneName);
+    }
+
+    private IEnumerator ReturnToTitleAfterSendLeave()
+    {
+        yield return new WaitForSecondsRealtime(0.25f);
+
+        SceneManager.LoadScene(titleSceneName);
+    }
+
     private void ShowDisconnectUI()
     {
         if (disconnectPanel != null)
         {
             disconnectPanel.SetActive(true);
         }
+
+        UpdateStatusText();
     }
 
     private void HideDisconnectUI()
@@ -791,6 +890,12 @@ public class GameManager : MonoBehaviour
 
             Debug.Log($"[Battle] 로컬 공격 결과: {localResult}, X={x}, Y={y}");
 
+            if (localResult == AttackResult.Sunk || localResult == AttackResult.GameOver)
+            {
+                string localSunkShipId = enemyBoardView.GetLastSunkShipId();
+                MarkEnemyShipSunk(localSunkShipId);
+            }
+
             if (localResult == AttackResult.GameOver)
             {
                 SetGameOver(true);
@@ -825,6 +930,8 @@ public class GameManager : MonoBehaviour
         }
 
         isWaitingResult = true;
+
+        UpdateStatusText();
         StopTurnTimer();
 
         Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
@@ -855,6 +962,7 @@ public class GameManager : MonoBehaviour
         gameState = GameState.GameOver;
 
         ShowGameOverUI(isWin);
+        UpdateStatusText();
 
         if (isWin)
         {
@@ -923,10 +1031,21 @@ public class GameManager : MonoBehaviour
         Debug.Log("[UI] Exit 버튼 클릭");
 
         isReturningToTitleByLeave = true;
+        isMyTurn = false;
+        isWaitingResult = false;
+        isGameOver = true;
+        isPlacementLocked = true;
 
-        TrySendPacket(PacketProtocol.LEAVE);
-
+        UpdateStatusText();
         StopTurnTimer();
+        HideGameOverUI();
+
+        if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
+        {
+            TrySendPacket(PacketProtocol.LEAVE);
+            StartCoroutine(ReturnToTitleAfterSendLeave());
+            return;
+        }
 
         SceneManager.LoadScene(titleSceneName);
     }
@@ -993,6 +1112,10 @@ public class GameManager : MonoBehaviour
         {
             enemyBoardPanel.SetActive(false);
         }
+
+        SetShipStatusChildrenVisible(false);
+
+        UpdateStatusText();
     }
 
     private void ShowBattleUI()
@@ -1005,6 +1128,43 @@ public class GameManager : MonoBehaviour
         if (enemyBoardPanel != null)
         {
             enemyBoardPanel.SetActive(true);
+        }
+
+        SetShipStatusChildrenVisible(true);
+
+        Debug.Log("[UI] 함선 상태바 자식 표시");
+
+        UpdateStatusText();
+    }
+
+    private void SetShipStatusChildrenVisible(bool isVisible)
+    {
+        if (shipStatusHeader == null)
+        {
+            return;
+        }
+
+        shipStatusHeader.SetActive(true);
+
+        for (int i = 0; i < shipStatusHeader.transform.childCount; i++)
+        {
+            Transform child = shipStatusHeader.transform.GetChild(i);
+            SetActiveRecursive(child, isVisible);
+        }
+    }
+
+    private void SetActiveRecursive(Transform target, bool isActive)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        target.gameObject.SetActive(isActive);
+
+        for (int i = 0; i < target.childCount; i++)
+        {
+            SetActiveRecursive(target.GetChild(i), isActive);
         }
     }
 
@@ -1031,6 +1191,145 @@ public class GameManager : MonoBehaviour
         if (loseCanvas != null)
         {
             loseCanvas.SetActive(!isWin);
+        }
+
+        UpdateStatusText();
+    }
+
+    private void UpdateStatusText()
+    {
+        if (statusText == null)
+        {
+            return;
+        }
+
+        if (isNetworkDisconnected)
+        {
+            statusText.text = "연결 끊김";
+            return;
+        }
+
+        if (isReturningToTitleByLeave)
+        {
+            statusText.text = "매치 종료 중";
+            return;
+        }
+
+        if (isRestartingByReplay)
+        {
+            statusText.text = "다시 시작 준비 중";
+            return;
+        }
+
+        if (gameState == GameState.Placement)
+        {
+            statusText.text = "함선 배치 중";
+            return;
+        }
+
+        if (gameState == GameState.WaitingReady)
+        {
+            statusText.text = "상대 준비 대기 중";
+            return;
+        }
+
+        if (gameState == GameState.GameOver)
+        {
+            statusText.text = "게임 종료";
+            return;
+        }
+
+        if (gameState == GameState.Battle)
+        {
+            if (isWaitingResult)
+            {
+                statusText.text = "공격 결과 대기 중";
+                return;
+            }
+
+            statusText.text = isMyTurn ? "내 차례" : "상대 차례";
+            return;
+        }
+
+        statusText.text = "";
+    }
+
+    private void ResetShipStatusUI()
+    {
+        if (myShipIcons != null)
+        {
+            for (int i = 0; i < myShipIcons.Length; i++)
+            {
+                if (myShipIcons[i] != null)
+                {
+                    myShipIcons[i].color = normalShipColor;
+                }
+            }
+        }
+
+        if (enemyShipIcons != null)
+        {
+            for (int i = 0; i < enemyShipIcons.Length; i++)
+            {
+                if (enemyShipIcons[i] != null)
+                {
+                    enemyShipIcons[i].color = normalShipColor;
+                }
+            }
+        }
+    }
+
+    private int GetShipIconIndex(string shipId)
+    {
+        switch (shipId)
+        {
+            case "Ship2":
+                return 0;
+
+            case "Ship3A":
+                return 1;
+
+            case "Ship3B":
+                return 2;
+
+            case "Ship4":
+                return 3;
+
+            case "Ship5":
+                return 4;
+
+            default:
+                return -1;
+        }
+    }
+
+    private void MarkMyShipSunk(string shipId)
+    {
+        int index = GetShipIconIndex(shipId);
+
+        if (index < 0 || myShipIcons == null || index >= myShipIcons.Length)
+        {
+            return;
+        }
+
+        if (myShipIcons[index] != null)
+        {
+            myShipIcons[index].color = sunkShipColor;
+        }
+    }
+
+    private void MarkEnemyShipSunk(string shipId)
+    {
+        int index = GetShipIconIndex(shipId);
+
+        if (index < 0 || enemyShipIcons == null || index >= enemyShipIcons.Length)
+        {
+            return;
+        }
+
+        if (enemyShipIcons[index] != null)
+        {
+            enemyShipIcons[index].color = sunkShipColor;
         }
     }
 
@@ -1073,6 +1372,7 @@ public class GameManager : MonoBehaviour
         turnTimer = turnTimeLimit;
         isTurnTimerRunning = true;
 
+        UpdateStatusText();
         UpdateTurnTimerUI();
 
         Debug.Log($"[TurnTimer] 턴 타이머 시작: {turnTimeLimit}초");
@@ -1170,12 +1470,24 @@ public class GameManager : MonoBehaviour
 
         if (!isMyTurn)
         {
-            turnTimerText.text = "상대 턴 대기 중";
+            turnTimerText.text = "";
+            return;
+        }
+
+        if (isWaitingResult)
+        {
+            turnTimerText.text = "";
+            return;
+        }
+
+        if (!isTurnTimerRunning)
+        {
+            turnTimerText.text = "";
             return;
         }
 
         int displayTime = Mathf.CeilToInt(turnTimer);
-        turnTimerText.text = $"남은 시간: {displayTime}";
+        turnTimerText.text = $"남은 시간: {displayTime}초";
     }
 
     private void OnTurnTimeout()
@@ -1205,6 +1517,7 @@ public class GameManager : MonoBehaviour
         isMyTurn = false;
         isWaitingResult = false;
 
+        UpdateStatusText();
         StopTurnTimer();
 
         TrySendPacket(PacketProtocol.TURN_TIMEOUT);
@@ -1297,6 +1610,7 @@ public class GameManager : MonoBehaviour
 
         HideGameOverUI();
         HideDisconnectUI();
+        ResetShipStatusUI();
         ShowBattleUI();
 
         Debug.Log("[Debug] 강제 Battle 단계 진입");
