@@ -11,31 +11,56 @@ public class MatchController : MonoBehaviour
     [SerializeField] private string titleSceneName = "Title";
     [SerializeField] private string gameSceneName = "Game";
 
-    public bool IsRestarting { get; private set; }
-    public bool IsLeaving { get; private set; }
-    public bool IsDisconnected { get; private set; }
+    [Header("매치 상태")]
+    [SerializeField] private bool isRestarting;
+    [SerializeField] private bool isLeaving;
+    [SerializeField] private bool isDisconnected;
 
     private bool isClearingReplay;
-    private Action refreshStatus;
 
-    public void Setup(Action refreshStatusAction)
+    private Action updateStatusText;
+
+    public bool IsRestarting => isRestarting;
+    public bool IsLeaving => isLeaving;
+    public bool IsDisconnected => isDisconnected;
+
+    public void Setup(Action statusUpdater)
     {
-        refreshStatus = refreshStatusAction;
+        updateStatusText = statusUpdater;
     }
 
     public void ResetState()
     {
-        IsDisconnected = false;
-        IsRestarting = isReplayLoading;
-        IsLeaving = false;
+        isDisconnected = false;
+        isRestarting = isReplayLoading;
+        isLeaving = false;
         isClearingReplay = false;
 
-        if (IsRestarting)
+        if (isRestarting)
         {
             Debug.Log("[Replay] 씬 재시작 상태 유지 중");
         }
 
-        refreshStatus?.Invoke();
+        updateStatusText?.Invoke();
+    }
+
+    public void ClearBattleLock()
+    {
+        isRestarting = false;
+        isLeaving = false;
+
+        updateStatusText?.Invoke();
+    }
+
+    public void StartReplay()
+    {
+        isReplayLoading = true;
+        isRestarting = true;
+        isClearingReplay = false;
+
+        updateStatusText?.Invoke();
+
+        Debug.Log("[Replay] 재시작 플래그 설정");
     }
 
     public void CheckReplayReconnect()
@@ -63,52 +88,32 @@ public class MatchController : MonoBehaviour
         StartCoroutine(ClearReplayAfterReconnect());
     }
 
-    public void StartReplay()
+    public void ClearReplayAfterSceneLoad(GameState currentState)
     {
-        isReplayLoading = true;
-        IsRestarting = true;
-        isClearingReplay = false;
+        if (!isRestarting)
+        {
+            return;
+        }
 
-        refreshStatus?.Invoke();
-
-        Debug.Log("[Replay] 재시작 플래그 설정");
-    }
-
-    public void ClearBattleLock()
-    {
-        IsRestarting = false;
-        IsLeaving = false;
-
-        refreshStatus?.Invoke();
-    }
-
-    public void ResetDebugState()
-    {
-        isReplayLoading = false;
-        IsRestarting = false;
-        IsLeaving = false;
-        IsDisconnected = false;
-        isClearingReplay = false;
-
-        refreshStatus?.Invoke();
+        StartCoroutine(ClearReplayAfterSceneLoadRoutine(currentState));
     }
 
     public bool TryLeave()
     {
-        if (IsDisconnected)
+        if (isDisconnected)
         {
             Debug.Log("[Network] 연결 끊김 상태라 Exit 무시");
             return false;
         }
 
-        if (IsLeaving)
+        if (isLeaving)
         {
             return false;
         }
 
-        IsLeaving = true;
+        isLeaving = true;
 
-        refreshStatus?.Invoke();
+        updateStatusText?.Invoke();
 
         Debug.Log("[UI] Exit 버튼 클릭");
 
@@ -117,48 +122,43 @@ public class MatchController : MonoBehaviour
 
     public bool ReceiveLeave()
     {
-        if (IsLeaving)
+        if (isLeaving)
         {
             return false;
         }
 
-        IsLeaving = true;
-        IsDisconnected = true;
+        isLeaving = true;
+        isDisconnected = true;
 
-        refreshStatus?.Invoke();
+        updateStatusText?.Invoke();
 
         Debug.Log("[Network] 상대가 매치에서 나감");
 
         return true;
     }
 
-    public bool Disconnect(bool isLocalTest)
+    public bool Disconnect()
     {
-        if (isReplayLoading || IsRestarting)
+        if (isReplayLoading || isRestarting)
         {
             Debug.Log("[Network] Replay 중이라 연결 끊김 무시");
             return false;
         }
 
-        if (IsLeaving)
+        if (isLeaving)
         {
             Debug.Log("[Network] Leave 처리 중이라 연결 끊김 무시");
             return false;
         }
 
-        if (IsDisconnected)
+        if (isDisconnected)
         {
             return false;
         }
 
-        if (isLocalTest)
-        {
-            return false;
-        }
+        isDisconnected = true;
 
-        IsDisconnected = true;
-
-        refreshStatus?.Invoke();
+        updateStatusText?.Invoke();
 
         Debug.Log("[Network] 상대와의 연결이 끊김");
 
@@ -190,16 +190,6 @@ public class MatchController : MonoBehaviour
         StartCoroutine(RestartGameSceneAfterDelay());
     }
 
-    public void ClearReplayAfterSceneLoad(GameState currentState)
-    {
-        if (!IsRestarting)
-        {
-            return;
-        }
-
-        StartCoroutine(ClearReplayAfterSceneLoadRoutine(currentState));
-    }
-
     private IEnumerator ClearReplayAfterSceneLoadRoutine(GameState currentState)
     {
         yield return new WaitForSecondsRealtime(0.7f);
@@ -210,10 +200,10 @@ public class MatchController : MonoBehaviour
         }
 
         isReplayLoading = false;
-        IsRestarting = false;
+        isRestarting = false;
         isClearingReplay = false;
 
-        refreshStatus?.Invoke();
+        updateStatusText?.Invoke();
 
         Debug.Log("[Replay] 씬 재시작 후 Placement 상태 전환 완료");
     }
@@ -227,10 +217,10 @@ public class MatchController : MonoBehaviour
         if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
         {
             isReplayLoading = false;
-            IsRestarting = false;
+            isRestarting = false;
             isClearingReplay = false;
 
-            refreshStatus?.Invoke();
+            updateStatusText?.Invoke();
 
             Debug.Log("[Replay] TCP 재연결 확인, 재시작 플래그 해제");
             yield break;
