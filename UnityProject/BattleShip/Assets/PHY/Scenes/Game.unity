@@ -5172,6 +5172,8 @@ GameObject:
   - component: {fileID: 1546513618}
   - component: {fileID: 1546513617}
   - component: {fileID: 1546513619}
+  - component: {fileID: 1546513620}
+  - component: {fileID: 1546513621}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5192,28 +5194,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   gameState: 0
-  isMyReady: 0
-  isOpponentReady: 0
-  isPlacementLocked: 0
   myBoardView: {fileID: 6633546089630634731}
   enemyBoardView: {fileID: 44838544}
   battleUIController: {fileID: 1546513619}
-  useLocalBattleTest: 0
+  matchController: {fileID: 1546513620}
+  readyController: {fileID: 1546513621}
   isMyTurn: 0
   isWaitingResult: 0
   isGameOver: 0
   isMyReplayReady: 0
   isOpponentReplayReady: 0
-  isRestartingByReplay: 0
-  isClearingReplayReloadFlag: 0
-  isReturningToTitleByLeave: 0
-  isNetworkDisconnected: 0
   turnTimeLimit: 15
   turnTimer: 0
   isTurnTimerRunning: 0
-  titleSceneName: Title
-  battleSceneName: Game
-  isPendingReadySend: 0
 --- !u!4 &1546513618
 Transform:
   m_ObjectHideFlags: 0
@@ -5263,6 +5256,36 @@ MonoBehaviour:
   - {fileID: 1543118156}
   aliveShipColor: {r: 1, g: 1, b: 1, a: 1}
   sunkShipColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
+--- !u!114 &1546513620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5c995c270770ef42b1fb4b4711ee270, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MatchController
+  titleSceneName: Title
+  gameSceneName: Game
+--- !u!114 &1546513621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be76ace3011a90a45a2f0dfa9ef1fd28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReadyController
+  isMyReady: 0
+  isOpponentReady: 0
+  isPlacementLocked: 0
+  isWaitingReadySend: 0
 --- !u!1 &1550360847
 GameObject:
   m_ObjectHideFlags: 0
