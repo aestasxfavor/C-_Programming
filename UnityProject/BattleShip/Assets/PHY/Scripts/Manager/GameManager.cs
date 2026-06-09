@@ -21,6 +21,9 @@ public class GameManager : MonoBehaviour
     [Header("Replay 컨트롤러")]
     [SerializeField] private ReplayController replayController;
 
+    [Header("나가기 컨트롤러")]
+    [SerializeField] private LeaveController leaveController;
+
     [Header("Ready 컨트롤러")]
     [SerializeField] private ReadyController readyController;
 
@@ -105,6 +108,11 @@ public class GameManager : MonoBehaviour
             replayController = GetComponent<ReplayController>();
         }
 
+        if (leaveController == null)
+        {
+            leaveController = GetComponent<LeaveController>();
+        }
+
         if (readyController == null)
         {
             readyController = GetComponent<ReadyController>();
@@ -134,11 +142,24 @@ public class GameManager : MonoBehaviour
             replayController.Setup(
                 matchController,
                 () => gameState,
-                TrySendPacket,
+                SendPacket,
                 StopBattle
             );
 
             replayController.ResetState();
+        }
+
+        if (leaveController != null)
+        {
+            leaveController.Setup(
+                matchController,
+                SendPacket,
+                StopBattle,
+                LockPlacement,
+                UpdateStatusText,
+                HideGameOverUI,
+                ShowDisconnectUI
+            );
         }
 
         if (readyController != null)
@@ -146,7 +167,7 @@ public class GameManager : MonoBehaviour
             readyController.Setup(
                 IsAllShipsPlaced,
                 IsTcpConnected,
-                TrySendPacket,
+                SendPacket,
                 SetWaitingReadyState,
                 TryStartBattle,
                 UpdateStatusText
@@ -163,7 +184,7 @@ public class GameManager : MonoBehaviour
                 () => IsLeaving,
                 () => gameState,
                 SetGameState,
-                TrySendPacket,
+                SendPacket,
                 UpdateStatusText
             );
 
@@ -174,14 +195,14 @@ public class GameManager : MonoBehaviour
         {
             battleNetworkHandler.Setup(
                 () => IsDisconnected,
-                ReceiveOpponentReady,
-                ReceiveAttackPacket,
-                ReceiveResultPacket,
-                ReceiveGameOverPacket,
-                ReceiveTurnTimeoutPacket,
-                ReceiveReplayReadyPacket,
-                ReceiveReplayStartPacket,
-                ReceiveLeavePacket
+                () => readyController?.ReceiveOpponentReady(),
+                split => battleController?.ReceiveAttackPacket(split),
+                split => battleController?.ReceiveResultPacket(split),
+                () => battleController?.ReceiveGameOverPacket(),
+                () => battleController?.ReceiveTurnTimeoutPacket(),
+                () => replayController?.ReceiveReplayReady(),
+                () => replayController?.ReceiveReplayStart(),
+                () => leaveController?.ReceiveLeave()
             );
         }
     }
@@ -211,11 +232,6 @@ public class GameManager : MonoBehaviour
         }
 
         readyController.ClickReady();
-    }
-
-    private void ReceiveOpponentReady()
-    {
-        readyController?.ReceiveOpponentReady();
     }
 
     private void TrySendWaitingReady()
@@ -312,84 +328,15 @@ public class GameManager : MonoBehaviour
         battleNetworkHandler.ReceivePacket(packet);
     }
 
-    private void ReceiveAttackPacket(string[] split)
+    private bool SendPacket(string packet)
     {
-        battleController?.ReceiveAttackPacket(split);
-    }
-
-    private void ReceiveResultPacket(string[] split)
-    {
-        battleController?.ReceiveResultPacket(split);
-    }
-
-    private void ReceiveGameOverPacket()
-    {
-        battleController?.ReceiveGameOverPacket();
-    }
-
-    private void ReceiveTurnTimeoutPacket()
-    {
-        battleController?.ReceiveTurnTimeoutPacket();
-    }
-
-    private void ReceiveReplayReadyPacket()
-    {
-        replayController?.ReceiveReplayReady();
-    }
-
-    private void ReceiveReplayStartPacket()
-    {
-        replayController?.ReceiveReplayStart();
-    }
-
-    private void ReceiveLeavePacket()
-    {
-        if (matchController == null)
+        if (battleNetworkHandler == null)
         {
-            return;
+            Debug.LogError("[Packet] BattleNetworkHandler 연결 필요");
+            return false;
         }
 
-        if (!matchController.ReceiveLeave())
-        {
-            return;
-        }
-
-        StopBattle();
-        LockPlacement();
-
-        UpdateStatusText();
-
-        HideGameOverUI();
-        ShowDisconnectUI();
-
-        matchController.GoTitleAfterLeave();
-    }
-
-    #endregion
-
-    #region Network Disconnect Flow
-
-    public void OnNetworkDisconnected()
-    {
-        if (matchController == null)
-        {
-            return;
-        }
-
-        if (!matchController.Disconnect())
-        {
-            return;
-        }
-
-        StopBattle();
-        LockPlacement();
-
-        UpdateStatusText();
-
-        HideGameOverUI();
-        ShowDisconnectUI();
-
-        matchController.GoTitleAfterDisconnect();
+        return battleNetworkHandler.SendPacket(packet);
     }
 
     #endregion
@@ -408,30 +355,12 @@ public class GameManager : MonoBehaviour
 
     public void OnClickExitButton()
     {
-        if (matchController == null)
-        {
-            return;
-        }
+        leaveController?.ClickExit();
+    }
 
-        if (!matchController.TryLeave())
-        {
-            return;
-        }
-
-        StopBattle();
-        LockPlacement();
-
-        UpdateStatusText();
-        HideGameOverUI();
-
-        if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
-        {
-            TrySendPacket(PacketProtocol.LEAVE);
-            matchController.GoTitleAfterSendLeave();
-            return;
-        }
-
-        matchController.GoTitleNow();
+    public void OnNetworkDisconnected()
+    {
+        leaveController?.Disconnect();
     }
 
     #endregion
@@ -466,55 +395,14 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (IsDisconnected)
-        {
-            battleUIController.SetStatusText("연결 끊김");
-            return;
-        }
-
-        if (IsLeaving)
-        {
-            battleUIController.SetStatusText("매치 종료 중");
-            return;
-        }
-
-        if (IsRestarting)
-        {
-            battleUIController.SetStatusText("다시 시작 준비 중");
-            return;
-        }
-
-        if (gameState == GameState.Placement)
-        {
-            battleUIController.SetStatusText("함선 배치 중");
-            return;
-        }
-
-        if (gameState == GameState.WaitingReady)
-        {
-            battleUIController.SetStatusText("상대 준비 대기 중");
-            return;
-        }
-
-        if (gameState == GameState.GameOver)
-        {
-            battleUIController.SetStatusText("게임 종료");
-            return;
-        }
-
-        if (gameState == GameState.Battle)
-        {
-            if (IsWaitingResult)
-            {
-                battleUIController.SetStatusText("공격 결과 대기 중");
-                return;
-            }
-
-            battleUIController.SetStatusText(IsMyTurn ? "내 차례" : "상대 차례");
-            return;
-        }
-
-        battleUIController.SetStatusText("");
+        battleUIController.UpdateGameStatus(
+            gameState,
+            IsDisconnected,
+            IsLeaving,
+            IsRestarting,
+            IsWaitingResult,
+            IsMyTurn
+        );
     }
 
     private void HideGameOverUI()
@@ -526,34 +414,6 @@ public class GameManager : MonoBehaviour
     {
         battleUIController?.ShowDisconnectPanel();
         UpdateStatusText();
-    }
-
-    #endregion
-
-    #region Packet Send Flow
-
-    private bool TrySendPacket(string packet)
-    {
-        if (IsDisconnected)
-        {
-            Debug.LogWarning($"[Packet Send] 연결 끊김 상태라 패킷 전송 생략: {packet}");
-            return false;
-        }
-
-        if (TCPManager.Instance == null)
-        {
-            Debug.LogWarning($"[Packet Send] TCPManager.Instance 없음: {packet}");
-            return false;
-        }
-
-        if (!TCPManager.Instance.IsConnected)
-        {
-            Debug.LogWarning($"[Packet Send] TCP 연결 안 됨: {packet}");
-            return false;
-        }
-
-        TCPManager.Instance.Send(packet);
-        return true;
     }
 
     #endregion

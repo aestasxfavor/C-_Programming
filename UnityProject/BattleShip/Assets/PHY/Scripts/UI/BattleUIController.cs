@@ -108,6 +108,65 @@ public class BattleUIController : MonoBehaviour
         gameStatusText.text = text;
     }
 
+    public void UpdateGameStatus(
+        GameState gameState,
+        bool isDisconnected,
+        bool isLeaving,
+        bool isRestarting,
+        bool isWaitingResult,
+        bool isMyTurn)
+    {
+        if (isDisconnected)
+        {
+            SetStatusText("연결 끊김");
+            return;
+        }
+
+        if (isLeaving)
+        {
+            SetStatusText("매치 종료 중");
+            return;
+        }
+
+        if (isRestarting)
+        {
+            SetStatusText("다시 시작 준비 중");
+            return;
+        }
+
+        if (gameState == GameState.Placement)
+        {
+            SetStatusText("함선 배치 중");
+            return;
+        }
+
+        if (gameState == GameState.WaitingReady)
+        {
+            SetStatusText("상대 준비 대기 중");
+            return;
+        }
+
+        if (gameState == GameState.GameOver)
+        {
+            SetStatusText("게임 종료");
+            return;
+        }
+
+        if (gameState == GameState.Battle)
+        {
+            if (isWaitingResult)
+            {
+                SetStatusText("공격 결과 대기 중");
+                return;
+            }
+
+            SetStatusText(isMyTurn ? "내 차례" : "상대 차례");
+            return;
+        }
+
+        SetStatusText("");
+    }
+
     public void SetTurnTimeText(int seconds)
     {
         if (turnTimeText == null)

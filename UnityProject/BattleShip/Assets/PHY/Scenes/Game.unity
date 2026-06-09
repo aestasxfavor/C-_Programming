@@ -5177,6 +5177,7 @@ GameObject:
   - component: {fileID: 1546513622}
   - component: {fileID: 1546513623}
   - component: {fileID: 1546513624}
+  - component: {fileID: 1546513625}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5201,6 +5202,7 @@ MonoBehaviour:
   battleUIController: {fileID: 1546513619}
   matchController: {fileID: 1546513620}
   replayController: {fileID: 1546513624}
+  leaveController: {fileID: 1546513625}
   readyController: {fileID: 1546513621}
   battleController: {fileID: 1546513622}
   battleNetworkHandler: {fileID: 1546513623}
@@ -5333,6 +5335,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ReplayController
   isMyReplayReady: 0
   isOpponentReplayReady: 0
+--- !u!114 &1546513625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 744b027a4f08d92468b3d86a7593bb5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LeaveController
 --- !u!1 &1550360847
 GameObject:
   m_ObjectHideFlags: 0

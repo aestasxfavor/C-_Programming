@@ -99,6 +99,30 @@ public class BattleNetworkHandler : MonoBehaviour
         }
     }
 
+    public bool SendPacket(string packet)
+    {
+        if (IsDisconnected())
+        {
+            Debug.LogWarning($"[Packet Send] 연결 끊김 상태라 패킷 전송 생략: {packet}");
+            return false;
+        }
+
+        if (TCPManager.Instance == null)
+        {
+            Debug.LogWarning($"[Packet Send] TCPManager.Instance 없음: {packet}");
+            return false;
+        }
+
+        if (!TCPManager.Instance.IsConnected)
+        {
+            Debug.LogWarning($"[Packet Send] TCP 연결 안 됨: {packet}");
+            return false;
+        }
+
+        TCPManager.Instance.Send(packet);
+        return true;
+    }
+
     private bool IsDisconnected()
     {
         return isDisconnected != null && isDisconnected();
