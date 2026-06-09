@@ -5171,6 +5171,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1546513618}
   - component: {fileID: 1546513617}
+  - component: {fileID: 1546513619}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5196,8 +5197,7 @@ MonoBehaviour:
   isPlacementLocked: 0
   myBoardView: {fileID: 6633546089630634731}
   enemyBoardView: {fileID: 44838544}
-  shipCanvas: {fileID: 1853690025}
-  enemyBoardPanel: {fileID: 44838539}
+  battleUIController: {fileID: 1546513619}
   useLocalBattleTest: 0
   isMyTurn: 0
   isWaitingResult: 0
@@ -5207,30 +5207,10 @@ MonoBehaviour:
   isRestartingByReplay: 0
   isClearingReplayReloadFlag: 0
   isReturningToTitleByLeave: 0
-  winCanvas: {fileID: 230143956}
-  loseCanvas: {fileID: 274303673}
-  disconnectPanel: {fileID: 730769970}
   isNetworkDisconnected: 0
   turnTimeLimit: 15
   turnTimer: 0
   isTurnTimerRunning: 0
-  turnTimerText: {fileID: 2142171797}
-  statusText: {fileID: 1140072581}
-  shipStatusHeader: {fileID: 60478972}
-  myShipIcons:
-  - {fileID: 85757090}
-  - {fileID: 998848975}
-  - {fileID: 130525733}
-  - {fileID: 645094582}
-  - {fileID: 597926167}
-  enemyShipIcons:
-  - {fileID: 618661176}
-  - {fileID: 796614112}
-  - {fileID: 985892006}
-  - {fileID: 442423889}
-  - {fileID: 1543118156}
-  normalShipColor: {r: 1, g: 1, b: 1, a: 1}
-  sunkShipColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
   titleSceneName: Title
   battleSceneName: Game
   isPendingReadySend: 0
@@ -5249,6 +5229,40 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1546513619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546513616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dadad746eed3c0945a554c5fa1bbae79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleUIController
+  placementShipPanel: {fileID: 415979479}
+  enemyBoardPanel: {fileID: 44838539}
+  winPanel: {fileID: 230143956}
+  losePanel: {fileID: 274303673}
+  disconnectPanel: {fileID: 730769970}
+  gameStatusText: {fileID: 1140072581}
+  turnTimeText: {fileID: 2142171797}
+  shipStatusPanel: {fileID: 60478972}
+  myShipStatusIcons:
+  - {fileID: 85757090}
+  - {fileID: 998848975}
+  - {fileID: 130525733}
+  - {fileID: 645094582}
+  - {fileID: 597926167}
+  enemyShipStatusIcons:
+  - {fileID: 618661176}
+  - {fileID: 796614112}
+  - {fileID: 985892006}
+  - {fileID: 442423889}
+  - {fileID: 1543118156}
+  aliveShipColor: {r: 1, g: 1, b: 1, a: 1}
+  sunkShipColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
 --- !u!1 &1550360847
 GameObject:
   m_ObjectHideFlags: 0

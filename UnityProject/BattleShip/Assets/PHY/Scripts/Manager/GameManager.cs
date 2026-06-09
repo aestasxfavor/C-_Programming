@@ -1,8 +1,6 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -24,9 +22,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BoardView myBoardView;
     [SerializeField] private BoardView enemyBoardView;
 
-    [Header("UI 전환")]
-    [SerializeField] private GameObject shipCanvas;
-    [SerializeField] private GameObject enemyBoardPanel;
+    [Header("UI 컨트롤러")]
+    [SerializeField] private BattleUIController battleUIController;
 
     [Header("로컬 테스트")]
     [SerializeField] private bool useLocalBattleTest;
@@ -45,31 +42,13 @@ public class GameManager : MonoBehaviour
     [Header("나가기 상태")]
     [SerializeField] private bool isReturningToTitleByLeave;
 
-    [Header("게임 종료 UI")]
-    [SerializeField] private GameObject winCanvas;
-    [SerializeField] private GameObject loseCanvas;
-
-    [Header("연결 끊김 UI")]
-    [SerializeField] private GameObject disconnectPanel;
+    [Header("연결 끊김 상태")]
     [SerializeField] private bool isNetworkDisconnected;
 
     [Header("턴 시간 제한")]
     [SerializeField] private float turnTimeLimit = 15f;
     [SerializeField] private float turnTimer;
     [SerializeField] private bool isTurnTimerRunning;
-
-    [Header("턴 시간 UI")]
-    [SerializeField] private TextMeshProUGUI turnTimerText;
-
-    [Header("상태 UI")]
-    [SerializeField] private TextMeshProUGUI statusText;
-
-    [Header("함선 상태 UI")]
-    [SerializeField] private GameObject shipStatusHeader;
-    [SerializeField] private Image[] myShipIcons;
-    [SerializeField] private Image[] enemyShipIcons;
-    [SerializeField] private Color normalShipColor = Color.white;
-    [SerializeField] private Color sunkShipColor = new Color(0.35f, 0.35f, 0.35f, 1f);
 
     [Header("씬 이름")]
     [SerializeField] private string titleSceneName = "Title";
@@ -826,9 +805,9 @@ public class GameManager : MonoBehaviour
 
     private void ShowDisconnectUI()
     {
-        if (disconnectPanel != null)
+        if (battleUIController != null)
         {
-            disconnectPanel.SetActive(true);
+            battleUIController.ShowDisconnectPanel();
         }
 
         UpdateStatusText();
@@ -836,9 +815,9 @@ public class GameManager : MonoBehaviour
 
     private void HideDisconnectUI()
     {
-        if (disconnectPanel != null)
+        if (battleUIController != null)
         {
-            disconnectPanel.SetActive(false);
+            battleUIController.HideDisconnectPanel();
         }
     }
 
@@ -1103,94 +1082,39 @@ public class GameManager : MonoBehaviour
 
     private void ShowPlacementUI()
     {
-        if (shipCanvas != null)
+        if (battleUIController != null)
         {
-            shipCanvas.SetActive(true);
+            battleUIController.ShowPlacementUI();
         }
-
-        if (enemyBoardPanel != null)
-        {
-            enemyBoardPanel.SetActive(false);
-        }
-
-        SetShipStatusChildrenVisible(false);
 
         UpdateStatusText();
     }
 
     private void ShowBattleUI()
     {
-        if (shipCanvas != null)
+        if (battleUIController != null)
         {
-            shipCanvas.SetActive(false);
+            battleUIController.ShowBattleUI();
         }
 
-        if (enemyBoardPanel != null)
-        {
-            enemyBoardPanel.SetActive(true);
-        }
-
-        SetShipStatusChildrenVisible(true);
-
-        Debug.Log("[UI] 함선 상태바 자식 표시");
+        Debug.Log("[UI] 함선 상태바 표시");
 
         UpdateStatusText();
     }
 
-    private void SetShipStatusChildrenVisible(bool isVisible)
-    {
-        if (shipStatusHeader == null)
-        {
-            return;
-        }
-
-        shipStatusHeader.SetActive(true);
-
-        for (int i = 0; i < shipStatusHeader.transform.childCount; i++)
-        {
-            Transform child = shipStatusHeader.transform.GetChild(i);
-            SetActiveRecursive(child, isVisible);
-        }
-    }
-
-    private void SetActiveRecursive(Transform target, bool isActive)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        target.gameObject.SetActive(isActive);
-
-        for (int i = 0; i < target.childCount; i++)
-        {
-            SetActiveRecursive(target.GetChild(i), isActive);
-        }
-    }
-
     private void HideGameOverUI()
     {
-        if (winCanvas != null)
+        if (battleUIController != null)
         {
-            winCanvas.SetActive(false);
-        }
-
-        if (loseCanvas != null)
-        {
-            loseCanvas.SetActive(false);
+            battleUIController.HideGameOverUI();
         }
     }
 
     private void ShowGameOverUI(bool isWin)
     {
-        if (winCanvas != null)
+        if (battleUIController != null)
         {
-            winCanvas.SetActive(isWin);
-        }
-
-        if (loseCanvas != null)
-        {
-            loseCanvas.SetActive(!isWin);
+            battleUIController.ShowGameOverUI(isWin);
         }
 
         UpdateStatusText();
@@ -1198,44 +1122,44 @@ public class GameManager : MonoBehaviour
 
     private void UpdateStatusText()
     {
-        if (statusText == null)
+        if (battleUIController == null)
         {
             return;
         }
 
         if (isNetworkDisconnected)
         {
-            statusText.text = "연결 끊김";
+            battleUIController.SetStatusText("연결 끊김");
             return;
         }
 
         if (isReturningToTitleByLeave)
         {
-            statusText.text = "매치 종료 중";
+            battleUIController.SetStatusText("매치 종료 중");
             return;
         }
 
         if (isRestartingByReplay)
         {
-            statusText.text = "다시 시작 준비 중";
+            battleUIController.SetStatusText("다시 시작 준비 중");
             return;
         }
 
         if (gameState == GameState.Placement)
         {
-            statusText.text = "함선 배치 중";
+            battleUIController.SetStatusText("함선 배치 중");
             return;
         }
 
         if (gameState == GameState.WaitingReady)
         {
-            statusText.text = "상대 준비 대기 중";
+            battleUIController.SetStatusText("상대 준비 대기 중");
             return;
         }
 
         if (gameState == GameState.GameOver)
         {
-            statusText.text = "게임 종료";
+            battleUIController.SetStatusText("게임 종료");
             return;
         }
 
@@ -1243,93 +1167,38 @@ public class GameManager : MonoBehaviour
         {
             if (isWaitingResult)
             {
-                statusText.text = "공격 결과 대기 중";
+                battleUIController.SetStatusText("공격 결과 대기 중");
                 return;
             }
 
-            statusText.text = isMyTurn ? "내 차례" : "상대 차례";
+            battleUIController.SetStatusText(isMyTurn ? "내 차례" : "상대 차례");
             return;
         }
 
-        statusText.text = "";
+        battleUIController.SetStatusText("");
     }
 
     private void ResetShipStatusUI()
     {
-        if (myShipIcons != null)
+        if (battleUIController != null)
         {
-            for (int i = 0; i < myShipIcons.Length; i++)
-            {
-                if (myShipIcons[i] != null)
-                {
-                    myShipIcons[i].color = normalShipColor;
-                }
-            }
-        }
-
-        if (enemyShipIcons != null)
-        {
-            for (int i = 0; i < enemyShipIcons.Length; i++)
-            {
-                if (enemyShipIcons[i] != null)
-                {
-                    enemyShipIcons[i].color = normalShipColor;
-                }
-            }
-        }
-    }
-
-    private int GetShipIconIndex(string shipId)
-    {
-        switch (shipId)
-        {
-            case "Ship2":
-                return 0;
-
-            case "Ship3A":
-                return 1;
-
-            case "Ship3B":
-                return 2;
-
-            case "Ship4":
-                return 3;
-
-            case "Ship5":
-                return 4;
-
-            default:
-                return -1;
+            battleUIController.ResetShipStatus();
         }
     }
 
     private void MarkMyShipSunk(string shipId)
     {
-        int index = GetShipIconIndex(shipId);
-
-        if (index < 0 || myShipIcons == null || index >= myShipIcons.Length)
+        if (battleUIController != null)
         {
-            return;
-        }
-
-        if (myShipIcons[index] != null)
-        {
-            myShipIcons[index].color = sunkShipColor;
+            battleUIController.MarkMyShipSunk(shipId);
         }
     }
 
     private void MarkEnemyShipSunk(string shipId)
     {
-        int index = GetShipIconIndex(shipId);
-
-        if (index < 0 || enemyShipIcons == null || index >= enemyShipIcons.Length)
+        if (battleUIController != null)
         {
-            return;
-        }
-
-        if (enemyShipIcons[index] != null)
-        {
-            enemyShipIcons[index].color = sunkShipColor;
+            battleUIController.MarkEnemyShipSunk(shipId);
         }
     }
 
@@ -1439,55 +1308,55 @@ public class GameManager : MonoBehaviour
 
     private void UpdateTurnTimerUI()
     {
-        if (turnTimerText == null)
+        if (battleUIController == null)
         {
             return;
         }
 
         if (isNetworkDisconnected)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (isRestartingByReplay)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (isReturningToTitleByLeave)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (gameState != GameState.Battle || isGameOver)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (!isMyTurn)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (isWaitingResult)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         if (!isTurnTimerRunning)
         {
-            turnTimerText.text = "";
+            battleUIController.ClearTurnTimeText();
             return;
         }
 
         int displayTime = Mathf.CeilToInt(turnTimer);
-        turnTimerText.text = $"남은 시간: {displayTime}초";
+        battleUIController.SetTurnTimeText(displayTime);
     }
 
     private void OnTurnTimeout()
