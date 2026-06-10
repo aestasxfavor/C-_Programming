@@ -13,9 +13,9 @@ public class ReadyController : MonoBehaviour
 
     private Func<bool> checkAllShipsPlaced;
     private Func<bool> checkTcpConnected;
-    private Func<string, bool> sendPacket;
+    private Func<string, bool> packetSender;
 
-    private Action setWaitingReadyState;
+    private Action showWaitingReadyState;
     private Action tryStartBattle;
     private Action updateStatusText;
 
@@ -33,9 +33,9 @@ public class ReadyController : MonoBehaviour
     {
         checkAllShipsPlaced = allShipsPlacedChecker;
         checkTcpConnected = tcpConnectedChecker;
-        sendPacket = packetSender;
+        this.packetSender = packetSender;
 
-        setWaitingReadyState = waitingReadySetter;
+        showWaitingReadyState = waitingReadySetter;
         tryStartBattle = battleStarter;
         updateStatusText = statusTextUpdater;
     }
@@ -68,12 +68,12 @@ public class ReadyController : MonoBehaviour
         Debug.Log("[Ready] 내 Ready 완료");
         Debug.Log("[Placement] 배치 수정 잠금");
 
-        setWaitingReadyState?.Invoke();
+        showWaitingReadyState?.Invoke();
         updateStatusText?.Invoke();
 
         if (checkTcpConnected != null && checkTcpConnected())
         {
-            sendPacket?.Invoke(PacketProtocol.READY);
+            packetSender?.Invoke(PacketProtocol.READY);
             isWaitingReadySend = false;
 
             Debug.Log("[Ready] READY 패킷 즉시 전송");
@@ -126,7 +126,7 @@ public class ReadyController : MonoBehaviour
             return;
         }
 
-        sendPacket?.Invoke(PacketProtocol.READY);
+        packetSender?.Invoke(PacketProtocol.READY);
         isWaitingReadySend = false;
 
         Debug.Log("[Ready] 예약된 READY 패킷 전송 완료");

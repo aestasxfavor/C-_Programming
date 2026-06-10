@@ -10,7 +10,7 @@ public class BoardSetupController
 
     private readonly BoardCell[,] cells;
     private readonly CellState[,] boardStates;
-    private readonly int[,] shipIDByCell;
+    private readonly int[,] shipIdByCell;
 
     private readonly Action<BoardCell> onClickCell;
     private readonly Action<BoardCell> onRightClickCell;
@@ -67,7 +67,7 @@ public class BoardSetupController
 
         this.cells = cells;
         this.boardStates = boardStates;
-        this.shipIDByCell = shipIDByCell;
+        this.shipIdByCell = shipIDByCell;
 
         this.onClickCell = onClickCell;
         this.onRightClickCell = onRightClickCell;
@@ -123,7 +123,7 @@ public class BoardSetupController
             for (int x = 0; x < boardSize; x++)
             {
                 boardStates[x, y] = CellState.Empty;
-                shipIDByCell[x, y] = -1;
+                shipIdByCell[x, y] = -1;
             }
         }
     }

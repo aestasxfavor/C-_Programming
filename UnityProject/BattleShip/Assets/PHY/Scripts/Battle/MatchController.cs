@@ -44,7 +44,7 @@ public class MatchController : MonoBehaviour
         updateStatusText?.Invoke();
     }
 
-    public void ClearBattleLock()
+    public void ClearMatchLock()
     {
         isRestarting = false;
         isLeaving = false;

@@ -10,8 +10,8 @@ public class BoardInputController
 
     private readonly BoardPlacementController placementController;
 
-    private readonly Func<bool> isBattle;
-    private readonly Func<bool> isPlacementLocked;
+    private readonly Func<bool> checkBattleState;
+    private readonly Func<bool> checkPlacementLocked;
 
     private readonly Action<int, int> requestEnemyAttack;
     private readonly Action<List<Vector2Int>, bool> showShipPreview;
@@ -32,8 +32,8 @@ public class BoardInputController
         this.boardStates = boardStates;
         this.placementController = placementController;
 
-        this.isBattle = isBattle;
-        this.isPlacementLocked = isPlacementLocked;
+        this.checkBattleState = isBattle;
+        this.checkPlacementLocked = isPlacementLocked;
 
         this.requestEnemyAttack = requestEnemyAttack;
         this.showShipPreview = showShipPreview;
@@ -220,11 +220,11 @@ public class BoardInputController
 
     private bool IsBattle()
     {
-        return isBattle != null && isBattle.Invoke();
+        return checkBattleState != null && checkBattleState.Invoke();
     }
 
     private bool IsPlacementLocked()
     {
-        return isPlacementLocked != null && isPlacementLocked.Invoke();
+        return checkPlacementLocked != null && checkPlacementLocked.Invoke();
     }
 }

@@ -9,7 +9,7 @@ public class ReplayController : MonoBehaviour
 
     private MatchController matchController;
     private Func<GameState> getGameState;
-    private Func<string, bool> sendPacket;
+    private Func<string, bool> packetSender;
     private Action stopBattle;
 
     public void Setup(
@@ -20,7 +20,7 @@ public class ReplayController : MonoBehaviour
     {
         matchController = match;
         getGameState = gameStateGetter;
-        sendPacket = packetSender;
+        this.packetSender = packetSender;
         stopBattle = battleStopper;
     }
 
@@ -165,11 +165,11 @@ public class ReplayController : MonoBehaviour
 
     private bool SendPacket(string packet)
     {
-        if (sendPacket == null)
+        if (packetSender == null)
         {
             return false;
         }
 
-        return sendPacket(packet);
+        return packetSender(packet);
     }
 }

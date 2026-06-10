@@ -20,12 +20,12 @@ public class BattleController : MonoBehaviour
     [SerializeField] private bool isWaitingResult;
     [SerializeField] private bool isGameOver;
 
-    private Func<bool> isDisconnected;
-    private Func<bool> isRestarting;
-    private Func<bool> isLeaving;
+    private Func<bool> checkDisconnected;
+    private Func<bool> checkRestarting;
+    private Func<bool> checkLeaving;
     private Func<GameState> getGameState;
     private Action<GameState> setGameState;
-    private Func<string, bool> sendPacket;
+    private Func<string, bool> packetSender;
     private Action updateStatusText;
 
     public bool IsMyTurn => isMyTurn;
@@ -41,12 +41,12 @@ public class BattleController : MonoBehaviour
         Func<string, bool> packetSender,
         Action statusTextUpdater)
     {
-        isDisconnected = disconnectedCheck;
-        isRestarting = restartingCheck;
-        isLeaving = leavingCheck;
+        checkDisconnected = disconnectedCheck;
+        checkRestarting = restartingCheck;
+        checkLeaving = leavingCheck;
         getGameState = gameStateGetter;
         setGameState = gameStateSetter;
-        sendPacket = packetSender;
+        this.packetSender = packetSender;
         updateStatusText = statusTextUpdater;
     }
 
@@ -161,9 +161,9 @@ public class BattleController : MonoBehaviour
         Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
     }
 
-    public void ReceiveAttackPacket(string[] split)
+    public void ReceiveAttackPacket(string[] packetParts)
     {
-        if (split.Length < 3)
+        if (packetParts.Length < 3)
         {
             Debug.LogWarning("[Attack] ATTACK 패킷 형식 오류");
             return;
@@ -193,7 +193,7 @@ public class BattleController : MonoBehaviour
             return;
         }
 
-        if (!int.TryParse(split[1], out int x) || !int.TryParse(split[2], out int y))
+        if (!int.TryParse(packetParts[1], out int x) || !int.TryParse(packetParts[2], out int y))
         {
             Debug.LogWarning("[Attack] 좌표 파싱 실패");
             return;
@@ -202,7 +202,7 @@ public class BattleController : MonoBehaviour
         Debug.Log($"[Attack] 공격 패킷 수신 X={x}, Y={y}");
 
         AttackResult result = myBoardView.ReceiveAttack(x, y);
-        string resultText = ConvertAttackResultToPacketText(result);
+        string resultText = GetAttackResultText(result);
 
         string sunkShipId = "-";
         string aroundPositionsText = "-";
@@ -265,23 +265,23 @@ public class BattleController : MonoBehaviour
         }
     }
 
-    public void ReceiveResultPacket(string[] split)
+    public void ReceiveResultPacket(string[] packetParts)
     {
-        if (split.Length < 6)
+        if (packetParts.Length < 6)
         {
             Debug.LogWarning("[Result] RESULT 패킷 형식 오류");
             return;
         }
 
-        if (!int.TryParse(split[1], out int x) || !int.TryParse(split[2], out int y))
+        if (!int.TryParse(packetParts[1], out int x) || !int.TryParse(packetParts[2], out int y))
         {
             Debug.LogWarning("[Result] 좌표 파싱 실패");
             return;
         }
 
-        string resultText = split[3];
-        string sunkShipId = split[4];
-        string aroundPositionsText = split[5];
+        string resultText = packetParts[3];
+        string sunkShipId = packetParts[4];
+        string aroundPositionsText = packetParts[5];
 
         if (sunkShipId == "-")
         {
@@ -611,27 +611,27 @@ public class BattleController : MonoBehaviour
 
     private bool SendPacket(string packet)
     {
-        if (sendPacket == null)
+        if (packetSender == null)
         {
             return false;
         }
 
-        return sendPacket(packet);
+        return packetSender(packet);
     }
 
     private bool IsDisconnected()
     {
-        return isDisconnected != null && isDisconnected();
+        return checkDisconnected != null && checkDisconnected();
     }
 
     private bool IsRestarting()
     {
-        return isRestarting != null && isRestarting();
+        return checkRestarting != null && checkRestarting();
     }
 
     private bool IsLeaving()
     {
-        return isLeaving != null && isLeaving();
+        return checkLeaving != null && checkLeaving();
     }
 
     private void ShowGameOverUI(bool isWin)
@@ -658,7 +658,7 @@ public class BattleController : MonoBehaviour
         }
     }
 
-    private string ConvertAttackResultToPacketText(AttackResult result)
+    private string GetAttackResultText(AttackResult result)
     {
         switch (result)
         {

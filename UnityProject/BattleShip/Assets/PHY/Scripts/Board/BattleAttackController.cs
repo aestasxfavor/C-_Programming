@@ -6,7 +6,7 @@ public class BattleAttackController
 {
     private readonly int boardSize;
     private readonly CellState[,] boardStates;
-    private readonly int[,] shipIDByCell;
+    private readonly int[,] shipIdByCell;
     private readonly ShipData[] ships;
     private readonly Action<int, int> refreshCell;
 
@@ -16,14 +16,14 @@ public class BattleAttackController
     public BattleAttackController(
         int _boardSize,
         CellState[,] _boardStates,
-        int[,] _shipIDByCell,
+        int[,] _shipIdByCell,
         ShipData[] _ships,
         Action<int, int> _refreshCell
     )
     {
         boardSize = _boardSize;
         boardStates = _boardStates;
-        shipIDByCell = _shipIDByCell;
+        shipIdByCell = _shipIdByCell;
         ships = _ships;
         refreshCell = _refreshCell;
     }
@@ -109,18 +109,18 @@ public class BattleAttackController
 
     private AttackResult HandleHit(int x, int y)
     {
-        int shipID = shipIDByCell[x, y];
+        int shipId = shipIdByCell[x, y];
 
         boardStates[x, y] = CellState.Hit;
         RefreshCell(x, y);
 
-        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipID={shipID}");
+        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipID={shipId}");
 
-        if (IsShipSunk(shipID))
+        if (IsShipSunk(shipId))
         {
-            lastSunkShipId = GetShipStatusId(shipID);
+            lastSunkShipId = GetShipStatusId(shipId);
 
-            MarkMissAroundSunkShip(shipID);
+            MarkMissCellsAroundSunkShip(shipId);
 
             if (IsAllShipsSunk())
             {
@@ -128,7 +128,7 @@ public class BattleAttackController
                 return AttackResult.GameOver;
             }
 
-            Debug.Log($"[Battle] Sunk ShipID={shipID}, LastSunkShip={lastSunkShipId}");
+            Debug.Log($"[Battle] Sunk ShipID={shipId}, LastSunkShip={lastSunkShipId}");
             return AttackResult.Sunk;
         }
 
@@ -231,14 +231,14 @@ public class BattleAttackController
         return true;
     }
 
-    private bool IsShipSunk(int shipID)
+    private bool IsShipSunk(int shipId)
     {
-        if (shipID < 0 || shipID >= ships.Length)
+        if (shipId < 0 || shipId >= ships.Length)
         {
             return false;
         }
 
-        ShipData ship = ships[shipID];
+        ShipData ship = ships[shipId];
 
         for (int i = 0; i < ship.positions.Count; i++)
         {
@@ -258,16 +258,16 @@ public class BattleAttackController
         return true;
     }
 
-    private void MarkMissAroundSunkShip(int shipID)
+    private void MarkMissCellsAroundSunkShip(int shipId)
     {
         lastSunkAroundPositionsText = "";
 
-        if (shipID < 0 || shipID >= ships.Length)
+        if (shipId < 0 || shipId >= ships.Length)
         {
             return;
         }
 
-        ShipData ship = ships[shipID];
+        ShipData ship = ships[shipId];
 
         HashSet<Vector2Int> aroundMissPositions = new HashSet<Vector2Int>();
 
@@ -320,10 +320,10 @@ public class BattleAttackController
             }
         }
 
-        lastSunkAroundPositionsText = ConvertPositionsToText(aroundMissPositions);
+        lastSunkAroundPositionsText = ConvertPositionsToPacketText(aroundMissPositions);
     }
 
-    private string ConvertPositionsToText(HashSet<Vector2Int> positions)
+    private string ConvertPositionsToPacketText(HashSet<Vector2Int> positions)
     {
         if (positions == null || positions.Count == 0)
         {
@@ -358,9 +358,9 @@ public class BattleAttackController
         return true;
     }
 
-    private string GetShipStatusId(int shipID)
+    private string GetShipStatusId(int shipId)
     {
-        switch (shipID)
+        switch (shipId)
         {
             case 0:
                 return "Ship2";

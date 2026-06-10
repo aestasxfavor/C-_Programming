@@ -301,7 +301,7 @@ public class GameManager : MonoBehaviour
 
         gameState = GameState.Battle;
 
-        matchController?.ClearBattleLock();
+        matchController?.ClearMatchLock();
         replayController?.ResetState();
 
         bool startWithMyTurn = TCPManager.Instance != null && TCPManager.Instance.IsHost;

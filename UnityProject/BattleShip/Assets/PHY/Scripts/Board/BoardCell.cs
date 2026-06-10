@@ -22,7 +22,7 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
 
     public void Init(int x, int y, 
         Action<BoardCell> _onLeftClick, Action<BoardCell> _onRightClick,
-        Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPoinerExit,
+        Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPointerExit,
         Action<BoardCell, PointerEventData> _onDrop)
     {
         X = x;
@@ -31,7 +31,7 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
         onLeftClick = _onLeftClick;
         onRightClick = _onRightClick;
         onPointerEnter = _onPointerEnter;
-        onPointerExit = _onPoinerExit;
+        onPointerExit = _onPointerExit;
         onDrop = _onDrop;
 
         SetState(CellState.Empty);

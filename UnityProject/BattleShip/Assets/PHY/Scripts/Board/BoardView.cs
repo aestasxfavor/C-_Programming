@@ -3,11 +3,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public enum BoardRole
-{
-    MyBoard,
-    EnemyBoard
-}
+//public enum BoardRole
+//{
+//    MyBoard,
+//    EnemyBoard
+//}
 
 public class BoardView : MonoBehaviour
 {
@@ -33,7 +33,6 @@ public class BoardView : MonoBehaviour
     [Header("프리뷰 스프라이트")]
     [SerializeField] private Sprite previewShipSprite;
     [SerializeField] private Sprite invalidPreviewSprite;
-    [SerializeField] private Sprite spacingPreviewSprite;
 
     [Header("배 이미지 오버레이")]
     [SerializeField] private bool useShipVisualOverlay;
@@ -63,8 +62,6 @@ public class BoardView : MonoBehaviour
 
     [Header("배 선택 UI")]
     [SerializeField] private ShipDragItem[] shipDragItems;
-
-    [SerializeField] private bool isShipSpacingRuleEnabled = true;
 
     private bool lastBattleState;
 
@@ -220,14 +217,14 @@ public class BoardView : MonoBehaviour
 
     #region 함선 선택 / 회전
 
-    public void SelectShip(int shipID)
+    public void SelectShip(int shipId)
     {
         if (placementController == null)
         {
             return;
         }
 
-        placementController.SelectShip(shipID);
+        placementController.SelectShip(shipId);
     }
 
     public void RotateShip()
@@ -318,7 +315,7 @@ public class BoardView : MonoBehaviour
         return shipVisualController != null && shipVisualController.CanShowShipVisual;
     }
 
-    private void CreateShipVisual(ShipData ship)
+    private void ShowShipVisual(ShipData ship)
     {
         if (shipVisualController == null)
         {
@@ -366,7 +363,7 @@ public class BoardView : MonoBehaviour
             ResetShipDragItems,
             ClearShipPreview,
             RemoveShipVisual,
-            CreateShipVisual,
+            ShowShipVisual,
             ClearAllShipVisuals
         );
     }

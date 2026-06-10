@@ -10,7 +10,7 @@ public class BoardPlacementController
     private readonly int[,] shipIDByCell;
     private readonly ShipData[] ships;
 
-    private readonly Func<bool> isPlacementLocked;
+    private readonly Func<bool> checkPlacementLocked;
     private readonly Action refreshCells;
     private readonly Action updateReadyButton;
     private readonly Action resetShipDragItems;
@@ -19,13 +19,13 @@ public class BoardPlacementController
     private readonly Action<ShipData> showShipVisual;
     private readonly Action clearAllShipVisuals;
 
-    private int selectedShipID = -1;
+    private int selectedShipId = -1;
     private int selectedShipSize = 0;
     private ShipDirection currentDirection = ShipDirection.Horizontal;
 
     public bool HasSelectedShip
     {
-        get { return selectedShipID != -1; }
+        get { return selectedShipId != -1; }
     }
 
     public BoardPlacementController(
@@ -50,7 +50,7 @@ public class BoardPlacementController
         this.shipIDByCell = shipIDByCell;
         this.ships = ships;
 
-        this.isPlacementLocked = isPlacementLocked;
+        this.checkPlacementLocked = isPlacementLocked;
         this.refreshCells = refreshCells;
         this.updateReadyButton = updateReadyButton;
         this.resetShipDragItems = resetShipDragItems;
@@ -95,11 +95,11 @@ public class BoardPlacementController
             RemovePlacedShip(ship);
         }
 
-        selectedShipID = ship.shipID;
+        selectedShipId = ship.shipID;
         selectedShipSize = ship.size;
         currentDirection = ShipDirection.Horizontal;
 
-        Debug.Log($"[BoardView] Selected Ship: ID={selectedShipID}, Size={selectedShipSize}");
+        Debug.Log($"[BoardView] Selected Ship: ID={selectedShipId}, Size={selectedShipSize}");
         Debug.Log($"[BoardView] Direction: {currentDirection}");
     }
 
@@ -142,7 +142,7 @@ public class BoardPlacementController
             return false;
         }
 
-        if (selectedShipID == -1)
+        if (selectedShipId == -1)
         {
             Debug.LogWarning("[Placement] 함선을 먼저 선택해야 함");
             return false;
@@ -168,7 +168,7 @@ public class BoardPlacementController
         }
 
         clearShipPreview?.Invoke();
-        PlaceShip(selectedShipID, positions);
+        PlaceShip(selectedShipId, positions);
 
         return true;
     }
@@ -198,11 +198,11 @@ public class BoardPlacementController
 
         RemovePlacedShip(ship);
 
-        selectedShipID = ship.shipID;
+        selectedShipId = ship.shipID;
         selectedShipSize = ship.size;
         currentDirection = ShipDirection.Horizontal;
 
-        Debug.Log($"[BoardView] 배 재배치 선택: ID={selectedShipID}, Size={selectedShipSize}");
+        Debug.Log($"[BoardView] 배 재배치 선택: ID={selectedShipId}, Size={selectedShipSize}");
         Debug.Log($"[BoardView] Direction: {currentDirection}");
     }
 
@@ -215,7 +215,7 @@ public class BoardPlacementController
             return new List<Vector2Int>();
         }
 
-        if (selectedShipID == -1)
+        if (selectedShipId == -1)
         {
             return new List<Vector2Int>();
         }
@@ -263,7 +263,7 @@ public class BoardPlacementController
             ships[i].isPlaced = false;
         }
 
-        selectedShipID = -1;
+        selectedShipId = -1;
         selectedShipSize = 0;
         currentDirection = ShipDirection.Horizontal;
 
@@ -404,7 +404,7 @@ public class BoardPlacementController
         refreshCells?.Invoke();
         showShipVisual?.Invoke(ship);
 
-        selectedShipID = -1;
+        selectedShipId = -1;
         selectedShipSize = 0;
         currentDirection = ShipDirection.Horizontal;
 
@@ -507,7 +507,7 @@ public class BoardPlacementController
 
     private bool IsLocked()
     {
-        return isPlacementLocked != null && isPlacementLocked.Invoke();
+        return checkPlacementLocked != null && checkPlacementLocked.Invoke();
     }
 
     private bool IsInsideBoard(int x, int y)

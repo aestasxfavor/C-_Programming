@@ -4,7 +4,7 @@ using UnityEngine;
 public class LeaveController : MonoBehaviour
 {
     private MatchController matchController;
-    private Func<string, bool> sendPacket;
+    private Func<string, bool> packetSender;
     private Action stopBattle;
     private Action lockPlacement;
     private Action updateStatusText;
@@ -13,7 +13,7 @@ public class LeaveController : MonoBehaviour
 
     public void Setup(
         MatchController match,
-        Func<string, bool> packetSender,
+        Func<string, bool> _packetSender,
         Action battleStopper,
         Action placementLocker,
         Action statusUpdater,
@@ -21,7 +21,7 @@ public class LeaveController : MonoBehaviour
         Action disconnectUIShower)
     {
         matchController = match;
-        sendPacket = packetSender;
+        packetSender = _packetSender;
         stopBattle = battleStopper;
         lockPlacement = placementLocker;
         updateStatusText = statusUpdater;
@@ -108,11 +108,11 @@ public class LeaveController : MonoBehaviour
 
     private bool SendPacket(string packet)
     {
-        if (sendPacket == null)
+        if (packetSender == null)
         {
             return false;
         }
 
-        return sendPacket(packet);
+        return packetSender(packet);
     }
 }
