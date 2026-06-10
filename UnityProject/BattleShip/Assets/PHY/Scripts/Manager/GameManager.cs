@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
 
-        FindControllers();
+        CacheControllers();
     }
 
     private void Start()
@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
         battleController?.UpdateBattle();
     }
 
-    private void FindControllers()
+    private void CacheControllers()
     {
         if (battleUIController == null)
         {

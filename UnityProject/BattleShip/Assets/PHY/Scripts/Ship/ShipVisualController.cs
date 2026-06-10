@@ -19,18 +19,13 @@ public class ShipVisualController
 
     private readonly Vector2 visualPadding;
 
-    private readonly Dictionary<int, Image> visualByShipID = new Dictionary<int, Image>();
+    private readonly Dictionary<int, Image> visualByShipId = new Dictionary<int, Image>();
 
     public bool CanShowShipVisual
     {
         get
         {
             if (!useOverlay)
-            {
-                return false;
-            }
-
-            if (boardRole != BoardRole.MyBoard)
             {
                 return false;
             }
@@ -115,11 +110,11 @@ public class ShipVisualController
         }
 
         BringRootToFront();
-        RemoveShip(ship.shipID);
+        RemoveShip(ship.shipId);
 
         Image visual = Object.Instantiate(visualTemplate, visualRoot);
 
-        visual.gameObject.name = $"ShipVisual_{ship.shipID}_Size{ship.size}";
+        visual.gameObject.name = $"ShipVisual_{ship.shipId}_Size{ship.size}";
         visual.sprite = shipSprite;
         visual.raycastTarget = false;
         visual.gameObject.SetActive(true);
@@ -171,14 +166,14 @@ public class ShipVisualController
         visualRect.SetAsLastSibling();
         BringRootToFront();
 
-        visualByShipID[ship.shipID] = visual;
+        visualByShipId[ship.shipId] = visual;
 
-        Debug.Log($"[ShipVisual] 생성 완료: ShipID={ship.shipID}, Size={ship.size}, Direction={(isHorizontal ? "Horizontal" : "Vertical")}");
+        Debug.Log($"[ShipVisual] 생성 완료: ShipID={ship.shipId}, Size={ship.size}, Direction={(isHorizontal ? "Horizontal" : "Vertical")}");
     }
 
     public void RemoveShip(int shipID)
     {
-        if (!visualByShipID.TryGetValue(shipID, out Image visual))
+        if (!visualByShipId.TryGetValue(shipID, out Image visual))
         {
             return;
         }
@@ -188,14 +183,14 @@ public class ShipVisualController
             Object.Destroy(visual.gameObject);
         }
 
-        visualByShipID.Remove(shipID);
+        visualByShipId.Remove(shipID);
 
         Debug.Log($"[ShipVisual] 제거 완료: ShipID={shipID}");
     }
 
     public void ClearAllShips()
     {
-        foreach (KeyValuePair<int, Image> pair in visualByShipID)
+        foreach (KeyValuePair<int, Image> pair in visualByShipId)
         {
             if (pair.Value != null)
             {
@@ -203,7 +198,7 @@ public class ShipVisualController
             }
         }
 
-        visualByShipID.Clear();
+        visualByShipId.Clear();
     }
 
     private void FitRootToBoard()

@@ -3,12 +3,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-//public enum BoardRole
-//{
-//    MyBoard,
-//    EnemyBoard
-//}
-
 public class BoardView : MonoBehaviour
 {
     [SerializeField] private BoardCell cellTemplate;
@@ -17,7 +11,7 @@ public class BoardView : MonoBehaviour
 
     private BoardCell[,] cells = new BoardCell[BoardSize, BoardSize];
     private CellState[,] boardStates = new CellState[BoardSize, BoardSize];
-    private int[,] shipIDByCell = new int[BoardSize, BoardSize];
+    private int[,] shipIdByCell = new int[BoardSize, BoardSize];
 
     [Header("보드 역할")]
     [SerializeField] private BoardRole boardRole = BoardRole.MyBoard;
@@ -126,7 +120,7 @@ public class BoardView : MonoBehaviour
             transform,
             cells,
             boardStates,
-            shipIDByCell,
+            shipIdByCell,
             OnClickCell,
             OnRightClickCell,
             OnPointerEnterCell,
@@ -325,14 +319,14 @@ public class BoardView : MonoBehaviour
         shipVisualController.ShowShip(ship);
     }
 
-    private void RemoveShipVisual(int shipID)
+    private void RemoveShipVisual(int shipId)
     {
         if (shipVisualController == null)
         {
             return;
         }
 
-        shipVisualController.RemoveShip(shipID);
+        shipVisualController.RemoveShip(shipId);
     }
 
     private void ClearAllShipVisuals()
@@ -345,6 +339,60 @@ public class BoardView : MonoBehaviour
         shipVisualController.ClearAllShips();
     }
 
+    private void ShowSunkShipVisual(List<Vector2Int> positions, string shipStatusId)
+    {
+        if (boardRole != BoardRole.EnemyBoard)
+        {
+            return;
+        }
+
+        if (positions == null || positions.Count == 0)
+        {
+            return;
+        }
+
+        int shipId = GetShipIdFromStatusId(shipStatusId);
+
+        if (shipId < 0)
+        {
+            return;
+        }
+
+        ShipData visualShip = new ShipData(shipId, positions.Count);
+        visualShip.isPlaced = true;
+
+        for (int i = 0; i < positions.Count; i++)
+        {
+            visualShip.positions.Add(positions[i]);
+        }
+
+        ShowShipVisual(visualShip);
+    }
+
+    private int GetShipIdFromStatusId(string shipStatusId)
+    {
+        switch (shipStatusId)
+        {
+            case "Ship2":
+                return 0;
+
+            case "Ship3A":
+                return 1;
+
+            case "Ship3B":
+                return 2;
+
+            case "Ship4":
+                return 3;
+
+            case "Ship5":
+                return 4;
+
+            default:
+                return -1;
+        }
+    }
+
     #endregion
 
     #region 배치 컨트롤러
@@ -355,7 +403,7 @@ public class BoardView : MonoBehaviour
             BoardSize,
             boardRole,
             boardStates,
-            shipIDByCell,
+            shipIdByCell,
             ships,
             IsPlacementLocked,
             RefreshCells,
@@ -377,9 +425,10 @@ public class BoardView : MonoBehaviour
         attackController = new BattleAttackController(
             BoardSize,
             boardStates,
-            shipIDByCell,
+            shipIdByCell,
             ships,
-            RefreshCell
+            RefreshCell,
+            ShowSunkShipVisual
         );
     }
 
@@ -393,14 +442,21 @@ public class BoardView : MonoBehaviour
         return attackController.ReceiveAttack(x, y);
     }
 
-    public void ApplyAttackResult(int x, int y, string resultText, string aroundPositionsText)
+    public void ApplyAttackResult(
+        int x,
+        int y,
+        string resultText,
+        string sunkShipId,
+        string aroundPositionsText,
+        string sunkShipPositionsText
+    )
     {
         if (attackController == null)
         {
             return;
         }
 
-        attackController.ApplyAttackResult(x, y, resultText, aroundPositionsText);
+        attackController.ApplyAttackResult(x, y, resultText, sunkShipId, aroundPositionsText, sunkShipPositionsText);
     }
 
     public string GetLastSunkAroundPositionsText()
@@ -411,6 +467,16 @@ public class BoardView : MonoBehaviour
         }
 
         return attackController.GetLastSunkAroundPositionsText();
+    }
+
+    public string GetLastSunkShipPositionsText()
+    {
+        if (attackController == null)
+        {
+            return "";
+        }
+
+        return attackController.GetLastSunkShipPositionsText();
     }
 
     public string GetLastSunkShipId()
@@ -555,21 +621,10 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region 상대 보드 좌표 반전 예정 구역
+    #region 상대 보드 좌표 반전 보류
 
-    // 기본 전투 시스템 안정화 이후 작업
-    // TCP 패킷에는 원본 좌표 사용
-    // 화면 표시만 반전 좌표 사용
-
-    //private Vector2Int ConvertToDisplayPosition(Vector2Int originalPosition)
-    //{
-    //    return originalPosition;
-    //}
-
-    //private Vector2Int ConvertToOriginalPosition(Vector2Int displayPosition)
-    //{
-    //    return originalPosition;
-    //}
+    // 필요하면 UI 표시 전용으로만 적용
+    // 네트워크 패킷 좌표는 원본 좌표 유지
 
     #endregion
 }

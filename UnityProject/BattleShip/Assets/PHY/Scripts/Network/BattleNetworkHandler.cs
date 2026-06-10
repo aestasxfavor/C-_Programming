@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class BattleNetworkHandler : MonoBehaviour
 {
-    private Func<bool> isDisconnected;
+    private Func<bool> checkDisconnected;
 
     private Action receiveReady;
     private Action<string[]> receiveAttack;
@@ -25,7 +25,7 @@ public class BattleNetworkHandler : MonoBehaviour
         Action replayStartHandler,
         Action leaveHandler)
     {
-        isDisconnected = disconnectedCheck;
+        checkDisconnected = disconnectedCheck;
 
         receiveReady = readyHandler;
         receiveAttack = attackHandler;
@@ -52,25 +52,25 @@ public class BattleNetworkHandler : MonoBehaviour
 
         Debug.Log($"[Packet Received] {packet}");
 
-        string[] split = packet.Split('|');
+        string[] packetParts = packet.Split('|');
 
-        if (split.Length == 0)
+        if (packetParts.Length == 0)
         {
             return;
         }
 
-        switch (split[0])
+        switch (packetParts[0])
         {
             case PacketProtocol.READY:
                 receiveReady?.Invoke();
                 break;
 
             case PacketProtocol.ATTACK:
-                receiveAttack?.Invoke(split);
+                receiveAttack?.Invoke(packetParts);
                 break;
 
             case PacketProtocol.RESULT:
-                receiveResult?.Invoke(split);
+                receiveResult?.Invoke(packetParts);
                 break;
 
             case PacketProtocol.GAME_OVER:
@@ -125,6 +125,6 @@ public class BattleNetworkHandler : MonoBehaviour
 
     private bool IsDisconnected()
     {
-        return isDisconnected != null && isDisconnected();
+        return checkDisconnected != null && checkDisconnected();
     }
 }

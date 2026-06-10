@@ -196,6 +196,14 @@ public class BoardRenderer
             case CellState.Miss:
                 return missSprite;
 
+            case CellState.SunkShip:
+                if (shipSprite != null)
+                {
+                    return shipSprite;
+                }
+
+                return hitSprite;
+
             default:
                 return waterSprite;
         }

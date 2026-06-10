@@ -202,15 +202,17 @@ public class BattleController : MonoBehaviour
         Debug.Log($"[Attack] 공격 패킷 수신 X={x}, Y={y}");
 
         AttackResult result = myBoardView.ReceiveAttack(x, y);
-        string resultText = GetAttackResultText(result);
+        string resultText = ConvertAttackResultToPacketText(result);
 
         string sunkShipId = "-";
         string aroundPositionsText = "-";
+        string sunkShipPositionsText = "-";
 
         if (result == AttackResult.Sunk || result == AttackResult.GameOver)
         {
             sunkShipId = myBoardView.GetLastSunkShipId();
             aroundPositionsText = myBoardView.GetLastSunkAroundPositionsText();
+            sunkShipPositionsText = myBoardView.GetLastSunkShipPositionsText();
 
             if (string.IsNullOrEmpty(sunkShipId))
             {
@@ -222,10 +224,15 @@ public class BattleController : MonoBehaviour
                 aroundPositionsText = "-";
             }
 
+            if (string.IsNullOrEmpty(sunkShipPositionsText))
+            {
+                sunkShipPositionsText = "-";
+            }
+
             MarkMyShipSunk(sunkShipId);
         }
 
-        string resultPacket = $"{PacketProtocol.RESULT}|{x}|{y}|{resultText}|{sunkShipId}|{aroundPositionsText}";
+        string resultPacket = $"{PacketProtocol.RESULT}|{x}|{y}|{resultText}|{sunkShipId}|{aroundPositionsText}|{sunkShipPositionsText}";
 
         SendPacket(resultPacket);
 
@@ -282,6 +289,12 @@ public class BattleController : MonoBehaviour
         string resultText = packetParts[3];
         string sunkShipId = packetParts[4];
         string aroundPositionsText = packetParts[5];
+        string sunkShipPositionsText = "";
+
+        if (packetParts.Length >= 7)
+        {
+            sunkShipPositionsText = packetParts[6];
+        }
 
         if (sunkShipId == "-")
         {
@@ -291,6 +304,11 @@ public class BattleController : MonoBehaviour
         if (aroundPositionsText == "-")
         {
             aroundPositionsText = "";
+        }
+
+        if (sunkShipPositionsText == "-")
+        {
+            sunkShipPositionsText = "";
         }
 
         Debug.Log($"[Result] 결과 수신 {resultText}, X={x}, Y={y}, Ship={sunkShipId}");
@@ -314,7 +332,14 @@ public class BattleController : MonoBehaviour
             return;
         }
 
-        enemyBoardView.ApplyAttackResult(x, y, resultText, aroundPositionsText);
+        enemyBoardView.ApplyAttackResult(
+            x,
+            y,
+            resultText,
+            sunkShipId,
+            aroundPositionsText,
+            sunkShipPositionsText
+        );
 
         if (!string.IsNullOrEmpty(sunkShipId))
         {
@@ -658,7 +683,7 @@ public class BattleController : MonoBehaviour
         }
     }
 
-    private string GetAttackResultText(AttackResult result)
+    private string ConvertAttackResultToPacketText(AttackResult result)
     {
         switch (result)
         {

@@ -9,23 +9,27 @@ public class BattleAttackController
     private readonly int[,] shipIdByCell;
     private readonly ShipData[] ships;
     private readonly Action<int, int> refreshCell;
+    private readonly Action<List<Vector2Int>, string> showSunkShipVisual;
 
     private string lastSunkAroundPositionsText = "";
+    private string lastSunkShipPositionsText = "";
     private string lastSunkShipId = "";
 
     public BattleAttackController(
-        int _boardSize,
-        CellState[,] _boardStates,
-        int[,] _shipIdByCell,
-        ShipData[] _ships,
-        Action<int, int> _refreshCell
+        int boardSize,
+        CellState[,] boardStates,
+        int[,] shipIdByCell,
+        ShipData[] ships,
+        Action<int, int> refreshCell,
+        Action<List<Vector2Int>, string> showSunkShipVisual = null
     )
     {
-        boardSize = _boardSize;
-        boardStates = _boardStates;
-        shipIdByCell = _shipIdByCell;
-        ships = _ships;
-        refreshCell = _refreshCell;
+        this.boardSize = boardSize;
+        this.boardStates = boardStates;
+        this.shipIdByCell = shipIdByCell;
+        this.ships = ships;
+        this.refreshCell = refreshCell;
+        this.showSunkShipVisual = showSunkShipVisual;
     }
 
     public AttackResult ReceiveAttack(int x, int y)
@@ -52,7 +56,14 @@ public class BattleAttackController
         return AttackResult.Invalid;
     }
 
-    public void ApplyAttackResult(int x, int y, string resultText, string aroundPositionsText)
+    public void ApplyAttackResult(
+        int x,
+        int y,
+        string resultText,
+        string sunkShipId,
+        string aroundPositionsText,
+        string sunkShipPositionsText
+    )
     {
         if (!IsInsideBoard(x, y))
         {
@@ -72,11 +83,13 @@ public class BattleAttackController
 
             case "SUNK":
                 ApplyHitResult(x, y);
+                ApplySunkShipPositions(sunkShipPositionsText, sunkShipId);
                 ApplyAroundMissPositions(aroundPositionsText);
                 break;
 
             case "GAME_OVER":
                 ApplyHitResult(x, y);
+                ApplySunkShipPositions(sunkShipPositionsText, sunkShipId);
                 ApplyAroundMissPositions(aroundPositionsText);
                 break;
 
@@ -96,6 +109,11 @@ public class BattleAttackController
         return lastSunkAroundPositionsText;
     }
 
+    public string GetLastSunkShipPositionsText()
+    {
+        return lastSunkShipPositionsText;
+    }
+
     public string GetLastSunkShipId()
     {
         return lastSunkShipId;
@@ -105,6 +123,7 @@ public class BattleAttackController
     {
         lastSunkShipId = "";
         lastSunkAroundPositionsText = "";
+        lastSunkShipPositionsText = "";
     }
 
     private AttackResult HandleHit(int x, int y)
@@ -114,13 +133,14 @@ public class BattleAttackController
         boardStates[x, y] = CellState.Hit;
         RefreshCell(x, y);
 
-        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipID={shipId}");
+        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipId={shipId}");
 
         if (IsShipSunk(shipId))
         {
             lastSunkShipId = GetShipStatusId(shipId);
+            lastSunkShipPositionsText = ConvertShipPositionsToText(shipId);
 
-            MarkMissCellsAroundSunkShip(shipId);
+            MarkMissAroundSunkShip(shipId);
 
             if (IsAllShipsSunk())
             {
@@ -128,7 +148,7 @@ public class BattleAttackController
                 return AttackResult.GameOver;
             }
 
-            Debug.Log($"[Battle] Sunk ShipID={shipId}, LastSunkShip={lastSunkShipId}");
+            Debug.Log($"[Battle] Sunk ShipId={shipId}, LastSunkShip={lastSunkShipId}");
             return AttackResult.Sunk;
         }
 
@@ -160,6 +180,43 @@ public class BattleAttackController
         Debug.Log($"[EnemyBoard] Miss 표시 X={x}, Y={y}");
     }
 
+    private void ApplySunkShipPositions(string sunkShipPositionsText, string sunkShipId)
+    {
+        if (string.IsNullOrEmpty(sunkShipPositionsText))
+        {
+            return;
+        }
+
+        List<Vector2Int> sunkShipPositions = ParsePositions(sunkShipPositionsText);
+
+        if (sunkShipPositions.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < sunkShipPositions.Count; i++)
+        {
+            Vector2Int position = sunkShipPositions[i];
+
+            if (!IsInsideBoard(position.x, position.y))
+            {
+                continue;
+            }
+
+            if (boardStates[position.x, position.y] == CellState.Land)
+            {
+                continue;
+            }
+
+            boardStates[position.x, position.y] = CellState.Hit;
+            RefreshCell(position.x, position.y);
+
+            Debug.Log($"[EnemyBoard] 침몰 배 위치 Hit 표시 X={position.x}, Y={position.y}");
+        }
+
+        showSunkShipVisual?.Invoke(sunkShipPositions, sunkShipId);
+    }
+
     private void ApplyAroundMissPositions(string aroundPositionsText)
     {
         if (string.IsNullOrEmpty(aroundPositionsText))
@@ -167,45 +224,28 @@ public class BattleAttackController
             return;
         }
 
-        string[] positions = aroundPositionsText.Split(';');
+        List<Vector2Int> aroundPositions = ParsePositions(aroundPositionsText);
 
-        for (int i = 0; i < positions.Length; i++)
+        for (int i = 0; i < aroundPositions.Count; i++)
         {
-            string positionText = positions[i];
+            Vector2Int position = aroundPositions[i];
 
-            if (string.IsNullOrEmpty(positionText))
+            if (!IsInsideBoard(position.x, position.y))
             {
                 continue;
             }
 
-            string[] xy = positionText.Split(',');
+            CellState state = boardStates[position.x, position.y];
 
-            if (xy.Length < 2)
+            if (state == CellState.Hit || state == CellState.Miss || state == CellState.Land || state == CellState.SunkShip)
             {
                 continue;
             }
 
-            if (!int.TryParse(xy[0], out int x) || !int.TryParse(xy[1], out int y))
-            {
-                continue;
-            }
+            boardStates[position.x, position.y] = CellState.Miss;
+            RefreshCell(position.x, position.y);
 
-            if (!IsInsideBoard(x, y))
-            {
-                continue;
-            }
-
-            CellState state = boardStates[x, y];
-
-            if (state == CellState.Hit || state == CellState.Miss || state == CellState.Land)
-            {
-                continue;
-            }
-
-            boardStates[x, y] = CellState.Miss;
-            RefreshCell(x, y);
-
-            Debug.Log($"[EnemyBoard] 침몰 주변 Miss 표시 X={x}, Y={y}");
+            Debug.Log($"[EnemyBoard] 침몰 주변 Miss 표시 X={position.x}, Y={position.y}");
         }
     }
 
@@ -218,7 +258,7 @@ public class BattleAttackController
 
         CellState state = boardStates[x, y];
 
-        if (state == CellState.Hit || state == CellState.Miss)
+        if (state == CellState.Hit || state == CellState.Miss || state == CellState.SunkShip)
         {
             return false;
         }
@@ -258,7 +298,7 @@ public class BattleAttackController
         return true;
     }
 
-    private void MarkMissCellsAroundSunkShip(int shipId)
+    private void MarkMissAroundSunkShip(int shipId)
     {
         lastSunkAroundPositionsText = "";
 
@@ -294,7 +334,7 @@ public class BattleAttackController
 
                     CellState aroundState = boardStates[checkX, checkY];
 
-                    if (aroundState == CellState.Hit || aroundState == CellState.Miss)
+                    if (aroundState == CellState.Hit || aroundState == CellState.Miss || aroundState == CellState.SunkShip)
                     {
                         continue;
                     }
@@ -320,10 +360,27 @@ public class BattleAttackController
             }
         }
 
-        lastSunkAroundPositionsText = ConvertPositionsToPacketText(aroundMissPositions);
+        lastSunkAroundPositionsText = ConvertPositionsToText(aroundMissPositions);
     }
 
-    private string ConvertPositionsToPacketText(HashSet<Vector2Int> positions)
+    private string ConvertShipPositionsToText(int shipId)
+    {
+        if (shipId < 0 || shipId >= ships.Length)
+        {
+            return "";
+        }
+
+        ShipData ship = ships[shipId];
+
+        if (ship == null || ship.positions == null || ship.positions.Count == 0)
+        {
+            return "";
+        }
+
+        return ConvertPositionsToText(ship.positions);
+    }
+
+    private string ConvertPositionsToText(HashSet<Vector2Int> positions)
     {
         if (positions == null || positions.Count == 0)
         {
@@ -340,6 +397,73 @@ public class BattleAttackController
         return string.Join(";", positionTexts);
     }
 
+    private string ConvertPositionsToText(List<Vector2Int> positions)
+    {
+        if (positions == null || positions.Count == 0)
+        {
+            return "";
+        }
+
+        List<string> positionTexts = new List<string>();
+
+        for (int i = 0; i < positions.Count; i++)
+        {
+            Vector2Int position = positions[i];
+
+            if (!IsInsideBoard(position.x, position.y))
+            {
+                continue;
+            }
+
+            positionTexts.Add($"{position.x},{position.y}");
+        }
+
+        return string.Join(";", positionTexts);
+    }
+
+    private List<Vector2Int> ParsePositions(string positionsText)
+    {
+        List<Vector2Int> positions = new List<Vector2Int>();
+
+        if (string.IsNullOrEmpty(positionsText))
+        {
+            return positions;
+        }
+
+        string[] splitPositions = positionsText.Split(';');
+
+        for (int i = 0; i < splitPositions.Length; i++)
+        {
+            string positionText = splitPositions[i];
+
+            if (string.IsNullOrEmpty(positionText))
+            {
+                continue;
+            }
+
+            string[] xy = positionText.Split(',');
+
+            if (xy.Length < 2)
+            {
+                continue;
+            }
+
+            if (!int.TryParse(xy[0], out int x) || !int.TryParse(xy[1], out int y))
+            {
+                continue;
+            }
+
+            if (!IsInsideBoard(x, y))
+            {
+                continue;
+            }
+
+            positions.Add(new Vector2Int(x, y));
+        }
+
+        return positions;
+    }
+
     private bool IsAllShipsSunk()
     {
         for (int i = 0; i < ships.Length; i++)
@@ -349,7 +473,7 @@ public class BattleAttackController
                 return false;
             }
 
-            if (!IsShipSunk(ships[i].shipID))
+            if (!IsShipSunk(ships[i].shipId))
             {
                 return false;
             }

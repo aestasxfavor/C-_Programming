@@ -4,14 +4,14 @@ using UnityEngine.EventSystems;
 public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private BoardView boardView;
-    [SerializeField] private int shipID;
+    [SerializeField] private int shipId;
 
     private RectTransform rectTransform;
     private Canvas rootCanvas;
     private CanvasGroup canvasGroup;
 
     private Vector2 startAnchoredPosition;
-    private bool isDroppedSuccessfully;
+    private bool isDropSuccessful;
     private bool hasStartPosition;
 
     private void Awake()
@@ -64,9 +64,9 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         SaveStartPosition();
 
-        isDroppedSuccessfully = false;
+        isDropSuccessful = false;
 
-        boardView.SelectShip(shipID);
+        boardView.SelectShip(shipId);
 
         canvasGroup.blocksRaycasts = false;
         transform.SetAsLastSibling();
@@ -92,7 +92,7 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         canvasGroup.blocksRaycasts = true;
 
-        if (isDroppedSuccessfully)
+        if (isDropSuccessful)
         {
             gameObject.SetActive(false);
             return;
@@ -103,7 +103,7 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void MarkDroppedSuccessfully()
     {
-        isDroppedSuccessfully = true;
+        isDropSuccessful = true;
         Debug.Log("[ShipDragItem] 드랍 성공 처리");
     }
 
@@ -111,7 +111,7 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         SaveStartPosition();
 
-        isDroppedSuccessfully = false;
+        isDropSuccessful = false;
 
         gameObject.SetActive(true);
 
@@ -127,6 +127,6 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             canvasGroup.interactable = true;
         }
 
-        Debug.Log($"[ShipDragItem] 리셋 완료: ShipID={shipID}");
+        Debug.Log($"[ShipDragItem] 리셋 완료: ShipID={shipId}");
     }
 }

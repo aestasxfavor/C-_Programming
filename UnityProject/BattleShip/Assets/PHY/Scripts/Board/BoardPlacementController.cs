@@ -7,7 +7,7 @@ public class BoardPlacementController
     private readonly int boardSize;
     private readonly BoardRole boardRole;
     private readonly CellState[,] boardStates;
-    private readonly int[,] shipIDByCell;
+    private readonly int[,] shipIdByCell;
     private readonly ShipData[] ships;
 
     private readonly Func<bool> checkPlacementLocked;
@@ -32,7 +32,7 @@ public class BoardPlacementController
         int boardSize,
         BoardRole boardRole,
         CellState[,] boardStates,
-        int[,] shipIDByCell,
+        int[,] shipIdByCell,
         ShipData[] ships,
         Func<bool> isPlacementLocked,
         Action refreshCells,
@@ -47,7 +47,7 @@ public class BoardPlacementController
         this.boardSize = boardSize;
         this.boardRole = boardRole;
         this.boardStates = boardStates;
-        this.shipIDByCell = shipIDByCell;
+        this.shipIdByCell = shipIdByCell;
         this.ships = ships;
 
         this.checkPlacementLocked = isPlacementLocked;
@@ -60,7 +60,7 @@ public class BoardPlacementController
         this.clearAllShipVisuals = clearAllShipVisuals;
     }
 
-    public void SelectShip(int shipID)
+    public void SelectShip(int shipId)
     {
         if (boardRole != BoardRole.MyBoard)
         {
@@ -73,7 +73,7 @@ public class BoardPlacementController
             return;
         }
 
-        Debug.Log($"[BoardView] SelectShip 호출됨: {shipID}");
+        Debug.Log($"[BoardView] SelectShip 호출됨: {shipId}");
 
         if (ships == null)
         {
@@ -81,21 +81,21 @@ public class BoardPlacementController
             return;
         }
 
-        if (shipID < 0 || shipID >= ships.Length)
+        if (shipId < 0 || shipId >= ships.Length)
         {
-            Debug.LogError($"[BoardView] 잘못된 shipID입니다: {shipID}");
+            Debug.LogError($"[BoardView] 잘못된 shipID입니다: {shipId}");
             return;
         }
 
-        ShipData ship = ships[shipID];
+        ShipData ship = ships[shipId];
 
         if (ship.isPlaced)
         {
-            Debug.LogWarning($"[BoardView] 이미 배치한 배입니다. ID={ship.shipID}, Size={ship.size}");
+            Debug.LogWarning($"[BoardView] 이미 배치한 배입니다. ID={ship.shipId}, Size={ship.size}");
             RemovePlacedShip(ship);
         }
 
-        selectedShipId = ship.shipID;
+        selectedShipId = ship.shipId;
         selectedShipSize = ship.size;
         currentDirection = ShipDirection.Horizontal;
 
@@ -186,19 +186,19 @@ public class BoardPlacementController
             return;
         }
 
-        int shipID = shipIDByCell[x, y];
+        int shipId = shipIdByCell[x, y];
 
-        if (shipID < 0 || shipID >= ships.Length)
+        if (shipId < 0 || shipId >= ships.Length)
         {
             Debug.LogWarning("[BoardView] 해당 칸의 shipID를 찾을 수 없음");
             return;
         }
 
-        ShipData ship = ships[shipID];
+        ShipData ship = ships[shipId];
 
         RemovePlacedShip(ship);
 
-        selectedShipId = ship.shipID;
+        selectedShipId = ship.shipId;
         selectedShipSize = ship.size;
         currentDirection = ShipDirection.Horizontal;
 
@@ -253,7 +253,7 @@ public class BoardPlacementController
                     boardStates[x, y] = CellState.Empty;
                 }
 
-                shipIDByCell[x, y] = -1;
+                shipIdByCell[x, y] = -1;
             }
         }
 
@@ -377,22 +377,22 @@ public class BoardPlacementController
         return true;
     }
 
-    private void PlaceShip(int shipID, List<Vector2Int> positions)
+    private void PlaceShip(int shipId, List<Vector2Int> positions)
     {
-        if (shipID < 0 || shipID >= ships.Length)
+        if (shipId < 0 || shipId >= ships.Length)
         {
-            Debug.LogError($"[BoardView] PlaceShip 실패: 잘못된 ShipID={shipID}");
+            Debug.LogError($"[BoardView] PlaceShip 실패: 잘못된 ShipID={shipId}");
             return;
         }
 
-        ShipData ship = ships[shipID];
+        ShipData ship = ships[shipId];
 
         for (int i = 0; i < positions.Count; i++)
         {
             Vector2Int position = positions[i];
 
             boardStates[position.x, position.y] = CellState.Ship;
-            shipIDByCell[position.x, position.y] = shipID;
+            shipIdByCell[position.x, position.y] = shipId;
         }
 
         ship.positions.Clear();
@@ -410,12 +410,12 @@ public class BoardPlacementController
 
         updateReadyButton?.Invoke();
 
-        Debug.Log($"[BoardView] 배치 완료: ShipID={shipID}, Size={ship.size}");
+        Debug.Log($"[BoardView] 배치 완료: ShipID={shipId}, Size={ship.size}");
     }
 
     private void RemovePlacedShip(ShipData ship)
     {
-        removeShipVisual?.Invoke(ship.shipID);
+        removeShipVisual?.Invoke(ship.shipId);
 
         for (int i = 0; i < ship.positions.Count; i++)
         {
@@ -429,7 +429,7 @@ public class BoardPlacementController
             if (boardStates[position.x, position.y] == CellState.Ship)
             {
                 boardStates[position.x, position.y] = CellState.Empty;
-                shipIDByCell[position.x, position.y] = -1;
+                shipIdByCell[position.x, position.y] = -1;
             }
         }
 
@@ -441,7 +441,7 @@ public class BoardPlacementController
         refreshCells?.Invoke();
         updateReadyButton?.Invoke();
 
-        Debug.Log($"[BoardView] 기존 배 위치 제거: ID={ship.shipID}, Size={ship.size}");
+        Debug.Log($"[BoardView] 기존 배 위치 제거: ID={ship.shipId}, Size={ship.size}");
     }
 
     private void RebuildBlockedCells()

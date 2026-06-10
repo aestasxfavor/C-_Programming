@@ -1,9 +1,7 @@
-using UnityEngine;
-
 public enum GameState
 {
     None,
-    Conneting,
+    Connecting,
     Placement,
     WaitingReady,
     Battle,

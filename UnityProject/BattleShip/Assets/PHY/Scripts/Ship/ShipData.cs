@@ -4,14 +4,14 @@ using UnityEngine;
 [System.Serializable]
 public class ShipData
 {
-    public int shipID;
+    public int shipId;
     public int size;
     public List<Vector2Int> positions = new List<Vector2Int>();
     public bool isPlaced;
 
-    public ShipData(int _shipID, int _size)
+    public ShipData(int _shipId, int _size)
     {
-        shipID = _shipID;
+        shipId = _shipId;
         size = _size;
         isPlaced = false;
     }

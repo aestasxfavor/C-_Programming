@@ -270,11 +270,11 @@ public class BattleUIController : MonoBehaviour
         for (int i = 0; i < shipStatusPanel.transform.childCount; i++)
         {
             Transform child = shipStatusPanel.transform.GetChild(i);
-            SetChildObjectsVisible(child, isVisible);
+            SetObjectTreeVisible(child, isVisible);
         }
     }
 
-    private void SetChildObjectsVisible(Transform target, bool isVisible)
+    private void SetObjectTreeVisible(Transform target, bool isVisible)
     {
         if (target == null)
         {
@@ -285,7 +285,7 @@ public class BattleUIController : MonoBehaviour
 
         for (int i = 0; i < target.childCount; i++)
         {
-            SetChildObjectsVisible(target.GetChild(i), isVisible);
+            SetObjectTreeVisible(target.GetChild(i), isVisible);
         }
     }
 }

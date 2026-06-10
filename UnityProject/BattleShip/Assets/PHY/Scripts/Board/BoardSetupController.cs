@@ -53,7 +53,7 @@ public class BoardSetupController
         Transform boardRoot,
         BoardCell[,] cells,
         CellState[,] boardStates,
-        int[,] shipIDByCell,
+        int[,] shipIdByCell,
         Action<BoardCell> onClickCell,
         Action<BoardCell> onRightClickCell,
         Action<BoardCell> onPointerEnterCell,
@@ -67,7 +67,7 @@ public class BoardSetupController
 
         this.cells = cells;
         this.boardStates = boardStates;
-        this.shipIdByCell = shipIDByCell;
+        this.shipIdByCell = shipIdByCell;
 
         this.onClickCell = onClickCell;
         this.onRightClickCell = onRightClickCell;

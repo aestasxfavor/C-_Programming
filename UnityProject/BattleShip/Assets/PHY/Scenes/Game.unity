@@ -289,6 +289,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1856798962}
+  - {fileID: 1540477544}
   m_Father: {fileID: 1881763341}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -310,7 +311,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardView
   cellTemplate: {fileID: 1856798963}
   boardRole: 1
-  autoPlaceTestShipForEnemyBoard: 0
   waterSprite: {fileID: 21300000, guid: 9c40ad16284ad7446aeb44d9fcf60fec, type: 3}
   landSprite: {fileID: 21300000, guid: 794b8c7ee47d73c4da0326be16bff573, type: 3}
   shipSprite: {fileID: 21300000, guid: 52feb362f7d35e84cbb0096b66d59141, type: 3}
@@ -319,20 +319,18 @@ MonoBehaviour:
   missSprite: {fileID: 21300000, guid: c268728aff22c6f4ca0a28ce0201c444, type: 3}
   previewShipSprite: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   invalidPreviewSprite: {fileID: 21300000, guid: ba3758445dc8eda47972b7b548dcf9b2, type: 3}
-  spacingPreviewSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  useShipVisualOverlay: 0
-  shipVisualRoot: {fileID: 0}
-  shipVisualTemplate: {fileID: 0}
-  shipSize2VisualSprite: {fileID: 0}
-  shipSize3VisualSprite: {fileID: 0}
-  shipSize4VisualSprite: {fileID: 0}
-  shipSize5VisualSprite: {fileID: 0}
-  shipVisualPadding: {x: 0, y: 0}
+  useShipVisualOverlay: 1
+  shipVisualRoot: {fileID: 1540477544}
+  shipVisualTemplate: {fileID: 249922050}
+  shipSize2VisualSprite: {fileID: 21300000, guid: 113990b1c0adcb747ad0d3c3b4972199, type: 3}
+  shipSize3VisualSprite: {fileID: 21300000, guid: 0d32bb3c15d8bdb4fabdaa63db9fbf59, type: 3}
+  shipSize4VisualSprite: {fileID: 21300000, guid: f078688849719c14a9382a1797e50933, type: 3}
+  shipSize5VisualSprite: {fileID: 21300000, guid: 82eded509d6f82a4ba6ccf58c23842a7, type: 3}
+  shipVisualPadding: {x: 20, y: 20}
   hideCellShipSpriteWhenUsingOverlay: 1
   hideBlockedCellsOnBattle: 1
   readyButton: {fileID: 870542697}
   shipDragItems: []
-  isShipSpacingRuleEnabled: 1
 --- !u!1 &53066914
 GameObject:
   m_ObjectHideFlags: 0
@@ -907,6 +905,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 230143956}
   m_CullTransparentMesh: 1
+--- !u!1 &249922049
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 249922052}
+  - component: {fileID: 249922051}
+  - component: {fileID: 249922050}
+  m_Layer: 5
+  m_Name: ShipVisualTemplate
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &249922050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249922049}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 113990b1c0adcb747ad0d3c3b4972199, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &249922051
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249922049}
+  m_CullTransparentMesh: 1
+--- !u!224 &249922052
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249922049}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1540477544}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &274303673
 GameObject:
   m_ObjectHideFlags: 0
@@ -2283,7 +2356,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShipDragItem
   boardView: {fileID: 6633546089630634731}
-  shipID: 4
+  shipId: 4
 --- !u!1 &597926165
 GameObject:
   m_ObjectHideFlags: 0
@@ -3160,7 +3233,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShipDragItem
   boardView: {fileID: 6633546089630634731}
-  shipID: 2
+  shipId: 2
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -4398,7 +4471,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShipDragItem
   boardView: {fileID: 6633546089630634731}
-  shipID: 1
+  shipId: 1
 --- !u!1 &1140072579
 GameObject:
   m_ObjectHideFlags: 0
@@ -5086,6 +5159,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1409508089}
   m_CullTransparentMesh: 1
+--- !u!1 &1540477543
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1540477544}
+  - component: {fileID: 1540477545}
+  m_Layer: 5
+  m_Name: ShipVisualRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1540477544
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540477543}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 249922052}
+  m_Father: {fileID: 44838543}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1540477545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540477543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &1543118154
 GameObject:
   m_ObjectHideFlags: 0
@@ -5918,7 +6048,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShipDragItem
   boardView: {fileID: 6633546089630634731}
-  shipID: 3
+  shipId: 3
 --- !u!1 &1853690025
 GameObject:
   m_ObjectHideFlags: 0
@@ -6930,7 +7060,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShipDragItem
   boardView: {fileID: 6633546089630634731}
-  shipID: 0
+  shipId: 0
 --- !u!1 &2142171796
 GameObject:
   m_ObjectHideFlags: 0
@@ -7230,7 +7360,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardView
   cellTemplate: {fileID: 1670111907}
   boardRole: 0
-  autoPlaceTestShipForEnemyBoard: 0
   waterSprite: {fileID: 21300000, guid: 9c40ad16284ad7446aeb44d9fcf60fec, type: 3}
   landSprite: {fileID: 21300000, guid: 794b8c7ee47d73c4da0326be16bff573, type: 3}
   shipSprite: {fileID: 21300000, guid: 52feb362f7d35e84cbb0096b66d59141, type: 3}
@@ -7239,7 +7368,6 @@ MonoBehaviour:
   missSprite: {fileID: 21300000, guid: c268728aff22c6f4ca0a28ce0201c444, type: 3}
   previewShipSprite: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   invalidPreviewSprite: {fileID: 21300000, guid: ba3758445dc8eda47972b7b548dcf9b2, type: 3}
-  spacingPreviewSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   useShipVisualOverlay: 1
   shipVisualRoot: {fileID: 185249674}
   shipVisualTemplate: {fileID: 168239492}
@@ -7257,7 +7385,6 @@ MonoBehaviour:
   - {fileID: 815417519}
   - {fileID: 1818409236}
   - {fileID: 583867191}
-  isShipSpacingRuleEnabled: 1
 --- !u!114 &8512031379983212978
 MonoBehaviour:
   m_ObjectHideFlags: 0
