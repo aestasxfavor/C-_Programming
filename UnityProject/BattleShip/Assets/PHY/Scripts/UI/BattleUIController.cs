@@ -15,6 +15,9 @@ public class BattleUIController : MonoBehaviour
     [Header("연결 끊김 UI")]
     [SerializeField] private GameObject disconnectPanel;
 
+    [Header("역할 표시 UI")]
+    [SerializeField] private TextMeshProUGUI roleText;
+
     [Header("상태 텍스트")]
     [SerializeField] private TextMeshProUGUI gameStatusText;
     [SerializeField] private TextMeshProUGUI turnTimeText;
@@ -96,6 +99,26 @@ public class BattleUIController : MonoBehaviour
         {
             disconnectPanel.SetActive(false);
         }
+    }
+
+    public void SetRoleText(bool isHost)
+    {
+        if (roleText == null)
+        {
+            return;
+        }
+
+        roleText.text = isHost ? "현재 역할: 서버" : "현재 역할: 클라";
+    }
+
+    public void ClearRoleText()
+    {
+        if (roleText == null)
+        {
+            return;
+        }
+
+        roleText.text = "";
     }
 
     public void SetStatusText(string text)

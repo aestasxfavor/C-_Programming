@@ -4,7 +4,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    #region Inspector Fields
+    #region 인스펙터 필드
 
     [Header("게임 상태")]
     [SerializeField] private GameState gameState = GameState.None;
@@ -38,7 +38,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region Properties
+    #region 프로퍼티
 
     public bool IsPlacementLocked => readyController != null && readyController.IsPlacementLocked;
     public bool IsBattle => gameState == GameState.Battle;
@@ -53,7 +53,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region Unity Event Methods
+    #region Unity 이벤트 메서드
 
     private void Awake()
     {
@@ -78,6 +78,8 @@ public class GameManager : MonoBehaviour
         battleUIController?.HideGameOverUI();
         battleUIController?.HideDisconnectPanel();
         battleUIController?.ResetShipStatus();
+
+        UpdateRoleText();
 
         chatController?.ClearChat();
 
@@ -230,7 +232,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region Ready Flow
+    #region 레디 과정
 
     public void OnClickReadyButton()
     {
@@ -336,7 +338,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region Packet Flow
+    #region 패킷 흐름
 
     public void OnReceivePacket(string packet)
     {
@@ -407,7 +409,23 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region UI Flow
+    #region UI 흐름
+
+    private void UpdateRoleText()
+    {
+        if (battleUIController == null)
+        {
+            return;
+        }
+
+        if (TCPManager.Instance == null)
+        {
+            battleUIController.ClearRoleText();
+            return;
+        }
+
+        battleUIController.SetRoleText(TCPManager.Instance.IsHost);
+    }
 
     private void UpdateStatusText()
     {

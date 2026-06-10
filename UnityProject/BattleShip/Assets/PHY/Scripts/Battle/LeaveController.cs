@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class LeaveController : MonoBehaviour
@@ -10,6 +11,8 @@ public class LeaveController : MonoBehaviour
     private Action updateStatusText;
     private Action hideGameOverUI;
     private Action showDisconnectUI;
+
+    private Coroutine leaveRoutine;
 
     public void Setup(
         MatchController match,
@@ -37,6 +40,12 @@ public class LeaveController : MonoBehaviour
             return;
         }
 
+        if (leaveRoutine != null)
+        {
+            Debug.Log("[Leave] 이미 나가기 처리 중");
+            return;
+        }
+
         if (!matchController.TryLeave())
         {
             return;
@@ -50,12 +59,32 @@ public class LeaveController : MonoBehaviour
 
         if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
         {
-            SendPacket(PacketProtocol.LEAVE);
-            matchController.GoTitleAfterSendLeave();
+            leaveRoutine = StartCoroutine(SendLeaveThenGoTitle());
             return;
         }
 
         matchController.GoTitleNow();
+    }
+
+    private IEnumerator SendLeaveThenGoTitle()
+    {
+        Debug.Log("[Leave] LEAVE 패킷 전송 시작");
+
+        SendPacket(PacketProtocol.LEAVE);
+
+        yield return new WaitForSeconds(0.15f);
+
+        if (TCPManager.Instance != null && TCPManager.Instance.IsConnected)
+        {
+            SendPacket(PacketProtocol.LEAVE);
+            Debug.Log("[Leave] LEAVE 패킷 재전송");
+        }
+
+        yield return new WaitForSeconds(0.15f);
+
+        leaveRoutine = null;
+
+        matchController.GoTitleAfterSendLeave();
     }
 
     public void ReceiveLeave()
@@ -69,6 +98,12 @@ public class LeaveController : MonoBehaviour
         if (!matchController.ReceiveLeave())
         {
             return;
+        }
+
+        if (leaveRoutine != null)
+        {
+            StopCoroutine(leaveRoutine);
+            leaveRoutine = null;
         }
 
         stopBattle?.Invoke();
@@ -95,6 +130,12 @@ public class LeaveController : MonoBehaviour
             return;
         }
 
+        if (leaveRoutine != null)
+        {
+            StopCoroutine(leaveRoutine);
+            leaveRoutine = null;
+        }
+
         stopBattle?.Invoke();
         lockPlacement?.Invoke();
 
@@ -110,6 +151,7 @@ public class LeaveController : MonoBehaviour
     {
         if (packetSender == null)
         {
+            Debug.LogWarning("[Leave] packetSender 연결 안 됨");
             return false;
         }
 
