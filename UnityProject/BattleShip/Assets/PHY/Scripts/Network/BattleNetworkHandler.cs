@@ -13,6 +13,7 @@ public class BattleNetworkHandler : MonoBehaviour
     private Action receiveReplayReady;
     private Action receiveReplayStart;
     private Action receiveLeave;
+    private Action<string[]> receiveChat;
 
     public void Setup(
         Func<bool> disconnectedCheck,
@@ -23,7 +24,8 @@ public class BattleNetworkHandler : MonoBehaviour
         Action turnTimeoutHandler,
         Action replayReadyHandler,
         Action replayStartHandler,
-        Action leaveHandler)
+        Action leaveHandler,
+        Action<string[]> chatHandler)
     {
         checkDisconnected = disconnectedCheck;
 
@@ -35,6 +37,7 @@ public class BattleNetworkHandler : MonoBehaviour
         receiveReplayReady = replayReadyHandler;
         receiveReplayStart = replayStartHandler;
         receiveLeave = leaveHandler;
+        receiveChat = chatHandler;
     }
 
     public void ReceivePacket(string packet)
@@ -91,6 +94,10 @@ public class BattleNetworkHandler : MonoBehaviour
 
             case PacketProtocol.LEAVE:
                 receiveLeave?.Invoke();
+                break;
+
+            case PacketProtocol.CHAT:
+                receiveChat?.Invoke(packetParts);
                 break;
 
             default:

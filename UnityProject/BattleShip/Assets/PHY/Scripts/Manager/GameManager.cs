@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     [Header("UI 컨트롤러")]
     [SerializeField] private BattleUIController battleUIController;
 
+    [Header("채팅 컨트롤러")]
+    [SerializeField] private ChattingController chatController;
+
     [Header("매치 컨트롤러")]
     [SerializeField] private MatchController matchController;
 
@@ -62,7 +65,7 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
 
-        CacheControllers();
+        FindControllers();
     }
 
     private void Start()
@@ -75,6 +78,8 @@ public class GameManager : MonoBehaviour
         battleUIController?.HideGameOverUI();
         battleUIController?.HideDisconnectPanel();
         battleUIController?.ResetShipStatus();
+
+        chatController?.ClearChat();
 
         UpdateStatusText();
 
@@ -91,11 +96,16 @@ public class GameManager : MonoBehaviour
         battleController?.UpdateBattle();
     }
 
-    private void CacheControllers()
+    private void FindControllers()
     {
         if (battleUIController == null)
         {
             battleUIController = GetComponent<BattleUIController>();
+        }
+
+        if (chatController == null)
+        {
+            chatController = GetComponent<ChattingController>();
         }
 
         if (matchController == null)
@@ -191,18 +201,29 @@ public class GameManager : MonoBehaviour
             battleController.ResetBattle();
         }
 
+        if (chatController != null)
+        {
+            chatController.Setup(
+                SendPacket,
+                () => IsDisconnected,
+                () => IsLeaving,
+                () => IsRestarting
+            );
+        }
+
         if (battleNetworkHandler != null)
         {
             battleNetworkHandler.Setup(
                 () => IsDisconnected,
                 () => readyController?.ReceiveOpponentReady(),
-                split => battleController?.ReceiveAttackPacket(split),
-                split => battleController?.ReceiveResultPacket(split),
+                packetParts => battleController?.ReceiveAttackPacket(packetParts),
+                packetParts => battleController?.ReceiveResultPacket(packetParts),
                 () => battleController?.ReceiveGameOverPacket(),
                 () => battleController?.ReceiveTurnTimeoutPacket(),
                 () => replayController?.ReceiveReplayReady(),
                 () => replayController?.ReceiveReplayStart(),
-                () => leaveController?.ReceiveLeave()
+                () => leaveController?.ReceiveLeave(),
+                packetParts => chatController?.ReceiveChatPacket(packetParts)
             );
         }
     }

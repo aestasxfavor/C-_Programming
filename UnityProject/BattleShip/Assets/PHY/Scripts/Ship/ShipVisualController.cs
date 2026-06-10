@@ -45,30 +45,30 @@ public class ShipVisualController
     }
 
     public ShipVisualController(
-        bool useOverlay,
-        BoardRole boardRole,
-        int boardSize,
-        BoardCell[,] cells,
-        RectTransform visualRoot,
-        Image visualTemplate,
-        Sprite shipSize2Sprite,
-        Sprite shipSize3Sprite,
-        Sprite shipSize4Sprite,
-        Sprite shipSize5Sprite,
-        Vector2 visualPadding
+        bool _useOverlay,
+        BoardRole _boardRole,
+        int _boardSize,
+        BoardCell[,] _cells,
+        RectTransform _visualRoot,
+        Image _visualTemplate,
+        Sprite _shipSize2Sprite,
+        Sprite _shipSize3Sprite,
+        Sprite _shipSize4Sprite,
+        Sprite _shipSize5Sprite,
+        Vector2 _visualPadding
     )
     {
-        this.useOverlay = useOverlay;
-        this.boardRole = boardRole;
-        this.boardSize = boardSize;
-        this.cells = cells;
-        this.visualRoot = visualRoot;
-        this.visualTemplate = visualTemplate;
-        this.shipSize2Sprite = shipSize2Sprite;
-        this.shipSize3Sprite = shipSize3Sprite;
-        this.shipSize4Sprite = shipSize4Sprite;
-        this.shipSize5Sprite = shipSize5Sprite;
-        this.visualPadding = visualPadding;
+        useOverlay = _useOverlay;
+        boardRole = _boardRole;
+        boardSize = _boardSize;
+        cells = _cells;
+        visualRoot = _visualRoot;
+        visualTemplate = _visualTemplate;
+        shipSize2Sprite = _shipSize2Sprite;
+        shipSize3Sprite = _shipSize3Sprite;
+        shipSize4Sprite = _shipSize4Sprite;
+        shipSize5Sprite = _shipSize5Sprite;
+        visualPadding = _visualPadding;
     }
 
     public void InitVisualRoot()

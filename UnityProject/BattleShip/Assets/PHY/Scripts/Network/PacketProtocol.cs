@@ -13,4 +13,6 @@ public static class PacketProtocol
     public const string REPLAY_START = "REPLAY_START";
 
     public const string LEAVE = "LEAVE";
+
+    public const string CHAT = "CHAT";
 }
