@@ -53,8 +53,8 @@ public class BoardView : MonoBehaviour
     [SerializeField] private bool hideBlockedCellsOnBattle = true;
 
     private ShipVisualController shipVisualController;
+    private BoardRenderer boardRenderer;
 
-    private List<Vector2Int> previewPositions = new List<Vector2Int>();
     private string lastSunkAroundPositionsText = "";
     private string lastSunkShipId = "";
 
@@ -83,7 +83,9 @@ public class BoardView : MonoBehaviour
         CreateBoard();
         InitBoardState();
         ApplyLandTiles();
+
         InitShipVisualOverlay();
+        InitBoardRenderer();
 
         if (autoPlaceTestShipForEnemyBoard)
         {
@@ -102,7 +104,7 @@ public class BoardView : MonoBehaviour
 
     private void UpdateBattleVisualState()
     {
-        bool currentBattleState = GameManager.Instance != null && GameManager.Instance.IsBattle;
+        bool currentBattleState = IsBattle();
 
         if (currentBattleState == lastBattleState)
         {
@@ -299,84 +301,51 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region ¼¿ °»½Å
+    #region ¼¿ Ç¥½Ã
+
+    private void InitBoardRenderer()
+    {
+        boardRenderer = new BoardRenderer(
+            BoardSize,
+            boardRole,
+            cells,
+            waterSprite,
+            landSprite,
+            shipSprite,
+            blockedSprite,
+            hitSprite,
+            missSprite,
+            previewShipSprite,
+            invalidPreviewSprite,
+            hideBlockedCellsOnBattle,
+            hideCellShipSpriteWhenUsingOverlay,
+            IsBattle,
+            IsShipVisualOverlayEnabled
+        );
+    }
 
     private void RefreshCells()
     {
-        for (int y = 0; y < BoardSize; y++)
+        if (boardRenderer == null)
         {
-            for (int x = 0; x < BoardSize; x++)
-            {
-                RefreshCell(x, y);
-            }
+            return;
         }
+
+        boardRenderer.RefreshAllCells(boardStates);
     }
 
     private void RefreshCell(int x, int y)
     {
-        CellState state = boardStates[x, y];
+        if (boardRenderer == null)
+        {
+            return;
+        }
 
-        cells[x, y].SetState(state);
-        cells[x, y].SetSprite(GetSpriteByState(state));
+        boardRenderer.RefreshCell(x, y, boardStates);
     }
 
-    private Sprite GetSpriteByState(CellState state)
+    private bool IsBattle()
     {
-        if (boardRole == BoardRole.EnemyBoard)
-        {
-            if (state == CellState.Ship || state == CellState.Blocked)
-            {
-                return waterSprite;
-            }
-        }
-
-        switch (state)
-        {
-            case CellState.Empty:
-                return waterSprite;
-
-            case CellState.Land:
-                return landSprite;
-
-            case CellState.Ship:
-                if (ShouldHideCellShipSprite())
-                {
-                    return waterSprite;
-                }
-
-                return shipSprite;
-
-            case CellState.Blocked:
-                if (ShouldHideBlockedSprite())
-                {
-                    return waterSprite;
-                }
-
-                return blockedSprite;
-
-            case CellState.Hit:
-                return hitSprite;
-
-            case CellState.Miss:
-                return missSprite;
-
-            default:
-                return waterSprite;
-        }
-    }
-
-    private bool ShouldHideBlockedSprite()
-    {
-        if (!hideBlockedCellsOnBattle)
-        {
-            return false;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return false;
-        }
-
         return GameManager.Instance != null && GameManager.Instance.IsBattle;
     }
 
@@ -400,17 +369,12 @@ public class BoardView : MonoBehaviour
             shipVisualPadding
         );
 
-        shipVisualController.Init();
+        shipVisualController.InitVisualRoot();
     }
 
-    private bool ShouldHideCellShipSprite()
+    private bool IsShipVisualOverlayEnabled()
     {
-        if (!hideCellShipSpriteWhenUsingOverlay)
-        {
-            return false;
-        }
-
-        return shipVisualController != null && shipVisualController.IsEnabled;
+        return shipVisualController != null && shipVisualController.CanShowShipVisual;
     }
 
     private void CreateShipVisual(ShipData ship)
@@ -420,7 +384,7 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        shipVisualController.Create(ship);
+        shipVisualController.ShowShip(ship);
     }
 
     private void RemoveShipVisual(int shipID)
@@ -430,7 +394,7 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        shipVisualController.Remove(shipID);
+        shipVisualController.RemoveShip(shipID);
     }
 
     private void ClearAllShipVisuals()
@@ -440,7 +404,7 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        shipVisualController.ClearAll();
+        shipVisualController.ClearAllShips();
     }
 
     #endregion
@@ -905,7 +869,7 @@ public class BoardView : MonoBehaviour
             return false;
         }
 
-        ClearPreview();
+        ClearShipPreview();
         PlaceShip(selectedShipID, positions);
 
         return true;
@@ -913,7 +877,7 @@ public class BoardView : MonoBehaviour
 
     private void OnClickCell(BoardCell cell)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsBattle)
+        if (IsBattle())
         {
             if (boardRole == BoardRole.EnemyBoard)
             {
@@ -953,7 +917,7 @@ public class BoardView : MonoBehaviour
 
     private void OnRightClickCell(BoardCell cell)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsBattle)
+        if (IsBattle())
         {
             return;
         }
@@ -1193,7 +1157,7 @@ public class BoardView : MonoBehaviour
         lastSunkShipId = "";
         lastSunkAroundPositionsText = "";
 
-        ClearPreview();
+        ClearShipPreview();
         ClearAllShipVisuals();
 
         for (int y = 0; y < BoardSize; y++)
@@ -1250,7 +1214,7 @@ public class BoardView : MonoBehaviour
 
     private void OnPointerEnterCell(BoardCell cell)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsBattle)
+        if (IsBattle())
         {
             return;
         }
@@ -1265,7 +1229,7 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        ClearPreview();
+        ClearShipPreview();
 
         Vector2Int startPosition = GetClampedStartPosition(
             cell.X,
@@ -1283,12 +1247,12 @@ public class BoardView : MonoBehaviour
 
         bool canPlace = CanPlaceShip(positions, false);
 
-        ShowPreview(positions, canPlace);
+        ShowShipPreview(positions, canPlace);
     }
 
     private void OnPointerExitCell(BoardCell cell)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsBattle)
+        if (IsBattle())
         {
             return;
         }
@@ -1298,12 +1262,12 @@ public class BoardView : MonoBehaviour
             return;
         }
 
-        ClearPreview();
+        ClearShipPreview();
     }
 
     private void OnDropCell(BoardCell cell, PointerEventData eventData)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsBattle)
+        if (IsBattle())
         {
             return;
         }
@@ -1339,46 +1303,24 @@ public class BoardView : MonoBehaviour
         }
     }
 
-    private void ShowPreview(List<Vector2Int> positions, bool canPlace)
+    private void ShowShipPreview(List<Vector2Int> positions, bool canPlace)
     {
-        previewPositions.Clear();
-
-        Sprite previewSprite = canPlace ? previewShipSprite : invalidPreviewSprite;
-
-        if (previewSprite == null)
+        if (boardRenderer == null)
         {
-            previewSprite = canPlace ? shipSprite : blockedSprite;
+            return;
         }
 
-        for (int i = 0; i < positions.Count; i++)
-        {
-            Vector2Int position = positions[i];
-
-            if (!IsInsideBoard(position.x, position.y))
-            {
-                continue;
-            }
-
-            previewPositions.Add(position);
-            cells[position.x, position.y].SetSprite(previewSprite);
-        }
+        boardRenderer.ShowShipPreview(positions, canPlace);
     }
 
-    private void ClearPreview()
+    private void ClearShipPreview()
     {
-        for (int i = 0; i < previewPositions.Count; i++)
+        if (boardRenderer == null)
         {
-            Vector2Int position = previewPositions[i];
-
-            if (!IsInsideBoard(position.x, position.y))
-            {
-                continue;
-            }
-
-            RefreshCell(position.x, position.y);
+            return;
         }
 
-        previewPositions.Clear();
+        boardRenderer.ClearShipPreview(boardStates);
     }
 
     #endregion

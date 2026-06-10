@@ -4,25 +4,28 @@ using UnityEngine.UI;
 
 public class ShipVisualController
 {
-    private readonly bool useShipVisualOverlay;
+    private readonly bool useOverlay;
     private readonly BoardRole boardRole;
     private readonly int boardSize;
     private readonly BoardCell[,] cells;
-    private readonly RectTransform shipVisualRoot;
-    private readonly Image shipVisualTemplate;
-    private readonly Sprite shipSize2VisualSprite;
-    private readonly Sprite shipSize3VisualSprite;
-    private readonly Sprite shipSize4VisualSprite;
-    private readonly Sprite shipSize5VisualSprite;
-    private readonly Vector2 shipVisualPadding;
 
-    private readonly Dictionary<int, Image> shipVisualsByID = new Dictionary<int, Image>();
+    private readonly RectTransform visualRoot;
+    private readonly Image visualTemplate;
 
-    public bool IsEnabled
+    private readonly Sprite shipSize2Sprite;
+    private readonly Sprite shipSize3Sprite;
+    private readonly Sprite shipSize4Sprite;
+    private readonly Sprite shipSize5Sprite;
+
+    private readonly Vector2 visualPadding;
+
+    private readonly Dictionary<int, Image> visualByShipID = new Dictionary<int, Image>();
+
+    public bool CanShowShipVisual
     {
         get
         {
-            if (!useShipVisualOverlay)
+            if (!useOverlay)
             {
                 return false;
             }
@@ -32,12 +35,12 @@ public class ShipVisualController
                 return false;
             }
 
-            if (shipVisualRoot == null)
+            if (visualRoot == null)
             {
                 return false;
             }
 
-            if (shipVisualTemplate == null)
+            if (visualTemplate == null)
             {
                 return false;
             }
@@ -47,48 +50,48 @@ public class ShipVisualController
     }
 
     public ShipVisualController(
-        bool useShipVisualOverlay,
+        bool useOverlay,
         BoardRole boardRole,
         int boardSize,
         BoardCell[,] cells,
-        RectTransform shipVisualRoot,
-        Image shipVisualTemplate,
-        Sprite shipSize2VisualSprite,
-        Sprite shipSize3VisualSprite,
-        Sprite shipSize4VisualSprite,
-        Sprite shipSize5VisualSprite,
-        Vector2 shipVisualPadding
+        RectTransform visualRoot,
+        Image visualTemplate,
+        Sprite shipSize2Sprite,
+        Sprite shipSize3Sprite,
+        Sprite shipSize4Sprite,
+        Sprite shipSize5Sprite,
+        Vector2 visualPadding
     )
     {
-        this.useShipVisualOverlay = useShipVisualOverlay;
+        this.useOverlay = useOverlay;
         this.boardRole = boardRole;
         this.boardSize = boardSize;
         this.cells = cells;
-        this.shipVisualRoot = shipVisualRoot;
-        this.shipVisualTemplate = shipVisualTemplate;
-        this.shipSize2VisualSprite = shipSize2VisualSprite;
-        this.shipSize3VisualSprite = shipSize3VisualSprite;
-        this.shipSize4VisualSprite = shipSize4VisualSprite;
-        this.shipSize5VisualSprite = shipSize5VisualSprite;
-        this.shipVisualPadding = shipVisualPadding;
+        this.visualRoot = visualRoot;
+        this.visualTemplate = visualTemplate;
+        this.shipSize2Sprite = shipSize2Sprite;
+        this.shipSize3Sprite = shipSize3Sprite;
+        this.shipSize4Sprite = shipSize4Sprite;
+        this.shipSize5Sprite = shipSize5Sprite;
+        this.visualPadding = visualPadding;
     }
 
-    public void Init()
+    public void InitVisualRoot()
     {
-        if (shipVisualTemplate != null)
+        if (visualTemplate != null)
         {
-            shipVisualTemplate.gameObject.SetActive(false);
-            shipVisualTemplate.raycastTarget = false;
+            visualTemplate.gameObject.SetActive(false);
+            visualTemplate.raycastTarget = false;
         }
 
-        SetupRootRect();
-        EnsureRootIgnoresLayout();
-        MoveRootToFront();
+        FitRootToBoard();
+        IgnoreLayoutOnRoot();
+        BringRootToFront();
     }
 
-    public void Create(ShipData ship)
+    public void ShowShip(ShipData ship)
     {
-        if (!IsEnabled)
+        if (!CanShowShipVisual)
         {
             return;
         }
@@ -103,21 +106,21 @@ public class ShipVisualController
             return;
         }
 
-        Sprite visualSprite = GetShipVisualSprite(ship.size);
+        Sprite shipSprite = GetSpriteForShipSize(ship.size);
 
-        if (visualSprite == null)
+        if (shipSprite == null)
         {
             Debug.LogWarning($"[ShipVisual] Size={ship.size} 배 이미지 스프라이트가 없음");
             return;
         }
 
-        MoveRootToFront();
-        Remove(ship.shipID);
+        BringRootToFront();
+        RemoveShip(ship.shipID);
 
-        Image visual = Object.Instantiate(shipVisualTemplate, shipVisualRoot);
+        Image visual = Object.Instantiate(visualTemplate, visualRoot);
 
         visual.gameObject.name = $"ShipVisual_{ship.shipID}_Size{ship.size}";
-        visual.sprite = visualSprite;
+        visual.sprite = shipSprite;
         visual.raycastTarget = false;
         visual.gameObject.SetActive(true);
 
@@ -131,8 +134,8 @@ public class ShipVisualController
         Vector2Int firstPosition = ship.positions[0];
         Vector2Int lastPosition = ship.positions[ship.positions.Count - 1];
 
-        RectTransform firstCellRect = GetCellRect(firstPosition);
-        RectTransform lastCellRect = GetCellRect(lastPosition);
+        RectTransform firstCellRect = GetCellRectTransform(firstPosition);
+        RectTransform lastCellRect = GetCellRectTransform(lastPosition);
 
         if (firstCellRect == null || lastCellRect == null)
         {
@@ -141,41 +144,41 @@ public class ShipVisualController
         }
 
         Vector3 centerWorldPosition = (firstCellRect.position + lastCellRect.position) * 0.5f;
-        Vector2 centerLocalPosition = WorldToRootLocalPoint(centerWorldPosition);
+        Vector2 centerRootPosition = WorldToRootPoint(centerWorldPosition);
         Vector2 cellSize = GetCellSizeInRoot(firstCellRect);
 
-        bool isHorizontal = IsHorizontalShip(ship.positions);
+        bool isHorizontal = IsHorizontal(ship.positions);
 
-        float length;
-        float thickness;
+        float visualLength;
+        float visualThickness;
 
         if (isHorizontal)
         {
-            length = cellSize.x * ship.size + shipVisualPadding.x;
-            thickness = cellSize.y + shipVisualPadding.y;
+            visualLength = cellSize.x * ship.size + visualPadding.x;
+            visualThickness = cellSize.y + visualPadding.y;
             visualRect.localRotation = Quaternion.identity;
         }
         else
         {
-            length = cellSize.y * ship.size + shipVisualPadding.y;
-            thickness = cellSize.x + shipVisualPadding.x;
+            visualLength = cellSize.y * ship.size + visualPadding.y;
+            visualThickness = cellSize.x + visualPadding.x;
             visualRect.localRotation = Quaternion.Euler(0f, 0f, 90f);
         }
 
-        visualRect.anchoredPosition = centerLocalPosition;
-        visualRect.sizeDelta = new Vector2(length, thickness);
+        visualRect.anchoredPosition = centerRootPosition;
+        visualRect.sizeDelta = new Vector2(visualLength, visualThickness);
 
         visualRect.SetAsLastSibling();
-        MoveRootToFront();
+        BringRootToFront();
 
-        shipVisualsByID[ship.shipID] = visual;
+        visualByShipID[ship.shipID] = visual;
 
         Debug.Log($"[ShipVisual] 생성 완료: ShipID={ship.shipID}, Size={ship.size}, Direction={(isHorizontal ? "Horizontal" : "Vertical")}");
     }
 
-    public void Remove(int shipID)
+    public void RemoveShip(int shipID)
     {
-        if (!shipVisualsByID.TryGetValue(shipID, out Image visual))
+        if (!visualByShipID.TryGetValue(shipID, out Image visual))
         {
             return;
         }
@@ -185,14 +188,14 @@ public class ShipVisualController
             Object.Destroy(visual.gameObject);
         }
 
-        shipVisualsByID.Remove(shipID);
+        visualByShipID.Remove(shipID);
 
         Debug.Log($"[ShipVisual] 제거 완료: ShipID={shipID}");
     }
 
-    public void ClearAll()
+    public void ClearAllShips()
     {
-        foreach (KeyValuePair<int, Image> pair in shipVisualsByID)
+        foreach (KeyValuePair<int, Image> pair in visualByShipID)
         {
             if (pair.Value != null)
             {
@@ -200,74 +203,74 @@ public class ShipVisualController
             }
         }
 
-        shipVisualsByID.Clear();
+        visualByShipID.Clear();
     }
 
-    private void SetupRootRect()
+    private void FitRootToBoard()
     {
-        if (shipVisualRoot == null)
+        if (visualRoot == null)
         {
             return;
         }
 
-        shipVisualRoot.anchorMin = Vector2.zero;
-        shipVisualRoot.anchorMax = Vector2.one;
-        shipVisualRoot.offsetMin = Vector2.zero;
-        shipVisualRoot.offsetMax = Vector2.zero;
-        shipVisualRoot.pivot = new Vector2(0.5f, 0.5f);
-        shipVisualRoot.localScale = Vector3.one;
-        shipVisualRoot.localRotation = Quaternion.identity;
+        visualRoot.anchorMin = Vector2.zero;
+        visualRoot.anchorMax = Vector2.one;
+        visualRoot.offsetMin = Vector2.zero;
+        visualRoot.offsetMax = Vector2.zero;
+        visualRoot.pivot = new Vector2(0.5f, 0.5f);
+        visualRoot.localScale = Vector3.one;
+        visualRoot.localRotation = Quaternion.identity;
     }
 
-    private void EnsureRootIgnoresLayout()
+    private void IgnoreLayoutOnRoot()
     {
-        if (shipVisualRoot == null)
+        if (visualRoot == null)
         {
             return;
         }
 
-        LayoutElement layoutElement = shipVisualRoot.GetComponent<LayoutElement>();
+        LayoutElement layoutElement = visualRoot.GetComponent<LayoutElement>();
 
         if (layoutElement == null)
         {
-            layoutElement = shipVisualRoot.gameObject.AddComponent<LayoutElement>();
+            layoutElement = visualRoot.gameObject.AddComponent<LayoutElement>();
         }
 
         layoutElement.ignoreLayout = true;
     }
 
-    private void MoveRootToFront()
+    private void BringRootToFront()
     {
-        if (shipVisualRoot == null)
+        if (visualRoot == null)
         {
             return;
         }
 
-        shipVisualRoot.SetAsLastSibling();
+        visualRoot.SetAsLastSibling();
     }
 
-    private Sprite GetShipVisualSprite(int shipSize)
+    private Sprite GetSpriteForShipSize(int shipSize)
     {
         switch (shipSize)
         {
             case 2:
-                return shipSize2VisualSprite;
+                return shipSize2Sprite;
 
             case 3:
-                return shipSize3VisualSprite;
+                return shipSize3Sprite;
 
             case 4:
-                return shipSize4VisualSprite;
+                return shipSize4Sprite;
 
             case 5:
-                return shipSize5VisualSprite;
+                return shipSize5Sprite;
 
             default:
                 return null;
         }
     }
 
-    private RectTransform GetCellRect(Vector2Int position)
+    private RectTransform GetCellRectTransform(Vector2Int position)
     {
         if (!IsInsideBoard(position.x, position.y))
         {
@@ -282,7 +285,7 @@ public class ShipVisualController
         return cells[position.x, position.y].GetComponent<RectTransform>();
     }
 
-    private bool IsHorizontalShip(List<Vector2Int> positions)
+    private bool IsHorizontal(List<Vector2Int> positions)
     {
         if (positions == null || positions.Count <= 1)
         {
@@ -292,9 +295,9 @@ public class ShipVisualController
         return positions[0].y == positions[positions.Count - 1].y;
     }
 
-    private Vector2 WorldToRootLocalPoint(Vector3 worldPosition)
+    private Vector2 WorldToRootPoint(Vector3 worldPosition)
     {
-        Canvas canvas = shipVisualRoot.GetComponentInParent<Canvas>();
+        Canvas canvas = visualRoot.GetComponentInParent<Canvas>();
         Camera camera = null;
 
         if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
@@ -305,13 +308,13 @@ public class ShipVisualController
         Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(camera, worldPosition);
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            shipVisualRoot,
+            visualRoot,
             screenPoint,
             camera,
-            out Vector2 localPoint
+            out Vector2 rootPoint
         );
 
-        return localPoint;
+        return rootPoint;
     }
 
     private Vector2 GetCellSizeInRoot(RectTransform cellRect)
@@ -324,8 +327,8 @@ public class ShipVisualController
         Vector3[] worldCorners = new Vector3[4];
         cellRect.GetWorldCorners(worldCorners);
 
-        Vector2 bottomLeft = WorldToRootLocalPoint(worldCorners[0]);
-        Vector2 topRight = WorldToRootLocalPoint(worldCorners[2]);
+        Vector2 bottomLeft = WorldToRootPoint(worldCorners[0]);
+        Vector2 topRight = WorldToRootPoint(worldCorners[2]);
 
         float width = Mathf.Abs(topRight.x - bottomLeft.x);
         float height = Mathf.Abs(topRight.y - bottomLeft.y);
