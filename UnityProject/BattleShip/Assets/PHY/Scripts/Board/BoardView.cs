@@ -22,9 +22,6 @@ public class BoardView : MonoBehaviour
     [Header("보드 역할")]
     [SerializeField] private BoardRole boardRole = BoardRole.MyBoard;
 
-    [Header("전투 테스트")]
-    [SerializeField] private bool autoPlaceTestShipForEnemyBoard;
-
     [Header("타일 스프라이트")]
     [SerializeField] private Sprite waterSprite;
     [SerializeField] private Sprite landSprite;
@@ -52,10 +49,12 @@ public class BoardView : MonoBehaviour
     [Header("전투 표시 옵션")]
     [SerializeField] private bool hideBlockedCellsOnBattle = true;
 
+    private BoardSetupController setupController;
     private ShipVisualController shipVisualController;
     private BoardRenderer boardRenderer;
     private BoardPlacementController placementController;
-    private BoardAttackController attackController;
+    private BattleAttackController attackController;
+    private BoardInputController inputController;
 
     [Header("함선 세팅")]
     private ShipData[] ships;
@@ -75,19 +74,14 @@ public class BoardView : MonoBehaviour
 
         InitShips();
 
-        CreateBoard();
-        InitBoardState();
-        ApplyLandTiles();
+        InitBoardSetup();
+        setupController.SetupBoard();
 
         InitShipVisualOverlay();
         InitBoardRenderer();
         InitPlacementController();
         InitAttackController();
-
-        if (autoPlaceTestShipForEnemyBoard)
-        {
-            PlaceTestShipsForEnemyBoard();
-        }
+        InitInputController();
 
         RefreshCells();
 
@@ -125,107 +119,101 @@ public class BoardView : MonoBehaviour
         };
     }
 
-    private readonly Vector2Int[] singleLandPositions =
+    #region 보드 준비
+
+    private void InitBoardSetup()
     {
-        new Vector2Int(1, 3),
-        new Vector2Int(4, 2),
-        new Vector2Int(5, 8),
-        new Vector2Int(7, 2),
-        new Vector2Int(8, 5),
-    };
-
-    private readonly Vector2Int[] islandShapeA =
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(2, 0),
-
-        new Vector2Int(1, 1),
-
-        new Vector2Int(1, 2),
-        new Vector2Int(2, 2),
-    };
-
-    private readonly Vector2Int[] islandShapeB =
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-
-        new Vector2Int(0, 1),
-    };
-
-    private void CreateBoard()
-    {
-        cellTemplate.gameObject.SetActive(false);
-
-        for (int y = 0; y < BoardSize; y++)
-        {
-            for (int x = 0; x < BoardSize; x++)
-            {
-                BoardCell cell = Instantiate(cellTemplate, transform);
-
-                cell.gameObject.SetActive(true);
-
-                cell.Init(
-                    x,
-                    y,
-                    OnClickCell,
-                    OnRightClickCell,
-                    OnPointerEnterCell,
-                    OnPointerExitCell,
-                    OnDropCell
-                );
-
-                cells[x, y] = cell;
-            }
-        }
+        setupController = new BoardSetupController(
+            BoardSize,
+            cellTemplate,
+            transform,
+            cells,
+            boardStates,
+            shipIDByCell,
+            OnClickCell,
+            OnRightClickCell,
+            OnPointerEnterCell,
+            OnPointerExitCell,
+            OnDropCell
+        );
     }
 
-    private void InitBoardState()
+    #endregion
+
+    #region 입력 처리
+
+    private void InitInputController()
     {
-        for (int y = 0; y < BoardSize; y++)
-        {
-            for (int x = 0; x < BoardSize; x++)
-            {
-                boardStates[x, y] = CellState.Empty;
-                shipIDByCell[x, y] = -1;
-            }
-        }
+        inputController = new BoardInputController(
+            boardRole,
+            boardStates,
+            placementController,
+            IsBattle,
+            IsPlacementLocked,
+            RequestEnemyAttack,
+            ShowShipPreview,
+            ClearShipPreview
+        );
     }
 
-    #region 육지 배치
-
-    private void ApplyLandTiles()
+    private void OnClickCell(BoardCell cell)
     {
-        ApplySingleLandTiles();
-        ApplyLandShape(new Vector2Int(3, 3), islandShapeA);
-        ApplyLandShape(new Vector2Int(7, 5), islandShapeB);
+        if (inputController == null)
+        {
+            return;
+        }
+
+        inputController.OnClickCell(cell);
     }
 
-    private void ApplySingleLandTiles()
+    private void OnRightClickCell(BoardCell cell)
     {
-        for (int i = 0; i < singleLandPositions.Length; i++)
+        if (inputController == null)
         {
-            Vector2Int position = singleLandPositions[i];
-
-            if (IsInsideBoard(position.x, position.y))
-            {
-                boardStates[position.x, position.y] = CellState.Land;
-            }
+            return;
         }
+
+        inputController.OnRightClickCell(cell);
     }
 
-    private void ApplyLandShape(Vector2Int startPosition, Vector2Int[] shape)
+    private void OnPointerEnterCell(BoardCell cell)
     {
-        for (int i = 0; i < shape.Length; i++)
+        if (inputController == null)
         {
-            Vector2Int position = startPosition + shape[i];
-
-            if (IsInsideBoard(position.x, position.y))
-            {
-                boardStates[position.x, position.y] = CellState.Land;
-            }
+            return;
         }
+
+        inputController.OnPointerEnterCell(cell);
+    }
+
+    private void OnPointerExitCell(BoardCell cell)
+    {
+        if (inputController == null)
+        {
+            return;
+        }
+
+        inputController.OnPointerExitCell(cell);
+    }
+
+    private void OnDropCell(BoardCell cell, PointerEventData eventData)
+    {
+        if (inputController == null)
+        {
+            return;
+        }
+
+        inputController.OnDropCell(cell, eventData);
+    }
+
+    private void RequestEnemyAttack(int x, int y)
+    {
+        if (GameManager.Instance == null)
+        {
+            return;
+        }
+
+        GameManager.Instance.TryAttackEnemyBoard(x, y);
     }
 
     #endregion
@@ -389,7 +377,7 @@ public class BoardView : MonoBehaviour
 
     private void InitAttackController()
     {
-        attackController = new BoardAttackController(
+        attackController = new BattleAttackController(
             BoardSize,
             boardStates,
             shipIDByCell,
@@ -450,169 +438,16 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region 로컬 전투 테스트 전용 배 자동 배치
-
-    private void PlaceTestShipsForEnemyBoard()
-    {
-        if (boardRole != BoardRole.EnemyBoard)
-        {
-            return;
-        }
-
-        bool success = true;
-
-        success &= TryPlaceTestShip(
-            0,
-            new List<Vector2Int>
-            {
-                new Vector2Int(0, 0),
-                new Vector2Int(1, 0)
-            }
-        );
-
-        success &= TryPlaceTestShip(
-            1,
-            new List<Vector2Int>
-            {
-                new Vector2Int(10, 0),
-                new Vector2Int(10, 1),
-                new Vector2Int(10, 2)
-            }
-        );
-
-        success &= TryPlaceTestShip(
-            2,
-            new List<Vector2Int>
-            {
-                new Vector2Int(0, 6),
-                new Vector2Int(1, 6),
-                new Vector2Int(2, 6)
-            }
-        );
-
-        success &= TryPlaceTestShip(
-            3,
-            new List<Vector2Int>
-            {
-                new Vector2Int(5, 10),
-                new Vector2Int(6, 10),
-                new Vector2Int(7, 10),
-                new Vector2Int(8, 10)
-            }
-        );
-
-        success &= TryPlaceTestShip(
-            4,
-            new List<Vector2Int>
-            {
-                new Vector2Int(10, 5),
-                new Vector2Int(10, 6),
-                new Vector2Int(10, 7),
-                new Vector2Int(10, 8),
-                new Vector2Int(10, 9)
-            }
-        );
-
-        if (success)
-        {
-            Debug.Log("[Test] EnemyBoard 테스트 배 5척 자동 배치 완료");
-        }
-        else
-        {
-            Debug.LogWarning("[Test] EnemyBoard 테스트 배 자동 배치 중 일부 실패");
-        }
-    }
-
-    private bool TryPlaceTestShip(int shipID, List<Vector2Int> positions)
-    {
-        if (placementController == null)
-        {
-            return false;
-        }
-
-        return placementController.TryPlaceShipForTest(shipID, positions);
-    }
-
-    #endregion
-
     #region 배치 처리
 
     public bool TryPlaceSelectedShipAt(BoardCell cell)
     {
-        if (placementController == null)
+        if (inputController == null)
         {
             return false;
         }
 
-        return placementController.TryPlaceSelectedShipAt(cell);
-    }
-
-    private void OnClickCell(BoardCell cell)
-    {
-        if (IsBattle())
-        {
-            if (boardRole == BoardRole.EnemyBoard)
-            {
-                GameManager.Instance.TryAttackEnemyBoard(cell.X, cell.Y);
-            }
-            else
-            {
-                Debug.Log("[Battle] 내 보드는 공격 대상이 아님");
-            }
-
-            return;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return;
-        }
-
-        if (IsPlacementLocked())
-        {
-            Debug.Log("[Placement] Ready 이후 배치 불가");
-            return;
-        }
-
-        CellState state = boardStates[cell.X, cell.Y];
-
-        Debug.Log($"[BoardView] Clicked Cell: X={cell.X}, Y={cell.Y}, State={cell.State}");
-
-        if (placementController != null && !placementController.HasSelectedShip && state == CellState.Ship)
-        {
-            placementController.SelectPlacedShipFromBoard(cell.X, cell.Y);
-            return;
-        }
-
-        TryPlaceSelectedShipAt(cell);
-    }
-
-    private void OnRightClickCell(BoardCell cell)
-    {
-        if (IsBattle())
-        {
-            return;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return;
-        }
-
-        if (placementController == null || !placementController.HasSelectedShip)
-        {
-            return;
-        }
-
-        if (IsPlacementLocked())
-        {
-            Debug.Log("[Placement] Ready 이후 배치 불가");
-            return;
-        }
-
-        RotateShip();
-
-        OnPointerEnterCell(cell);
+        return inputController.TryPlaceSelectedShipAt(cell);
     }
 
     #endregion
@@ -670,84 +505,7 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region 프리뷰 / 드래그
-
-    private void OnPointerEnterCell(BoardCell cell)
-    {
-        if (IsBattle())
-        {
-            return;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return;
-        }
-
-        if (placementController == null || !placementController.HasSelectedShip)
-        {
-            return;
-        }
-
-        ClearShipPreview();
-
-        List<Vector2Int> positions = placementController.GetPreviewShipPositions(cell, out bool canPlace);
-
-        ShowShipPreview(positions, canPlace);
-    }
-
-    private void OnPointerExitCell(BoardCell cell)
-    {
-        if (IsBattle())
-        {
-            return;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return;
-        }
-
-        ClearShipPreview();
-    }
-
-    private void OnDropCell(BoardCell cell, PointerEventData eventData)
-    {
-        if (IsBattle())
-        {
-            return;
-        }
-
-        if (boardRole != BoardRole.MyBoard)
-        {
-            return;
-        }
-
-        if (IsPlacementLocked())
-        {
-            Debug.Log("[Placement] Ready 이후 배치 불가");
-            return;
-        }
-
-        if (eventData.pointerDrag == null)
-        {
-            return;
-        }
-
-        ShipDragItem dragItem = eventData.pointerDrag.GetComponent<ShipDragItem>();
-
-        if (dragItem == null)
-        {
-            return;
-        }
-
-        bool success = TryPlaceSelectedShipAt(cell);
-
-        if (success)
-        {
-            dragItem.MarkDroppedSuccessfully();
-        }
-    }
+    #region 프리뷰
 
     private void ShowShipPreview(List<Vector2Int> positions, bool canPlace)
     {
@@ -796,11 +554,6 @@ public class BoardView : MonoBehaviour
     private bool IsPlacementLocked()
     {
         return GameManager.Instance != null && GameManager.Instance.IsPlacementLocked;
-    }
-
-    private bool IsInsideBoard(int x, int y)
-    {
-        return x >= 0 && x < BoardSize && y >= 0 && y < BoardSize;
     }
 
     #endregion

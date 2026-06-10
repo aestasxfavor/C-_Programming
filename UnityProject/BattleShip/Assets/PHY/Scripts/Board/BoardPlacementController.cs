@@ -239,27 +239,6 @@ public class BoardPlacementController
         return positions;
     }
 
-    public bool TryPlaceShipForTest(int shipID, List<Vector2Int> positions)
-    {
-        if (shipID < 0 || shipID >= ships.Length)
-        {
-            Debug.LogWarning($"[Test] 잘못된 ShipID={shipID}");
-            return false;
-        }
-
-        if (!CanPlaceShip(positions, false))
-        {
-            Debug.LogWarning($"[Test] 테스트 배 배치 실패: ShipID={shipID}");
-            return false;
-        }
-
-        PlaceShip(shipID, positions);
-
-        Debug.Log($"[Test] 테스트 배 배치 완료: ShipID={shipID}");
-
-        return true;
-    }
-
     public void ResetPlacement()
     {
         clearShipPreview?.Invoke();

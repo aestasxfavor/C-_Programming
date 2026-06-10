@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoardAttackController
+public class BattleAttackController
 {
     private readonly int boardSize;
     private readonly CellState[,] boardStates;
@@ -13,19 +13,19 @@ public class BoardAttackController
     private string lastSunkAroundPositionsText = "";
     private string lastSunkShipId = "";
 
-    public BoardAttackController(
-        int boardSize,
-        CellState[,] boardStates,
-        int[,] shipIDByCell,
-        ShipData[] ships,
-        Action<int, int> refreshCell
+    public BattleAttackController(
+        int _boardSize,
+        CellState[,] _boardStates,
+        int[,] _shipIDByCell,
+        ShipData[] _ships,
+        Action<int, int> _refreshCell
     )
     {
-        this.boardSize = boardSize;
-        this.boardStates = boardStates;
-        this.shipIDByCell = shipIDByCell;
-        this.ships = ships;
-        this.refreshCell = refreshCell;
+        boardSize = _boardSize;
+        boardStates = _boardStates;
+        shipIDByCell = _shipIDByCell;
+        ships = _ships;
+        refreshCell = _refreshCell;
     }
 
     public AttackResult ReceiveAttack(int x, int y)
