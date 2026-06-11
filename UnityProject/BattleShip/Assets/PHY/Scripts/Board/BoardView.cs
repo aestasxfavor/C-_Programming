@@ -3,19 +3,20 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+// 플레이어 보드와 상대 보드의 생성, 입력 연결, 표시 갱신, 배치 / 공격 컨트롤러 연결을 담당하는 보드 UI 컨트롤러
 public class BoardView : MonoBehaviour
 {
+    #region 인스펙터 필드
+
     [SerializeField] private BoardCell cellTemplate;
 
+    // TODO: 보드 크기는 추후 BattleShipRuleConfigSO로 분리 가능
     private const int BoardSize = 11;
-
-    private BoardCell[,] cells = new BoardCell[BoardSize, BoardSize];
-    private CellState[,] boardStates = new CellState[BoardSize, BoardSize];
-    private int[,] shipIdByCell = new int[BoardSize, BoardSize];
 
     [Header("보드 역할")]
     [SerializeField] private BoardRole boardRole = BoardRole.MyBoard;
 
+    // TODO: Water, Land, Hit, Miss, Sunk 표시 Sprite는 추후 BoardVisualConfigSO로 분리 가능
     [Header("타일 스프라이트")]
     [SerializeField] private Sprite waterSprite;
     [SerializeField] private Sprite landSprite;
@@ -28,6 +29,7 @@ public class BoardView : MonoBehaviour
     [SerializeField] private Sprite previewShipSprite;
     [SerializeField] private Sprite invalidPreviewSprite;
 
+    // TODO: 함선 크기별 표시 Sprite는 추후 ShipDefinitionSO 또는 BoardVisualConfigSO로 분리 가능
     [Header("배 이미지 오버레이")]
     [SerializeField] private bool useShipVisualOverlay;
     [SerializeField] private RectTransform shipVisualRoot;
@@ -42,13 +44,6 @@ public class BoardView : MonoBehaviour
     [Header("전투 표시 옵션")]
     [SerializeField] private bool hideBlockedCellsOnBattle = true;
 
-    private BoardSetupController setupController;
-    private ShipVisualController shipVisualController;
-    private BoardRenderer boardRenderer;
-    private BoardPlacementController placementController;
-    private BattleAttackController attackController;
-    private BoardInputController inputController;
-
     [Header("함선 세팅")]
     private ShipData[] ships;
 
@@ -57,7 +52,26 @@ public class BoardView : MonoBehaviour
     [Header("배 선택 UI")]
     [SerializeField] private ShipDragItem[] shipDragItems;
 
+    #endregion
+
+    #region 런타임 상태 / 컨트롤러
+
+    private BoardCell[,] cells = new BoardCell[BoardSize, BoardSize];
+    private CellState[,] boardStates = new CellState[BoardSize, BoardSize];
+    private int[,] shipIdByCell = new int[BoardSize, BoardSize];
+
+    private BoardSetupController setupController;
+    private ShipVisualController shipVisualController;
+    private BoardRenderer boardRenderer;
+    private BoardPlacementController placementController;
+    private BattleAttackController attackController;
+    private BoardInputController inputController;
+
     private bool lastBattleState;
+
+    #endregion
+
+    #region Unity 생명주기
 
     private void Start()
     {
@@ -98,6 +112,11 @@ public class BoardView : MonoBehaviour
         RefreshCells();
     }
 
+    #endregion
+
+    #region 초기화
+
+    // 함선 크기 2, 3, 3, 4, 5 초기화
     private void InitShips()
     {
         ships = new ShipData[]
@@ -109,8 +128,6 @@ public class BoardView : MonoBehaviour
             new ShipData(4, 5),
         };
     }
-
-    #region 보드 준비
 
     private void InitBoardSetup()
     {
@@ -129,9 +146,57 @@ public class BoardView : MonoBehaviour
         );
     }
 
-    #endregion
+    private void InitBoardRenderer()
+    {
+        boardRenderer = new BoardRenderer(
+            BoardSize,
+            boardRole,
+            cells,
+            waterSprite,
+            landSprite,
+            shipSprite,
+            blockedSprite,
+            hitSprite,
+            missSprite,
+            previewShipSprite,
+            invalidPreviewSprite,
+            hideBlockedCellsOnBattle,
+            hideCellShipSpriteWhenUsingOverlay,
+            IsBattle,
+            IsShipVisualOverlayEnabled
+        );
+    }
 
-    #region 입력 처리
+    private void InitPlacementController()
+    {
+        placementController = new BoardPlacementController(
+            BoardSize,
+            boardRole,
+            boardStates,
+            shipIdByCell,
+            ships,
+            IsPlacementLocked,
+            RefreshCells,
+            UpdateReadyButton,
+            ResetShipDragItems,
+            ClearShipPreview,
+            RemoveShipVisual,
+            ShowShipVisual,
+            ClearAllShipVisuals
+        );
+    }
+
+    private void InitAttackController()
+    {
+        attackController = new BattleAttackController(
+            BoardSize,
+            boardStates,
+            shipIdByCell,
+            ships,
+            RefreshCell,
+            ShowSunkShipVisual
+        );
+    }
 
     private void InitInputController()
     {
@@ -146,6 +211,10 @@ public class BoardView : MonoBehaviour
             ClearShipPreview
         );
     }
+
+    #endregion
+
+    #region 입력 처리
 
     private void OnClickCell(BoardCell cell)
     {
@@ -233,28 +302,7 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region 셀 표시
-
-    private void InitBoardRenderer()
-    {
-        boardRenderer = new BoardRenderer(
-            BoardSize,
-            boardRole,
-            cells,
-            waterSprite,
-            landSprite,
-            shipSprite,
-            blockedSprite,
-            hitSprite,
-            missSprite,
-            previewShipSprite,
-            invalidPreviewSprite,
-            hideBlockedCellsOnBattle,
-            hideCellShipSpriteWhenUsingOverlay,
-            IsBattle,
-            IsShipVisualOverlayEnabled
-        );
-    }
+    #region 보드 표시
 
     private void RefreshCells()
     {
@@ -339,6 +387,7 @@ public class BoardView : MonoBehaviour
         shipVisualController.ClearAllShips();
     }
 
+    // 침몰한 상대 함선의 위치 정보를 받아 보드 위에 함선 이미지 표시
     private void ShowSunkShipVisual(List<Vector2Int> positions, string shipStatusId)
     {
         if (boardRole != BoardRole.EnemyBoard)
@@ -395,42 +444,7 @@ public class BoardView : MonoBehaviour
 
     #endregion
 
-    #region 배치 컨트롤러
-
-    private void InitPlacementController()
-    {
-        placementController = new BoardPlacementController(
-            BoardSize,
-            boardRole,
-            boardStates,
-            shipIdByCell,
-            ships,
-            IsPlacementLocked,
-            RefreshCells,
-            UpdateReadyButton,
-            ResetShipDragItems,
-            ClearShipPreview,
-            RemoveShipVisual,
-            ShowShipVisual,
-            ClearAllShipVisuals
-        );
-    }
-
-    #endregion
-
-    #region 공격 컨트롤러
-
-    private void InitAttackController()
-    {
-        attackController = new BattleAttackController(
-            BoardSize,
-            boardStates,
-            shipIdByCell,
-            ships,
-            RefreshCell,
-            ShowSunkShipVisual
-        );
-    }
+    #region 공격 판정 연결
 
     public AttackResult ReceiveAttack(int x, int y)
     {

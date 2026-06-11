@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 보드 셀 위에 함선 이미지를 오버레이로 배치하고 갱신하는 시각화 컨트롤러
 public class ShipVisualController
 {
     private readonly bool useOverlay;
@@ -12,6 +13,7 @@ public class ShipVisualController
     private readonly RectTransform visualRoot;
     private readonly Image visualTemplate;
 
+    // TODO: 함선 크기별 Sprite는 추후 ShipDefinitionSO 또는 BoardVisualConfigSO로 분리 가능
     private readonly Sprite shipSize2Sprite;
     private readonly Sprite shipSize3Sprite;
     private readonly Sprite shipSize4Sprite;
@@ -84,6 +86,7 @@ public class ShipVisualController
         BringRootToFront();
     }
 
+    // 함선 위치와 크기에 맞춰 보드 위에 함선 이미지 표시
     public void ShowShip(ShipData ship)
     {
         if (!CanShowShipVisual)
@@ -201,6 +204,7 @@ public class ShipVisualController
         visualByShipId.Clear();
     }
 
+    // 함선 이미지 루트 영역을 보드 크기에 맞춤
     private void FitRootToBoard()
     {
         if (visualRoot == null)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+// 보드 클릭, 우클릭, 드래그 앤 드랍 입력을 배치 또는 전투 처리로 분기하는 입력 컨트롤러
 public class BoardInputController
 {
     private readonly BoardRole boardRole;
@@ -18,26 +19,26 @@ public class BoardInputController
     private readonly Action clearShipPreview;
 
     public BoardInputController(
-        BoardRole boardRole,
-        CellState[,] boardStates,
-        BoardPlacementController placementController,
-        Func<bool> isBattle,
-        Func<bool> isPlacementLocked,
-        Action<int, int> requestEnemyAttack,
-        Action<List<Vector2Int>, bool> showShipPreview,
-        Action clearShipPreview
+        BoardRole _boardRole,
+        CellState[,] _boardStates,
+        BoardPlacementController _placementController,
+        Func<bool> _isBattle,
+        Func<bool> _isPlacementLocked,
+        Action<int, int> _requestEnemyAttack,
+        Action<List<Vector2Int>, bool> _showShipPreview,
+        Action _clearShipPreview
     )
     {
-        this.boardRole = boardRole;
-        this.boardStates = boardStates;
-        this.placementController = placementController;
+        boardRole = _boardRole;
+        boardStates = _boardStates;
+        placementController = _placementController;
 
-        this.checkBattleState = isBattle;
-        this.checkPlacementLocked = isPlacementLocked;
+        checkBattleState = _isBattle;
+        checkPlacementLocked = _isPlacementLocked;
 
-        this.requestEnemyAttack = requestEnemyAttack;
-        this.showShipPreview = showShipPreview;
-        this.clearShipPreview = clearShipPreview;
+        requestEnemyAttack = _requestEnemyAttack;
+        showShipPreview = _showShipPreview;
+        clearShipPreview = _clearShipPreview;
     }
 
     public bool TryPlaceSelectedShipAt(BoardCell cell)
@@ -50,6 +51,7 @@ public class BoardInputController
         return placementController.TryPlaceSelectedShipAt(cell);
     }
 
+    // 현재 게임 단계에 따라 배치 선택 또는 공격 요청으로 입력 분기
     public void OnClickCell(BoardCell cell)
     {
         if (cell == null)
@@ -207,6 +209,7 @@ public class BoardInputController
         }
     }
 
+    // 전투 중 상대 보드 클릭 시 공격 요청
     private void HandleBattleClick(BoardCell cell)
     {
         if (boardRole == BoardRole.EnemyBoard)

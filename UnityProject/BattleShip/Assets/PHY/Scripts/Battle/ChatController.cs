@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 채팅 메시지 입력, CHAT 패킷 송수신, 채팅 로그 UI 갱신을 담당하는 컨트롤러
 public class ChattingController : MonoBehaviour
 {
     [Header("채팅 UI")]
@@ -13,6 +14,7 @@ public class ChattingController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI chatLogText;
     [SerializeField] private ScrollRect chatScrollRect;
 
+    // TODO: SO로 분리 가능
     [Header("채팅 설정")]
     [SerializeField] private int maxMessageCount = 30;
 
@@ -24,15 +26,15 @@ public class ChattingController : MonoBehaviour
     private Func<bool> checkRestarting;
 
     public void Setup(
-        Func<string, bool> packetSender,
-        Func<bool> disconnectedCheck,
-        Func<bool> leavingCheck,
-        Func<bool> restartingCheck)
+        Func<string, bool> _packetSender,
+        Func<bool> _disconnectedCheck,
+        Func<bool> _leavingCheck,
+        Func<bool> _restartingCheck)
     {
-        this.packetSender = packetSender;
-        checkDisconnected = disconnectedCheck;
-        checkLeaving = leavingCheck;
-        checkRestarting = restartingCheck;
+        packetSender = _packetSender;
+        checkDisconnected = _disconnectedCheck;
+        checkLeaving = _leavingCheck;
+        checkRestarting = _restartingCheck;
     }
 
     private void Awake()
@@ -100,6 +102,7 @@ public class ChattingController : MonoBehaviour
         TrySendChatMessage();
     }
 
+    // 입력된 메시지를 검증한 뒤 로컬 로그에 추가하고 CHAT 패킷 전송
     private void TrySendChatMessage()
     {
         if (chatInputField == null)
@@ -206,6 +209,7 @@ public class ChattingController : MonoBehaviour
         chatScrollRect.verticalNormalizedPosition = 0f;
     }
 
+    // 패킷 구분자 충돌을 막기 위해 메시지 문자열 정리
     private string MakeSafeMessage(string message)
     {
         if (string.IsNullOrEmpty(message))

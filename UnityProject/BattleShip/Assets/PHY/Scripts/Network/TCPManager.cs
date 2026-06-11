@@ -6,10 +6,12 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using UnityEngine;
 
+// TCP Host / Client 연결, 패킷 송수신, 수신 큐 처리를 담당하는 네트워크 매니저
 public class TCPManager : MonoBehaviour
 {
     public static TCPManager Instance { get; private set; }
 
+    // TODO: 포트와 접속 IP는 추후 네트워크 설정 데이터로 분리 가능
     [Header("TCP 프로토콜")]
     [SerializeField] private int port = 7777;
     [SerializeField] private string hostIP = "127.0.0.1";
@@ -28,6 +30,7 @@ public class TCPManager : MonoBehaviour
 
     public bool IsHost { get; private set; }
 
+    // 수신 스레드에서 받은 패킷을 메인 스레드에서 처리하기 위한 큐
     private readonly ConcurrentQueue<string> receiveQueue = new ConcurrentQueue<string>();
 
     private bool disconnectPending;

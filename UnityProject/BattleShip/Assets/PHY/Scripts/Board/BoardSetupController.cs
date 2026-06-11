@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+// 보드 셀 생성, 초기 상태 리셋, 고정 육지 타일 배치를 담당하는 보드 초기화 컨트롤러
 public class BoardSetupController
 {
     private readonly int boardSize;
@@ -18,6 +19,7 @@ public class BoardSetupController
     private readonly Action<BoardCell> onPointerExitCell;
     private readonly Action<BoardCell, PointerEventData> onDropCell;
 
+    // TODO: 육지 좌표 패턴은 추후 LandPatternSO로 분리 가능
     private readonly Vector2Int[] singleLandPositions =
     {
         new Vector2Int(1, 3),
@@ -27,6 +29,7 @@ public class BoardSetupController
         new Vector2Int(8, 5),
     };
 
+    // TODO: 고정 섬 모양 데이터는 추후 LandPatternSO로 분리 가능
     private readonly Vector2Int[] islandShapeA =
     {
         new Vector2Int(0, 0),
@@ -48,32 +51,32 @@ public class BoardSetupController
     };
 
     public BoardSetupController(
-        int boardSize,
-        BoardCell cellTemplate,
-        Transform boardRoot,
-        BoardCell[,] cells,
-        CellState[,] boardStates,
-        int[,] shipIdByCell,
-        Action<BoardCell> onClickCell,
-        Action<BoardCell> onRightClickCell,
-        Action<BoardCell> onPointerEnterCell,
-        Action<BoardCell> onPointerExitCell,
-        Action<BoardCell, PointerEventData> onDropCell
+        int _boardSize,
+        BoardCell _cellTemplate,
+        Transform _boardRoot,
+        BoardCell[,] _cells,
+        CellState[,] _boardStates,
+        int[,] _shipIdByCell,
+        Action<BoardCell> _onClickCell,
+        Action<BoardCell> _onRightClickCell,
+        Action<BoardCell> _onPointerEnterCell,
+        Action<BoardCell> _onPointerExitCell,
+        Action<BoardCell, PointerEventData> _onDropCell
     )
     {
-        this.boardSize = boardSize;
-        this.cellTemplate = cellTemplate;
-        this.boardRoot = boardRoot;
+        boardSize = _boardSize;
+        cellTemplate = _cellTemplate;
+        boardRoot = _boardRoot;
 
-        this.cells = cells;
-        this.boardStates = boardStates;
-        this.shipIdByCell = shipIdByCell;
+        cells = _cells;
+        boardStates = _boardStates;
+        shipIdByCell = _shipIdByCell;
 
-        this.onClickCell = onClickCell;
-        this.onRightClickCell = onRightClickCell;
-        this.onPointerEnterCell = onPointerEnterCell;
-        this.onPointerExitCell = onPointerExitCell;
-        this.onDropCell = onDropCell;
+        onClickCell = _onClickCell;
+        onRightClickCell = _onRightClickCell;
+        onPointerEnterCell = _onPointerEnterCell;
+        onPointerExitCell = _onPointerExitCell;
+        onDropCell = _onDropCell;
     }
 
     public void SetupBoard()
@@ -128,6 +131,7 @@ public class BoardSetupController
         }
     }
 
+    // 현재 과제에서는 고정된 육지 패턴만 배치
     private void PlaceLandTiles()
     {
         PlaceSingleLandTiles();

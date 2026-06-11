@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+// 양쪽 Ready 상태 동기화, 배치 잠금, Battle 진입 조건 확인을 담당하는 컨트롤러
 public class ReadyController : MonoBehaviour
 {
     [Header("Ready 상태")]
@@ -24,20 +25,20 @@ public class ReadyController : MonoBehaviour
     public bool IsPlacementLocked => isPlacementLocked;
 
     public void Setup(
-        Func<bool> allShipsPlacedChecker,
-        Func<bool> tcpConnectedChecker,
-        Func<string, bool> packetSender,
-        Action waitingReadySetter,
-        Action battleStarter,
-        Action statusTextUpdater)
+        Func<bool> _allShipsPlacedChecker,
+        Func<bool> _tcpConnectedChecker,
+        Func<string, bool> _packetSender,
+        Action _waitingReadySetter,
+        Action _battleStarter,
+        Action _statusTextUpdater)
     {
-        checkAllShipsPlaced = allShipsPlacedChecker;
-        checkTcpConnected = tcpConnectedChecker;
-        this.packetSender = packetSender;
+        checkAllShipsPlaced = _allShipsPlacedChecker;
+        checkTcpConnected = _tcpConnectedChecker;
+        packetSender = _packetSender;
 
-        showWaitingReadyState = waitingReadySetter;
-        tryStartBattle = battleStarter;
-        updateStatusText = statusTextUpdater;
+        showWaitingReadyState = _waitingReadySetter;
+        tryStartBattle = _battleStarter;
+        updateStatusText = _statusTextUpdater;
     }
 
     public void ResetReadyState()
@@ -48,6 +49,7 @@ public class ReadyController : MonoBehaviour
         isWaitingReadySend = false;
     }
 
+    // 내 함선 배치 완료 여부를 확인하고 READY 패킷 전송
     public void ClickReady()
     {
         if (isMyReady)
@@ -139,6 +141,7 @@ public class ReadyController : MonoBehaviour
         isWaitingReadySend = false;
     }
 
+    // Ready 이후 함선 배치 수정 방지
     public void LockPlacement()
     {
         isPlacementLocked = true;

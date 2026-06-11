@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+// Ready, 전투, 채팅, 리플레이, 나가기 패킷을 각 컨트롤러로 분배하는 패킷 처리 스크립트
 public class BattleNetworkHandler : MonoBehaviour
 {
     private Func<bool> checkDisconnected;
@@ -40,6 +41,7 @@ public class BattleNetworkHandler : MonoBehaviour
         receiveChat = chatHandler;
     }
 
+    // 수신된 패킷 타입을 확인하고 알맞은 컨트롤러 콜백으로 전달
     public void ReceivePacket(string packet)
     {
         if (string.IsNullOrEmpty(packet))
@@ -106,6 +108,7 @@ public class BattleNetworkHandler : MonoBehaviour
         }
     }
 
+    // TCPManager를 통해 상대에게 패킷 전송
     public bool SendPacket(string packet)
     {
         if (IsDisconnected())

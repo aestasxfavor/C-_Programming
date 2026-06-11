@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// 보드 CellState에 맞춰 타일 Sprite와 X/O 표시, 배치 프리뷰 표시를 담당하는 렌더러
 public class BoardRenderer
 {
     private readonly int boardSize;
     private readonly BoardRole boardRole;
     private readonly BoardCell[,] cells;
 
+    // TODO: 보드 타일 Sprite 묶음은 추후 BoardVisualConfigSO로 분리 가능
     private readonly Sprite waterSprite;
     private readonly Sprite landSprite;
     private readonly Sprite shipSprite;
@@ -27,42 +29,42 @@ public class BoardRenderer
     private readonly List<Vector2Int> previewCells = new List<Vector2Int>();
 
     public BoardRenderer(
-        int boardSize,
-        BoardRole boardRole,
-        BoardCell[,] cells,
-        Sprite waterSprite,
-        Sprite landSprite,
-        Sprite shipSprite,
-        Sprite blockedSprite,
-        Sprite hitSprite,
-        Sprite missSprite,
-        Sprite validPreviewSprite,
-        Sprite invalidPreviewSprite,
-        bool hideBlockedCellsOnBattle,
-        bool hideCellShipSpriteWhenUsingOverlay,
-        Func<bool> getBattleState,
-        Func<bool> isShipVisualOverlayEnabled
+        int _boardSize,
+        BoardRole _boardRole,
+        BoardCell[,] _cells,
+        Sprite _waterSprite,
+        Sprite _landSprite,
+        Sprite _shipSprite,
+        Sprite _blockedSprite,
+        Sprite _hitSprite,
+        Sprite _missSprite,
+        Sprite _validPreviewSprite,
+        Sprite _invalidPreviewSprite,
+        bool _hideBlockedCellsOnBattle,
+        bool _hideCellShipSpriteWhenUsingOverlay,
+        Func<bool> _getBattleState,
+        Func<bool> _isShipVisualOverlayEnabled
     )
     {
-        this.boardSize = boardSize;
-        this.boardRole = boardRole;
-        this.cells = cells;
+        boardSize = _boardSize;
+        boardRole = _boardRole;
+        cells = _cells;
 
-        this.waterSprite = waterSprite;
-        this.landSprite = landSprite;
-        this.shipSprite = shipSprite;
-        this.blockedSprite = blockedSprite;
-        this.hitSprite = hitSprite;
-        this.missSprite = missSprite;
+        waterSprite = _waterSprite;
+        landSprite = _landSprite;
+        shipSprite = _shipSprite;
+        blockedSprite = _blockedSprite;
+        hitSprite = _hitSprite;
+        missSprite = _missSprite;
 
-        this.validPreviewSprite = validPreviewSprite;
-        this.invalidPreviewSprite = invalidPreviewSprite;
+        validPreviewSprite = _validPreviewSprite;
+        invalidPreviewSprite = _invalidPreviewSprite;
 
-        this.hideBlockedCellsOnBattle = hideBlockedCellsOnBattle;
-        this.hideCellShipSpriteWhenUsingOverlay = hideCellShipSpriteWhenUsingOverlay;
+        hideBlockedCellsOnBattle = _hideBlockedCellsOnBattle;
+        hideCellShipSpriteWhenUsingOverlay = _hideCellShipSpriteWhenUsingOverlay;
 
-        this.getBattleState = getBattleState;
-        this.isShipVisualOverlayEnabled = isShipVisualOverlayEnabled;
+        getBattleState = _getBattleState;
+        isShipVisualOverlayEnabled = _isShipVisualOverlayEnabled;
     }
 
     public void RefreshAllCells(CellState[,] boardStates)
@@ -104,6 +106,7 @@ public class BoardRenderer
         cells[x, y].SetSprite(GetSpriteForCell(state));
     }
 
+    // 배치 가능 여부에 따라 프리뷰 Sprite 표시
     public void ShowShipPreview(List<Vector2Int> shipPositions, bool canPlace)
     {
         if (shipPositions == null)
@@ -156,6 +159,7 @@ public class BoardRenderer
         previewCells.Clear();
     }
 
+    // CellState에 맞는 타일 Sprite 선택
     private Sprite GetSpriteForCell(CellState state)
     {
         if (boardRole == BoardRole.EnemyBoard)

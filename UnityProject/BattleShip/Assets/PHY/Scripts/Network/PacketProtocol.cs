@@ -1,3 +1,4 @@
+// TCP 통신에서 사용하는 패킷 타입 문자열을 모아둔 클래스
 public static class PacketProtocol
 {
     public const string READY = "READY";

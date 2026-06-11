@@ -3,10 +3,12 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// 매치 재시작, 나가기, 연결 끊김 상태와 씬 이동 흐름을 관리하는 컨트롤러
 public class MatchController : MonoBehaviour
 {
     private static bool isReplayLoading;
 
+    // TODO: SO로 분리 가능
     [Header("씬 이름")]
     [SerializeField] private string titleSceneName = "Title";
     [SerializeField] private string gameSceneName = "Game";
@@ -24,11 +26,12 @@ public class MatchController : MonoBehaviour
     public bool IsLeaving => isLeaving;
     public bool IsDisconnected => isDisconnected;
 
-    public void Setup(Action statusUpdater)
+    public void Setup(Action _statusUpdater)
     {
-        updateStatusText = statusUpdater;
+        updateStatusText = _statusUpdater;
     }
 
+    // 새 매치 시작 시 재시작 / 나가기 / 연결 끊김 상태 초기화
     public void ResetState()
     {
         isDisconnected = false;
@@ -88,6 +91,7 @@ public class MatchController : MonoBehaviour
         StartCoroutine(ClearReplayAfterReconnect());
     }
 
+    // Replay로 Game 씬을 다시 로드한 뒤 매치 잠금 상태 해제
     public void ClearReplayAfterSceneLoad(GameState currentState)
     {
         if (!isRestarting)
@@ -98,6 +102,7 @@ public class MatchController : MonoBehaviour
         StartCoroutine(ClearReplayAfterSceneLoadRoutine(currentState));
     }
 
+    // 중복 나가기 입력을 막고 타이틀 복귀 상태로 전환
     public bool TryLeave()
     {
         if (isDisconnected)

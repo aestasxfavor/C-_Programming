@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// 보드 한 칸의 현재 상태를 나타내는 enum
 public enum CellState
 {
     Empty,      // 물
@@ -11,6 +12,7 @@ public enum CellState
     SunkShip    // 침볼한 배
 }
 
+// 공격 판정 결과를 나타내는 enum
 public enum AttackResult
 {
     Invalid,

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// 타이틀 화면의 메인 메뉴, 모드 선택, 싱글 안내, 멀티 씬 이동을 담당하는 UI 매니저
 public class TitleManager : MonoBehaviour
 {
     [Header("타이틀 메인 패널")]

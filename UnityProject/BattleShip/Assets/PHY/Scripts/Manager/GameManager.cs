@@ -1,11 +1,12 @@
 using UnityEngine;
 
+// 배틀쉽 게임의 전체 진행 상태를 관리하고 각 컨트롤러 흐름을 연결하는 중심 스크립트
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
     #region 인스펙터 필드
-
+    // 런타임 중 변하는 게임 상태는 SO가 아닌 GameManager와 각 컨트롤러에서 관리
     [Header("게임 상태")]
     [SerializeField] private GameState gameState = GameState.None;
 
@@ -364,7 +365,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region Button Flow
+    #region 버튼 별 흐름 (보드 클릭)
 
     public void TryAttackEnemyBoard(int x, int y)
     {
@@ -388,7 +389,7 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region State Flow
+    #region 게임 상태 흐름
 
     private void SetGameState(GameState newState)
     {

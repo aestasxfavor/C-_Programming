@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 배치 / 전투 UI 전환, 상태 텍스트, 승패 패널, 함선 상태 아이콘 표시를 담당하는 UI 컨트롤러
 public class BattleUIController : MonoBehaviour
 {
     [Header("배치 / 전투 UI")]
@@ -18,6 +19,7 @@ public class BattleUIController : MonoBehaviour
     [Header("역할 표시 UI")]
     [SerializeField] private TextMeshProUGUI roleText;
 
+    // TODO: 상태 문구와 안내 문구는 추후 BattleUITextConfigSO로 분리 가능
     [Header("상태 텍스트")]
     [SerializeField] private TextMeshProUGUI gameStatusText;
     [SerializeField] private TextMeshProUGUI turnTimeText;
@@ -242,6 +244,7 @@ public class BattleUIController : MonoBehaviour
         }
     }
 
+    // 침몰한 함선 ID에 맞는 상태 아이콘을 회색으로 표시
     private void MarkShipStatusIconSunk(Image[] shipIcons, string shipId)
     {
         int iconIndex = GetShipStatusIconIndex(shipId);

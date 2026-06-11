@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// 보드 공격 판정, Hit / Miss / Sunk 처리, 침몰 주변 Miss 표시를 담당하는 전투 판정 컨트롤러
 public class BattleAttackController
 {
+    #region 필드 / 외부 콜백
+
     private readonly int boardSize;
     private readonly CellState[,] boardStates;
     private readonly int[,] shipIdByCell;
@@ -15,23 +18,32 @@ public class BattleAttackController
     private string lastSunkShipPositionsText = "";
     private string lastSunkShipId = "";
 
+    #endregion
+
+    #region 생성자
+
     public BattleAttackController(
-        int boardSize,
-        CellState[,] boardStates,
-        int[,] shipIdByCell,
-        ShipData[] ships,
-        Action<int, int> refreshCell,
-        Action<List<Vector2Int>, string> showSunkShipVisual = null
+        int _boardSize,
+        CellState[,] _boardStates,
+        int[,] _shipIdByCell,
+        ShipData[] _ships,
+        Action<int, int> _refreshCell,
+        Action<List<Vector2Int>, string> _showSunkShipVisual = null
     )
     {
-        this.boardSize = boardSize;
-        this.boardStates = boardStates;
-        this.shipIdByCell = shipIdByCell;
-        this.ships = ships;
-        this.refreshCell = refreshCell;
-        this.showSunkShipVisual = showSunkShipVisual;
+        boardSize = _boardSize;
+        boardStates = _boardStates;
+        shipIdByCell = _shipIdByCell;
+        ships = _ships;
+        refreshCell = _refreshCell;
+        showSunkShipVisual = _showSunkShipVisual;
     }
 
+    #endregion
+
+    #region 공격 판정
+
+    // 상대 공격 좌표를 내 보드 기준으로 판정
     public AttackResult ReceiveAttack(int x, int y)
     {
         ClearLastSunkResult();
@@ -56,6 +68,76 @@ public class BattleAttackController
         return AttackResult.Invalid;
     }
 
+    public bool CanRequestAttack(int x, int y)
+    {
+        return CanAttackCell(x, y);
+    }
+
+    private AttackResult HandleHit(int x, int y)
+    {
+        int shipId = shipIdByCell[x, y];
+
+        boardStates[x, y] = CellState.Hit;
+        RefreshCell(x, y);
+
+        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipId={shipId}");
+
+        if (IsShipSunk(shipId))
+        {
+            lastSunkShipId = GetShipStatusId(shipId);
+            lastSunkShipPositionsText = ConvertShipPositionsToText(shipId);
+
+            MarkMissAroundSunkShip(shipId);
+
+            if (IsAllShipsSunk())
+            {
+                Debug.Log($"[Battle] 모든 함선 침몰, LastSunkShip={lastSunkShipId}");
+                return AttackResult.GameOver;
+            }
+
+            Debug.Log($"[Battle] Sunk ShipId={shipId}, LastSunkShip={lastSunkShipId}");
+            return AttackResult.Sunk;
+        }
+
+        return AttackResult.Hit;
+    }
+
+    private AttackResult HandleMiss(int x, int y)
+    {
+        boardStates[x, y] = CellState.Miss;
+        RefreshCell(x, y);
+
+        Debug.Log($"[Battle] Miss X={x}, Y={y}");
+        return AttackResult.Miss;
+    }
+
+    private bool CanAttackCell(int x, int y)
+    {
+        if (!IsInsideBoard(x, y))
+        {
+            return false;
+        }
+
+        CellState state = boardStates[x, y];
+
+        if (state == CellState.Hit || state == CellState.Miss || state == CellState.SunkShip)
+        {
+            return false;
+        }
+
+        if (state == CellState.Land)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    #endregion
+
+    #region 결과 적용
+
+    // 상대가 보내온 공격 결과를 내 상대 보드 표시에 반영
     public void ApplyAttackResult(
         int x,
         int y,
@@ -97,71 +179,6 @@ public class BattleAttackController
                 Debug.LogWarning($"[Result] 알 수 없는 결과 타입: {resultText}");
                 break;
         }
-    }
-
-    public bool CanRequestAttack(int x, int y)
-    {
-        return CanAttackCell(x, y);
-    }
-
-    public string GetLastSunkAroundPositionsText()
-    {
-        return lastSunkAroundPositionsText;
-    }
-
-    public string GetLastSunkShipPositionsText()
-    {
-        return lastSunkShipPositionsText;
-    }
-
-    public string GetLastSunkShipId()
-    {
-        return lastSunkShipId;
-    }
-
-    public void ClearLastSunkResult()
-    {
-        lastSunkShipId = "";
-        lastSunkAroundPositionsText = "";
-        lastSunkShipPositionsText = "";
-    }
-
-    private AttackResult HandleHit(int x, int y)
-    {
-        int shipId = shipIdByCell[x, y];
-
-        boardStates[x, y] = CellState.Hit;
-        RefreshCell(x, y);
-
-        Debug.Log($"[Battle] Hit X={x}, Y={y}, ShipId={shipId}");
-
-        if (IsShipSunk(shipId))
-        {
-            lastSunkShipId = GetShipStatusId(shipId);
-            lastSunkShipPositionsText = ConvertShipPositionsToText(shipId);
-
-            MarkMissAroundSunkShip(shipId);
-
-            if (IsAllShipsSunk())
-            {
-                Debug.Log($"[Battle] 모든 함선 침몰, LastSunkShip={lastSunkShipId}");
-                return AttackResult.GameOver;
-            }
-
-            Debug.Log($"[Battle] Sunk ShipId={shipId}, LastSunkShip={lastSunkShipId}");
-            return AttackResult.Sunk;
-        }
-
-        return AttackResult.Hit;
-    }
-
-    private AttackResult HandleMiss(int x, int y)
-    {
-        boardStates[x, y] = CellState.Miss;
-        RefreshCell(x, y);
-
-        Debug.Log($"[Battle] Miss X={x}, Y={y}");
-        return AttackResult.Miss;
     }
 
     private void ApplyHitResult(int x, int y)
@@ -249,26 +266,30 @@ public class BattleAttackController
         }
     }
 
-    private bool CanAttackCell(int x, int y)
+    #endregion
+
+    #region 침몰 처리
+
+    public string GetLastSunkAroundPositionsText()
     {
-        if (!IsInsideBoard(x, y))
-        {
-            return false;
-        }
+        return lastSunkAroundPositionsText;
+    }
 
-        CellState state = boardStates[x, y];
+    public string GetLastSunkShipPositionsText()
+    {
+        return lastSunkShipPositionsText;
+    }
 
-        if (state == CellState.Hit || state == CellState.Miss || state == CellState.SunkShip)
-        {
-            return false;
-        }
+    public string GetLastSunkShipId()
+    {
+        return lastSunkShipId;
+    }
 
-        if (state == CellState.Land)
-        {
-            return false;
-        }
-
-        return true;
+    public void ClearLastSunkResult()
+    {
+        lastSunkShipId = "";
+        lastSunkAroundPositionsText = "";
+        lastSunkShipPositionsText = "";
     }
 
     private bool IsShipSunk(int shipId)
@@ -298,6 +319,7 @@ public class BattleAttackController
         return true;
     }
 
+    // 침몰한 함선 주변 8방향을 Miss로 표시
     private void MarkMissAroundSunkShip(int shipId)
     {
         lastSunkAroundPositionsText = "";
@@ -363,6 +385,53 @@ public class BattleAttackController
         lastSunkAroundPositionsText = ConvertPositionsToText(aroundMissPositions);
     }
 
+    private bool IsAllShipsSunk()
+    {
+        for (int i = 0; i < ships.Length; i++)
+        {
+            if (!ships[i].isPlaced)
+            {
+                return false;
+            }
+
+            if (!IsShipSunk(ships[i].shipId))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private string GetShipStatusId(int shipId)
+    {
+        switch (shipId)
+        {
+            case 0:
+                return "Ship2";
+
+            case 1:
+                return "Ship3A";
+
+            case 2:
+                return "Ship3B";
+
+            case 3:
+                return "Ship4";
+
+            case 4:
+                return "Ship5";
+
+            default:
+                return "";
+        }
+    }
+
+    #endregion
+
+    #region 위치 문자열 변환
+
+    // 침몰 위치와 주변 Miss 위치를 패킷으로 보내기 위한 문자열 변환
     private string ConvertShipPositionsToText(int shipId)
     {
         if (shipId < 0 || shipId >= ships.Length)
@@ -464,47 +533,9 @@ public class BattleAttackController
         return positions;
     }
 
-    private bool IsAllShipsSunk()
-    {
-        for (int i = 0; i < ships.Length; i++)
-        {
-            if (!ships[i].isPlaced)
-            {
-                return false;
-            }
+    #endregion
 
-            if (!IsShipSunk(ships[i].shipId))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private string GetShipStatusId(int shipId)
-    {
-        switch (shipId)
-        {
-            case 0:
-                return "Ship2";
-
-            case 1:
-                return "Ship3A";
-
-            case 2:
-                return "Ship3B";
-
-            case 3:
-                return "Ship4";
-
-            case 4:
-                return "Ship5";
-
-            default:
-                return "";
-        }
-    }
+    #region 내부 유틸
 
     private void RefreshCell(int x, int y)
     {
@@ -515,4 +546,6 @@ public class BattleAttackController
     {
         return x >= 0 && x < boardSize && y >= 0 && y < boardSize;
     }
+
+    #endregion
 }

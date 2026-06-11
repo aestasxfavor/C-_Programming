@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+// 게임 종료 후 양쪽 Replay Ready를 동기화하고 Game 씬 재시작을 처리하는 컨트롤러
 public class ReplayController : MonoBehaviour
 {
     [Header("Replay 상태")]
@@ -13,15 +14,15 @@ public class ReplayController : MonoBehaviour
     private Action stopBattle;
 
     public void Setup(
-        MatchController match,
-        Func<GameState> gameStateGetter,
-        Func<string, bool> packetSender,
-        Action battleStopper)
+        MatchController _match,
+        Func<GameState> _gameStateGetter,
+        Func<string, bool> _packetSender,
+        Action _battleStopper)
     {
-        matchController = match;
-        getGameState = gameStateGetter;
-        this.packetSender = packetSender;
-        stopBattle = battleStopper;
+        matchController = _match;
+        getGameState = _gameStateGetter;
+        packetSender = _packetSender;
+        stopBattle = _battleStopper;
     }
 
     public void ResetState()
@@ -30,6 +31,7 @@ public class ReplayController : MonoBehaviour
         isOpponentReplayReady = false;
     }
 
+    // 양쪽 Replay Ready 완료 시 재시작 흐름 진입
     public void ClickReplay()
     {
         if (matchController == null)

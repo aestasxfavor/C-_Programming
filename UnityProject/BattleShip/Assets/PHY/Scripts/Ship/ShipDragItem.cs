@@ -1,9 +1,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+// 배치 단계에서 함선 UI 드래그, 드랍 성공 처리, 원위치 복귀를 담당하는 스크립트
 public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private BoardView boardView;
+
+    // TODO: shipId와 함선 크기 매핑은 추후 ShipDefinitionSO로 분리 가능
     [SerializeField] private int shipId;
 
     private RectTransform rectTransform;
@@ -82,6 +85,7 @@ public class ShipDragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         rectTransform.anchoredPosition += eventData.delta / rootCanvas.scaleFactor;
     }
 
+    // 드랍 실패 시 시작 위치로 복귀, 성공 시 선택 UI 비활성화
     public void OnEndDrag(PointerEventData eventData)
     {
         if (IsPlacementLocked())

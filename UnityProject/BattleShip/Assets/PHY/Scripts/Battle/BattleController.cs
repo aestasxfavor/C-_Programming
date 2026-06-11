@@ -1,8 +1,11 @@
 using System;
 using UnityEngine;
 
+// 공격 요청, 공격 결과 처리, 턴 전환, 턴 타이머, 승패 판정을 담당하는 전투 컨트롤러
 public class BattleController : MonoBehaviour
 {
+    #region 인스펙터 필드
+
     [Header("보드 연결")]
     [SerializeField] private BoardView myBoardView;
     [SerializeField] private BoardView enemyBoardView;
@@ -10,6 +13,7 @@ public class BattleController : MonoBehaviour
     [Header("UI 컨트롤러")]
     [SerializeField] private BattleUIController battleUIController;
 
+    // TODO: 턴 제한 시간은 추후 BattleShipRuleConfigSO로 분리 가능
     [Header("턴 시간")]
     [SerializeField] private float turnTimeLimit = 15f;
     [SerializeField] private float turnTimer;
@@ -19,6 +23,10 @@ public class BattleController : MonoBehaviour
     [SerializeField] private bool isMyTurn;
     [SerializeField] private bool isWaitingResult;
     [SerializeField] private bool isGameOver;
+
+    #endregion
+
+    #region 외부 콜백 / 상태 프로퍼티
 
     private Func<bool> checkDisconnected;
     private Func<bool> checkRestarting;
@@ -32,22 +40,26 @@ public class BattleController : MonoBehaviour
     public bool IsWaitingResult => isWaitingResult;
     public bool IsGameOver => isGameOver;
 
+    #endregion
+
+    #region 초기화 / 전투 상태 제어
+
     public void Setup(
-        Func<bool> disconnectedCheck,
-        Func<bool> restartingCheck,
-        Func<bool> leavingCheck,
-        Func<GameState> gameStateGetter,
-        Action<GameState> gameStateSetter,
-        Func<string, bool> packetSender,
-        Action statusTextUpdater)
+        Func<bool> _disconnectedCheck,
+        Func<bool> _restartingCheck,
+        Func<bool> _leavingCheck,
+        Func<GameState> _gameStateGetter,
+        Action<GameState> _gameStateSetter,
+        Func<string, bool> _packetSender,
+        Action _statusTextUpdater)
     {
-        checkDisconnected = disconnectedCheck;
-        checkRestarting = restartingCheck;
-        checkLeaving = leavingCheck;
-        getGameState = gameStateGetter;
-        setGameState = gameStateSetter;
-        this.packetSender = packetSender;
-        updateStatusText = statusTextUpdater;
+        checkDisconnected = _disconnectedCheck;
+        checkRestarting = _restartingCheck;
+        checkLeaving = _leavingCheck;
+        getGameState = _gameStateGetter;
+        setGameState = _gameStateSetter;
+        packetSender = _packetSender;
+        updateStatusText = _statusTextUpdater;
     }
 
     public void ResetBattle()
@@ -96,6 +108,11 @@ public class BattleController : MonoBehaviour
         updateStatusText?.Invoke();
     }
 
+    #endregion
+
+    #region 공격 요청 / 패킷 수신 처리
+
+    // 내 턴에 상대 보드 공격을 요청하고 ATTACK 패킷 전송
     public void TryAttackEnemyBoard(int x, int y)
     {
         if (IsDisconnected())
@@ -161,6 +178,7 @@ public class BattleController : MonoBehaviour
         Debug.Log($"[Attack] 공격 패킷 전송 X={x}, Y={y}");
     }
 
+    // 상대가 보낸 ATTACK 패킷을 내 보드에 판정하고 RESULT 패킷으로 응답
     public void ReceiveAttackPacket(string[] packetParts)
     {
         if (packetParts.Length < 3)
@@ -272,6 +290,7 @@ public class BattleController : MonoBehaviour
         }
     }
 
+    // 상대가 보낸 RESULT 패킷을 상대 보드 표시와 턴 상태에 반영
     public void ReceiveResultPacket(string[] packetParts)
     {
         if (packetParts.Length < 6)
@@ -408,6 +427,10 @@ public class BattleController : MonoBehaviour
         StartTurnTimer();
     }
 
+    #endregion
+
+    #region 게임 종료 처리
+
     private void SetGameOver(bool isWin)
     {
         if (IsDisconnected())
@@ -440,6 +463,10 @@ public class BattleController : MonoBehaviour
             Debug.Log("[GameOver] 패배");
         }
     }
+
+    #endregion
+
+    #region 턴 타이머
 
     private void StartTurnTimer()
     {
@@ -599,6 +626,7 @@ public class BattleController : MonoBehaviour
         battleUIController.ClearTurnTimeText();
     }
 
+    // 턴 제한 시간이 끝났을 때 턴을 상대에게 넘기는 처리
     private void OnTurnTimeout()
     {
         if (IsDisconnected())
@@ -633,6 +661,10 @@ public class BattleController : MonoBehaviour
 
         Debug.Log("[Turn] 시간 초과로 상대 턴 대기");
     }
+
+    #endregion
+
+    #region 내부 유틸
 
     private bool SendPacket(string packet)
     {
@@ -703,4 +735,6 @@ public class BattleController : MonoBehaviour
                 return "INVALID";
         }
     }
+
+    #endregion
 }

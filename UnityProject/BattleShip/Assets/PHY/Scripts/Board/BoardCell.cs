@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+// 보드 한 칸의 좌표, 상태, Sprite, X/O 표시와 포인터 이벤트 전달을 담당하는 셀 스크립트
 public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IDropHandler
 {
     [SerializeField] private Image backgroundImage;
@@ -20,6 +21,7 @@ public class BoardCell : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
 
     public CellState State { get; private set; }
 
+    // 셀 좌표와 입력 콜백 연결
     public void Init(int x, int y, 
         Action<BoardCell> _onLeftClick, Action<BoardCell> _onRightClick,
         Action<BoardCell> _onPointerEnter, Action<BoardCell> _onPointerExit,

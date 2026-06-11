@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+// 매치 나가기, 상대 나가기 수신, 연결 끊김 후 타이틀 복귀 흐름을 처리하는 컨트롤러
 public class LeaveController : MonoBehaviour
 {
     private MatchController matchController;
@@ -15,23 +16,24 @@ public class LeaveController : MonoBehaviour
     private Coroutine leaveRoutine;
 
     public void Setup(
-        MatchController match,
+        MatchController _match,
         Func<string, bool> _packetSender,
-        Action battleStopper,
-        Action placementLocker,
-        Action statusUpdater,
-        Action gameOverUIHider,
-        Action disconnectUIShower)
+        Action _battleStopper,
+        Action _placementLocker,
+        Action _statusUpdater,
+        Action _gameOverUIHider,
+        Action _disconnectUIShower)
     {
-        matchController = match;
+        matchController = _match;
         packetSender = _packetSender;
-        stopBattle = battleStopper;
-        lockPlacement = placementLocker;
-        updateStatusText = statusUpdater;
-        hideGameOverUI = gameOverUIHider;
-        showDisconnectUI = disconnectUIShower;
+        stopBattle = _battleStopper;
+        lockPlacement = _placementLocker;
+        updateStatusText = _statusUpdater;
+        hideGameOverUI = _gameOverUIHider;
+        showDisconnectUI = _disconnectUIShower;
     }
 
+    // 나가기 버튼 입력 시 LEAVE 패킷 전송 후 타이틀 복귀 처리
     public void ClickExit()
     {
         if (matchController == null)
@@ -87,6 +89,7 @@ public class LeaveController : MonoBehaviour
         matchController.GoTitleAfterSendLeave();
     }
 
+    // 상대의 LEAVE 패킷 수신 시 연결 끊김 UI와 타이틀 복귀 처리
     public void ReceiveLeave()
     {
         if (matchController == null)
