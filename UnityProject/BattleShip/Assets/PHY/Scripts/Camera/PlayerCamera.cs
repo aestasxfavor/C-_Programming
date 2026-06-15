@@ -5,75 +5,120 @@ public class PlayerCamera : MonoBehaviour
     [Header("Target")]
     [SerializeField] private Transform target;
 
-    [Header("Third Person View")]
-    [SerializeField] private Vector3 offset = new Vector3(0f, 6f, -12f);
-    [SerializeField] private float lookHeight = 1.6f;
+    [Header("Position")]
+    [SerializeField] private Vector3 offset = new Vector3(0f, 3f, -7f);
 
-    [Header("Smooth")]
-    [SerializeField] private float followSmoothTime = 0.08f;
-    [SerializeField] private float rotationSmoothSpeed = 10f;
+    [Header("Look")]
+    [SerializeField] private float lookHeight = 1.5f;
 
-    private Vector3 currentVelocity;
+    [Header("Follow")]
+    [SerializeField] private float followSpeed = 12f;
+    [SerializeField] private float rotateSpeed = 14f;
+
+    private Transform resolvedTarget;
+
+    private void Awake()
+    {
+        ResolveTarget();
+        SnapCamera();
+    }
 
     private void Start()
     {
-        if (target == null)
-        {
-            return;
-        }
-
-        transform.position = target.position + offset;
-        LookAtTargetInstant();
+        ResolveTarget();
+        SnapCamera();
     }
 
     private void LateUpdate()
     {
-        if (target == null)
+        ResolveTarget();
+
+        if (resolvedTarget == null)
         {
             return;
         }
 
-        Vector3 desiredPosition = target.position + offset;
-
-        transform.position = Vector3.SmoothDamp(
-            transform.position,
-            desiredPosition,
-            ref currentVelocity,
-            followSmoothTime
-        );
-
-        RotateToTarget();
+        FollowTarget();
+        LookAtTarget();
     }
 
-    private void RotateToTarget()
+    private void ResolveTarget()
     {
-        Vector3 lookTarget = target.position + Vector3.up * lookHeight;
-        Vector3 lookDirection = lookTarget - transform.position;
+        if (target != null)
+        {
+            PlayerController controller = target.GetComponent<PlayerController>();
 
-        if (lookDirection.sqrMagnitude < 0.001f)
+            if (controller == null)
+            {
+                controller = target.GetComponentInParent<PlayerController>();
+            }
+
+            if (controller != null)
+            {
+                resolvedTarget = controller.transform;
+                return;
+            }
+
+            resolvedTarget = target;
+            return;
+        }
+
+        PlayerController foundController = FindFirstObjectByType<PlayerController>();
+
+        if (foundController != null)
+        {
+            resolvedTarget = foundController.transform;
+            target = resolvedTarget;
+        }
+    }
+
+    private void SnapCamera()
+    {
+        if (resolvedTarget == null)
         {
             return;
         }
 
-        Quaternion desiredRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
+        Vector3 targetPosition = resolvedTarget.position + offset;
+        Vector3 lookTarget = resolvedTarget.position + Vector3.up * lookHeight;
+        Vector3 lookDirection = lookTarget - targetPosition;
+
+        if (lookDirection.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        transform.position = targetPosition;
+        transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
+    }
+
+    private void FollowTarget()
+    {
+        Vector3 targetPosition = resolvedTarget.position + offset;
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            targetPosition,
+            followSpeed * Time.deltaTime
+        );
+    }
+
+    private void LookAtTarget()
+    {
+        Vector3 lookTarget = resolvedTarget.position + Vector3.up * lookHeight;
+        Vector3 lookDirection = lookTarget - transform.position;
+
+        if (lookDirection.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
-            desiredRotation,
-            rotationSmoothSpeed * Time.deltaTime
+            targetRotation,
+            rotateSpeed * Time.deltaTime
         );
-    }
-
-    private void LookAtTargetInstant()
-    {
-        Vector3 lookTarget = target.position + Vector3.up * lookHeight;
-        Vector3 lookDirection = lookTarget - transform.position;
-
-        if (lookDirection.sqrMagnitude < 0.001f)
-        {
-            return;
-        }
-
-        transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
     }
 }

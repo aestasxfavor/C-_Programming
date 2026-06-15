@@ -10,47 +10,26 @@ public class PlayerController : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform cameraTransform;
-    [SerializeField] private Animator animator;
 
-    [Header("Move Settings")]
-    [SerializeField] private float moveSpeed = 4.5f;
-    [SerializeField] private float rotationSpeed = 8f;
+    [Header("Move")]
+    [SerializeField] private float moveSpeed = 5f;
 
     [Header("Jump / Gravity")]
-    [SerializeField] private float jumpHeight = 1.3f;
+    [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -20f;
-    [SerializeField] private float groundedStickForce = -2f;
-
-    [Header("Animator Settings")]
-    [SerializeField] private string animationParName = "AnimationPar";
-    [SerializeField] private int idleValue = 0;
-    [SerializeField] private int runValue = 1;
+    [SerializeField] private float groundedVelocity = -2f;
 
     private CharacterController characterController;
-
     private Vector2 moveInput;
     private float verticalVelocity;
-    private bool jumpRequested;
-
-    private bool hasAnimationPar;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
 
-        if (animator == null)
-        {
-            animator = GetComponentInChildren<Animator>();
-        }
-
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
-        }
-
-        if (animator != null)
-        {
-            hasAnimationPar = HasAnimatorParameter(animationParName, AnimatorControllerParameterType.Int);
         }
     }
 
@@ -64,32 +43,29 @@ public class PlayerController : MonoBehaviour
         if (jumpAction != null)
         {
             jumpAction.action.Enable();
-            jumpAction.action.performed += OnJumpPerformed;
         }
     }
 
     private void OnDisable()
     {
-        if (jumpAction != null)
-        {
-            jumpAction.action.performed -= OnJumpPerformed;
-            jumpAction.action.Disable();
-        }
-
         if (moveAction != null)
         {
             moveAction.action.Disable();
+        }
+
+        if (jumpAction != null)
+        {
+            jumpAction.action.Disable();
         }
     }
 
     private void Update()
     {
-        ReadMoveInput();
-        MovePlayer();
-        UpdateAnimator();
+        ReadInput();
+        Move();
     }
 
-    private void ReadMoveInput()
+    private void ReadInput()
     {
         if (moveAction == null)
         {
@@ -100,48 +76,66 @@ public class PlayerController : MonoBehaviour
         moveInput = moveAction.action.ReadValue<Vector2>();
     }
 
-    private void MovePlayer()
+    private void Move()
     {
         Vector3 moveDirection = GetCameraBasedMoveDirection();
 
-        ApplyJumpAndGravity();
+        if (characterController.isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = groundedVelocity;
+        }
 
-        Vector3 finalMove = moveDirection * moveSpeed;
-        finalMove.y = verticalVelocity;
+        bool jumpPressed = jumpAction != null && jumpAction.action.WasPressedThisFrame();
 
-        characterController.Move(finalMove * Time.deltaTime);
+        if (jumpPressed && characterController.isGrounded)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
-        RotateToMoveDirection(moveDirection);
+        verticalVelocity += gravity * Time.deltaTime;
+
+        Vector3 horizontalMove = moveDirection * moveSpeed;
+        Vector3 verticalMove = Vector3.up * verticalVelocity;
+
+        characterController.Move((horizontalMove + verticalMove) * Time.deltaTime);
     }
 
     private Vector3 GetCameraBasedMoveDirection()
     {
-        Vector3 forward = Vector3.forward;
-        Vector3 right = Vector3.right;
-
-        if (cameraTransform != null)
+        if (cameraTransform == null)
         {
-            forward = cameraTransform.forward;
-            right = cameraTransform.right;
+            Vector3 fallbackMove = new Vector3(moveInput.x, 0f, moveInput.y);
+
+            if (fallbackMove.sqrMagnitude > 1f)
+            {
+                fallbackMove.Normalize();
+            }
+
+            return fallbackMove;
         }
 
-        forward.y = 0f;
-        right.y = 0f;
+        Vector3 cameraForward = cameraTransform.forward;
+        Vector3 cameraRight = cameraTransform.right;
 
-        if (forward.sqrMagnitude < 0.001f)
+        cameraForward.y = 0f;
+        cameraRight.y = 0f;
+
+        if (cameraForward.sqrMagnitude < 0.01f)
         {
-            forward = Vector3.forward;
+            cameraForward = Vector3.forward;
         }
 
-        if (right.sqrMagnitude < 0.001f)
+        if (cameraRight.sqrMagnitude < 0.01f)
         {
-            right = Vector3.right;
+            cameraRight = Vector3.right;
         }
 
-        forward.Normalize();
-        right.Normalize();
+        cameraForward.Normalize();
+        cameraRight.Normalize();
 
-        Vector3 moveDirection = forward * moveInput.y + right * moveInput.x;
+        Vector3 moveDirection =
+            cameraForward * moveInput.y +
+            cameraRight * moveInput.x;
 
         if (moveDirection.sqrMagnitude > 1f)
         {
@@ -149,86 +143,5 @@ public class PlayerController : MonoBehaviour
         }
 
         return moveDirection;
-    }
-
-    private void RotateToMoveDirection(Vector3 moveDirection)
-    {
-        if (moveDirection.sqrMagnitude < 0.001f)
-        {
-            return;
-        }
-
-        Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
-
-        transform.rotation = Quaternion.RotateTowards(
-            transform.rotation,
-            targetRotation,
-            rotationSpeed * 100f * Time.deltaTime
-        );
-    }
-
-    private void ApplyJumpAndGravity()
-    {
-        if (characterController.isGrounded && verticalVelocity < 0f)
-        {
-            verticalVelocity = groundedStickForce;
-        }
-
-        if (jumpRequested)
-        {
-            if (characterController.isGrounded)
-            {
-                verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            }
-
-            jumpRequested = false;
-        }
-
-        verticalVelocity += gravity * Time.deltaTime;
-    }
-
-    private void OnJumpPerformed(InputAction.CallbackContext context)
-    {
-        jumpRequested = true;
-    }
-
-    private void UpdateAnimator()
-    {
-        if (animator == null)
-        {
-            return;
-        }
-
-        if (!hasAnimationPar)
-        {
-            return;
-        }
-
-        bool isMoving = moveInput.sqrMagnitude > 0.01f;
-
-        animator.SetInteger(animationParName, isMoving ? runValue : idleValue);
-    }
-
-    private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType parameterType)
-    {
-        if (animator == null)
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(parameterName))
-        {
-            return false;
-        }
-
-        foreach (AnimatorControllerParameter parameter in animator.parameters)
-        {
-            if (parameter.name == parameterName && parameter.type == parameterType)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
