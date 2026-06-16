@@ -281,7 +281,13 @@ namespace InventoryFramework
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (tooltip == null)
+            {
+                return;
+            }
+
             var slot = GetSlot();
+
             if (slot != null && !slot.IsEmpty)
             {
                 tooltip.Show(slot.item, eventData.position);
@@ -290,6 +296,11 @@ namespace InventoryFramework
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            if (tooltip == null)
+            {
+                return;
+            }
+
             tooltip.Hide();
         }
     }
