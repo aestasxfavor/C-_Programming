@@ -4,24 +4,32 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Input Actions")]
+    [Header("Input")]
     [SerializeField] private InputActionReference moveAction;
     [SerializeField] private InputActionReference jumpAction;
 
-    [Header("References")]
-    [SerializeField] private Transform cameraTransform;
-
-    [Header("Move")]
+    [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
-
-    [Header("Jump / Gravity")]
     [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -20f;
-    [SerializeField] private float groundedVelocity = -2f;
+
+    [Header("Camera")]
+    [SerializeField] private Transform cameraTransform;
+
+    [Header("Visual Rotation")]
+    [SerializeField] private Transform visualRoot;
+    [SerializeField] private float rotationSpeed = 720f;
+    [SerializeField] private float modelYawOffset = 0f;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string animationParameterName = "AnimationPar";
+    [SerializeField] private int idleValue = 0;
+    [SerializeField] private int runValue = 1;
 
     private CharacterController characterController;
-    private Vector2 moveInput;
     private float verticalVelocity;
+    private int animationParameterHash;
 
     private void Awake()
     {
@@ -31,6 +39,18 @@ public class PlayerController : MonoBehaviour
         {
             cameraTransform = Camera.main.transform;
         }
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        animationParameterHash = Animator.StringToHash(animationParameterName);
     }
 
     private void OnEnable()
@@ -61,81 +81,42 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        ReadInput();
-        Move();
+        Vector2 input = GetMoveInput();
+        Vector3 moveDirection = GetMoveDirection(input);
+
+        ApplyJumpAndGravity();
+        Move(moveDirection);
+        RotateVisual(moveDirection);
+        UpdateAnimation(input);
     }
 
-    private void ReadInput()
+    private Vector2 GetMoveInput()
     {
         if (moveAction == null)
         {
-            moveInput = Vector2.zero;
-            return;
+            return Vector2.zero;
         }
 
-        moveInput = moveAction.action.ReadValue<Vector2>();
+        return moveAction.action.ReadValue<Vector2>();
     }
 
-    private void Move()
-    {
-        Vector3 moveDirection = GetCameraBasedMoveDirection();
-
-        if (characterController.isGrounded && verticalVelocity < 0f)
-        {
-            verticalVelocity = groundedVelocity;
-        }
-
-        bool jumpPressed = jumpAction != null && jumpAction.action.WasPressedThisFrame();
-
-        if (jumpPressed && characterController.isGrounded)
-        {
-            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-
-        verticalVelocity += gravity * Time.deltaTime;
-
-        Vector3 horizontalMove = moveDirection * moveSpeed;
-        Vector3 verticalMove = Vector3.up * verticalVelocity;
-
-        characterController.Move((horizontalMove + verticalMove) * Time.deltaTime);
-    }
-
-    private Vector3 GetCameraBasedMoveDirection()
+    private Vector3 GetMoveDirection(Vector2 input)
     {
         if (cameraTransform == null)
         {
-            Vector3 fallbackMove = new Vector3(moveInput.x, 0f, moveInput.y);
-
-            if (fallbackMove.sqrMagnitude > 1f)
-            {
-                fallbackMove.Normalize();
-            }
-
-            return fallbackMove;
+            return Vector3.zero;
         }
 
-        Vector3 cameraForward = cameraTransform.forward;
-        Vector3 cameraRight = cameraTransform.right;
+        Vector3 forward = cameraTransform.forward;
+        Vector3 right = cameraTransform.right;
 
-        cameraForward.y = 0f;
-        cameraRight.y = 0f;
+        forward.y = 0f;
+        right.y = 0f;
 
-        if (cameraForward.sqrMagnitude < 0.01f)
-        {
-            cameraForward = Vector3.forward;
-        }
+        forward.Normalize();
+        right.Normalize();
 
-        if (cameraRight.sqrMagnitude < 0.01f)
-        {
-            cameraRight = Vector3.right;
-        }
-
-        cameraForward.Normalize();
-        cameraRight.Normalize();
-
-        Vector3 moveDirection =
-            cameraForward * moveInput.y +
-            cameraRight * moveInput.x;
+        Vector3 moveDirection = forward * input.y + right * input.x;
 
         if (moveDirection.sqrMagnitude > 1f)
         {
@@ -143,5 +124,63 @@ public class PlayerController : MonoBehaviour
         }
 
         return moveDirection;
+    }
+
+    private void Move(Vector3 moveDirection)
+    {
+        Vector3 horizontalMove = moveDirection * moveSpeed;
+        Vector3 verticalMove = Vector3.up * verticalVelocity;
+
+        characterController.Move((horizontalMove + verticalMove) * Time.deltaTime);
+    }
+
+    private void RotateVisual(Vector3 moveDirection)
+    {
+        if (visualRoot == null)
+        {
+            return;
+        }
+
+        if (moveDirection.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+        targetRotation *= Quaternion.Euler(0f, modelYawOffset, 0f);
+
+        visualRoot.rotation = Quaternion.RotateTowards(
+            visualRoot.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
+    }
+
+    private void ApplyJumpAndGravity()
+    {
+        if (characterController.isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
+
+        bool jumpPressed = jumpAction != null && jumpAction.action.WasPressedThisFrame();
+
+        if (characterController.isGrounded && jumpPressed)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        verticalVelocity += gravity * Time.deltaTime;
+    }
+
+    private void UpdateAnimation(Vector2 input)
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        bool isMoving = input.sqrMagnitude > 0.01f;
+        animator.SetInteger(animationParameterHash, isMoving ? runValue : idleValue);
     }
 }

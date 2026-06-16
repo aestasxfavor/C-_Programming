@@ -9,22 +9,45 @@ namespace InventoryFramework
 
         public void PickupItem(Item item, int amount = 1)
         {
-            bool addedToHotbar = hotbar.AddItem(item, amount);
+            if (item == null)
+            {
+                Debug.LogWarning("Pickup item is null.");
+                return;
+            }
 
-            if (!addedToHotbar)
+            bool addedToHotbar = false;
+
+            if (hotbar != null)
+            {
+                addedToHotbar = hotbar.AddItem(item, amount);
+            }
+
+            if (!addedToHotbar && inventory != null)
             {
                 bool addedToInventory = inventory.AddItem(item, amount);
 
                 if (!addedToInventory)
                 {
-                    Debug.Log("Both hotbar and inventory full! Dropping item...");
+                    Debug.Log("Hotbar and Inventory are full.");
+                    return;
                 }
             }
 
-            FindAnyObjectByType<HotbarUI>().RefreshUI();
-            FindAnyObjectByType<InventoryUI>().RefreshUI();
+            HotbarUI hotbarUI = FindAnyObjectByType<HotbarUI>();
+
+            if (hotbarUI != null)
+            {
+                hotbarUI.RefreshUI();
+            }
+
+            InventoryUI inventoryUI = FindAnyObjectByType<InventoryUI>();
+
+            if (inventoryUI != null)
+            {
+                inventoryUI.RefreshUI();
+            }
+
+            Debug.Log($"Picked up {item.itemName} x {amount}");
         }
     }
 }
-
-
