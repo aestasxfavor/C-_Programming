@@ -2091,6 +2091,61 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 833950161}
   m_CullTransparentMesh: 1
+--- !u!1 &859733275
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 859733276}
+  - component: {fileID: 859733277}
+  m_Layer: 5
+  m_Name: VendorUIConrtroller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &859733276
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859733275}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3614324684248998401}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &859733277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859733275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55c3e81295d74643853d04d99947065, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VendorUIController
+  vendorUIRoot: {fileID: 992928285}
+  oreSalesPanel: {fileID: 456787786}
+  itemBuyPanel: {fileID: 351246503}
+  mineralSalesButton: {fileID: 139873963}
+  itemBuyButton: {fileID: 1986324581}
+  closeButton: {fileID: 691288250}
+  sellButton: {fileID: 1419543824}
 --- !u!1 &863257732
 GameObject:
   m_ObjectHideFlags: 0
@@ -2742,7 +2797,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &992928286
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2778,7 +2833,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -25825,6 +25880,7 @@ RectTransform:
   - {fileID: 2341003231522782638}
   - {fileID: 5994241038197202370}
   - {fileID: 1017658869116869687}
+  - {fileID: 859733276}
   - {fileID: 992928286}
   m_Father: {fileID: 1584210814}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -45722,8 +45778,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fa269d73ee67c24190dde3c7b3ffb0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VendorNPC
-  defaultOrePrice: 10
-  sellKey: 304
+  interactKey: 304
 --- !u!136 &6792327054261310895
 CapsuleCollider:
   m_ObjectHideFlags: 0

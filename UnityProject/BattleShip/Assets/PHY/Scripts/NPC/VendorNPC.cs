@@ -3,11 +3,8 @@ using InventoryFramework;
 
 public class VendorNPC : MonoBehaviour
 {
-    [Header("Sell Settings")]
-    [SerializeField] private int defaultOrePrice = 10;
-
     [Header("Interaction")]
-    [SerializeField] private KeyCode sellKey = KeyCode.LeftShift;
+    [SerializeField] private KeyCode interactKey = KeyCode.LeftShift;
 
     private bool isPlayerInRange;
     private ItemPickupHandler playerPickupHandler;
@@ -19,9 +16,9 @@ public class VendorNPC : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(sellKey))
+        if (Input.GetKeyDown(interactKey))
         {
-            SellOres();
+            OpenVendorUI();
         }
     }
 
@@ -68,18 +65,14 @@ public class VendorNPC : MonoBehaviour
         }
     }
 
-    private void SellOres()
+    private void OpenVendorUI()
     {
-        Debug.Log("판매 시도");
-
-        if (CoinManager.instance == null)
+        if (VendorUIController.instance == null)
         {
-            Debug.LogWarning("CoinManager가 없습니다.");
+            Debug.LogWarning("VendorUIController가 없습니다.");
             return;
         }
 
-        CoinManager.instance.AddCoin(defaultOrePrice);
-
-        Debug.Log($"테스트 판매 완료: +{defaultOrePrice} Coin");
+        VendorUIController.instance.Open();
     }
 }

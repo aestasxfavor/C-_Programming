@@ -35,10 +35,7 @@ public class PlayerController : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
 
-        if (cameraTransform == null && Camera.main != null)
-        {
-            cameraTransform = Camera.main.transform;
-        }
+        ResolveCamera();
 
         if (animator == null)
         {
@@ -81,6 +78,14 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        ResolveCamera();
+
+        if (IsUIOpen())
+        {
+            StopPlayerInputWhileUIOpen();
+            return;
+        }
+
         Vector2 input = GetMoveInput();
         Vector3 moveDirection = GetMoveDirection(input);
 
@@ -88,6 +93,36 @@ public class PlayerController : MonoBehaviour
         Move(moveDirection);
         RotateVisual(moveDirection);
         UpdateAnimation(input);
+    }
+
+    private bool IsUIOpen()
+    {
+        return VendorUIController.instance != null && VendorUIController.instance.IsOpen;
+    }
+
+    private void StopPlayerInputWhileUIOpen()
+    {
+        if (characterController.isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
+
+        UpdateAnimation(Vector2.zero);
+    }
+
+    private void ResolveCamera()
+    {
+        if (cameraTransform != null)
+        {
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera != null)
+        {
+            cameraTransform = mainCamera.transform;
+        }
     }
 
     private Vector2 GetMoveInput()
