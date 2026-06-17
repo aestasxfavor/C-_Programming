@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 444379700255487471}
   - component: {fileID: 7479268411165120321}
   - component: {fileID: 7723996390595597647}
+  - component: {fileID: 5279888653653021465}
   m_Layer: 0
   m_Name: Coal
   m_TagString: Untagged
@@ -128,3 +129,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MineableOre
   oreItem: {fileID: 11400000, guid: c4d8c25a56591a34e86f022aca256c7a, type: 2}
   amount: 1
+--- !u!114 &5279888653653021465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6674880634233042915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c89187ada6a8233489de10c9e9d1953e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolingOre

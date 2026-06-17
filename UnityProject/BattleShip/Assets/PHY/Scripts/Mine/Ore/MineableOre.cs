@@ -11,6 +11,11 @@ public class MineableOre : MonoBehaviour
 
     public bool IsMined => isMined;
 
+    private void OnEnable()
+    {
+        isMined = false;
+    }
+
     public void Mine(ItemPickupHandler pickupHandler)
     {
         if (isMined)
@@ -33,6 +38,19 @@ public class MineableOre : MonoBehaviour
         isMined = true;
 
         pickupHandler.PickupItem(oreItem, amount);
+
+        DespawnOre();
+    }
+
+    private void DespawnOre()
+    {
+        PoolingOre pooledOre = GetComponent<PoolingOre>();
+
+        if (pooledOre != null)
+        {
+            pooledOre.Despawn();
+            return;
+        }
 
         gameObject.SetActive(false);
     }

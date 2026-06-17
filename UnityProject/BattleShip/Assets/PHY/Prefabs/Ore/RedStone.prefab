@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4332772017689881714}
   - component: {fileID: 2084592078745138738}
   - component: {fileID: 5183082371507404423}
+  - component: {fileID: 3267838113829430042}
   m_Layer: 0
   m_Name: RedStone
   m_TagString: Untagged
@@ -128,3 +129,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MineableOre
   oreItem: {fileID: 11400000, guid: 97bfd38f83cc0804ab464d13d19df756, type: 2}
   amount: 1
+--- !u!114 &3267838113829430042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4811324963366360347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c89187ada6a8233489de10c9e9d1953e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolingOre
