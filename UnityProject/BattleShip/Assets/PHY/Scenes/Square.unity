@@ -332,6 +332,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 12907986}
   m_CullTransparentMesh: 1
+--- !u!1 &18833982
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 18833983}
+  m_Layer: 7
+  m_Name: RespawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &18833983
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 18833982}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 10, y: 8, z: 5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &139873961
 GameObject:
   m_ObjectHideFlags: 0
@@ -1332,7 +1363,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8419050133502176890, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 993514257}
   m_SourcePrefab: {fileID: 100100000, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
 --- !u!1 &345937214
 GameObject:
@@ -4286,6 +4320,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 992928285}
   m_CullTransparentMesh: 1
+--- !u!1 &993514251 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8419050133502176890, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
+  m_PrefabInstance: {fileID: 338569556}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &993514257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 993514251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1a9bc9514f5804fa9597edd39c52a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFallRespawner
+  fallY: -20
+  respawnPointLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!1 &1013488536
 GameObject:
   m_ObjectHideFlags: 0
@@ -66175,3 +66230,4 @@ SceneRoots:
   - {fileID: 1584210814}
   - {fileID: 1107466803}
   - {fileID: 982551634}
+  - {fileID: 18833983}
