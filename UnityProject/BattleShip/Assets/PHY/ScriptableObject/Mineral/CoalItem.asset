@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CoalItem
   m_EditorClassIdentifier: Assembly-CSharp::InventoryFramework.Item
   id: 1
-  itemName: Coal
+  itemName: "\uC11D\uD0C4"
   description: "\uC11D\uD0C4"
   icon: {fileID: 21300074, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   maxStack: 64

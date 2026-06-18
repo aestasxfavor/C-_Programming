@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GoldItem
   m_EditorClassIdentifier: Assembly-CSharp::InventoryFramework.Item
   id: 3
-  itemName: Gold
+  itemName: "\uAE08"
   description: "\uAE08"
   icon: {fileID: 21300066, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   maxStack: 64

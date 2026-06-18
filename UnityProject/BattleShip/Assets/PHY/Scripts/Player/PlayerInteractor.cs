@@ -9,6 +9,7 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private LayerMask interactMask = ~0;
 
     private ItemPickupHandler pickupHandler;
+    private MineableOre currentMiningOre;
 
     private void Awake()
     {
@@ -24,11 +25,29 @@ public class PlayerInteractor : MonoBehaviour
 
         if (Keyboard.current.fKey.wasPressedThisFrame)
         {
-            TryInteract();
+            TryStartMining();
+        }
+
+        if (Keyboard.current.fKey.wasReleasedThisFrame)
+        {
+            CancelCurrentMining();
         }
     }
 
-    private void TryInteract()
+    private void TryStartMining()
+    {
+        MineableOre nearestOre = FindNearestOre();
+
+        if (nearestOre == null)
+        {
+            return;
+        }
+
+        currentMiningOre = nearestOre;
+        currentMiningOre.StartMining(pickupHandler);
+    }
+
+    private MineableOre FindNearestOre()
     {
         Collider[] hits = Physics.OverlapSphere(
             transform.position,
@@ -58,10 +77,23 @@ public class PlayerInteractor : MonoBehaviour
             }
         }
 
-        if (nearestOre != null)
+        return nearestOre;
+    }
+
+    private void CancelCurrentMining()
+    {
+        if (currentMiningOre == null)
         {
-            nearestOre.Mine(pickupHandler);
+            return;
         }
+
+        currentMiningOre.CancelMining();
+        currentMiningOre = null;
+    }
+
+    private void OnDisable()
+    {
+        CancelCurrentMining();
     }
 
     private void OnDrawGizmosSelected()

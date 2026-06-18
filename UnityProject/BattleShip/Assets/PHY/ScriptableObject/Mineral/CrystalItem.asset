@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryFramework.Item
   id: 2
   itemName: "\uD06C\uB9AC\uC2A4\uD0C8"
-  description: Crystal
+  description: "\uD06C\uB9AC\uC2A4\uD0C8"
   icon: {fileID: 21300070, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   maxStack: 64
   model: {fileID: 0}

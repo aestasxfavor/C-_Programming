@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RedstoneItem
   m_EditorClassIdentifier: Assembly-CSharp::InventoryFramework.Item
   id: 5
-  itemName: Redstone
+  itemName: "\uB808\uB4DC\uC2A4\uD1A4"
   description: "\uB808\uB4DC\uC2A4\uD1A4"
   icon: {fileID: 21300068, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   maxStack: 64

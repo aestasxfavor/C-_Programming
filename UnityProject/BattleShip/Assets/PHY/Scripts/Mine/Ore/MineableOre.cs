@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using InventoryFramework;
 
@@ -7,18 +8,36 @@ public class MineableOre : MonoBehaviour
     [SerializeField] private Item oreItem;
     [SerializeField] private int amount = 1;
 
+    [Header("Mining")]
+    [SerializeField] private float mineDuration = 1.5f;
+    [SerializeField] private float cancelDistance = 3f;
+
     private bool isMined;
+    private bool isMining;
+    private Coroutine miningCoroutine;
 
     public bool IsMined => isMined;
 
     private void OnEnable()
     {
         isMined = false;
+        isMining = false;
+        miningCoroutine = null;
+    }
+
+    private void OnDisable()
+    {
+        CancelMining();
     }
 
     public void Mine(ItemPickupHandler pickupHandler)
     {
-        if (isMined)
+        StartMining(pickupHandler);
+    }
+
+    public void StartMining(ItemPickupHandler pickupHandler)
+    {
+        if (isMined || isMining)
         {
             return;
         }
@@ -35,7 +54,86 @@ public class MineableOre : MonoBehaviour
             return;
         }
 
+        miningCoroutine = StartCoroutine(MiningRoutine(pickupHandler));
+    }
+
+    public void CancelMining()
+    {
+        if (!isMining && miningCoroutine == null)
+        {
+            return;
+        }
+
+        if (miningCoroutine != null)
+        {
+            StopCoroutine(miningCoroutine);
+            miningCoroutine = null;
+        }
+
+        isMining = false;
+
+        if (MiningGaugeUI.instance != null)
+        {
+            MiningGaugeUI.instance.Hide();
+        }
+    }
+
+    private IEnumerator MiningRoutine(ItemPickupHandler pickupHandler)
+    {
+        isMining = true;
+
+        if (MiningGaugeUI.instance != null)
+        {
+            MiningGaugeUI.instance.Show();
+        }
+
+        float timer = 0f;
+
+        while (timer < mineDuration)
+        {
+            if (pickupHandler == null)
+            {
+                CancelMining();
+                yield break;
+            }
+
+            float distance = Vector3.Distance(transform.position, pickupHandler.transform.position);
+
+            if (distance > cancelDistance)
+            {
+                CancelMining();
+                yield break;
+            }
+
+            timer += Time.deltaTime;
+            float progress = timer / mineDuration;
+
+            if (MiningGaugeUI.instance != null)
+            {
+                MiningGaugeUI.instance.SetProgress(progress);
+            }
+
+            yield return null;
+        }
+
+        CompleteMining(pickupHandler);
+    }
+
+    private void CompleteMining(ItemPickupHandler pickupHandler)
+    {
+        if (isMined)
+        {
+            return;
+        }
+
         isMined = true;
+        isMining = false;
+        miningCoroutine = null;
+
+        if (MiningGaugeUI.instance != null)
+        {
+            MiningGaugeUI.instance.Hide();
+        }
 
         pickupHandler.PickupItem(oreItem, amount);
 
