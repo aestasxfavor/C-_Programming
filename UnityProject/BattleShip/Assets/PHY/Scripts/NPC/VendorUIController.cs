@@ -27,11 +27,17 @@ public class VendorUIController : MonoBehaviour
     [SerializeField] private GameObject oreSalesPanel;
     [SerializeField] private GameObject itemBuyPanel;
 
-    [Header("Buttons")]
+    [Header("Tab Buttons")]
     [SerializeField] private Button mineralSalesButton;
     [SerializeField] private Button itemBuyButton;
+
+    [Header("Common Buttons")]
     [SerializeField] private Button closeButton;
     [SerializeField] private Button sellButton;
+
+    [Header("Item Buy Buttons")]
+    [SerializeField] private Button pickaxeBuyButton;
+    [SerializeField] private Button pendantBuyButton;
 
     [Header("Ore Sell Rows")]
     [SerializeField] private OreSellRow[] oreSellRows;
@@ -78,6 +84,7 @@ public class VendorUIController : MonoBehaviour
 
     private void Start()
     {
+        SetupItemBuyButtonsAsNotReady();
         Close();
     }
 
@@ -142,20 +149,44 @@ public class VendorUIController : MonoBehaviour
 
     private void ShowItemBuyPanel()
     {
-        if (itemBuyPanel == null)
-        {
-            Debug.Log("아이템 구매 기능은 준비중입니다.");
-            return;
-        }
-
         if (oreSalesPanel != null)
         {
             oreSalesPanel.SetActive(false);
         }
 
-        itemBuyPanel.SetActive(true);
+        if (itemBuyPanel != null)
+        {
+            itemBuyPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.Log("아이템 구매 패널이 연결되어 있지 않습니다.");
+        }
 
-        Debug.Log("아이템 구매 기능은 준비중입니다.");
+        SetupItemBuyButtonsAsNotReady();
+    }
+
+    private void SetupItemBuyButtonsAsNotReady()
+    {
+        SetBuyButtonNotReady(pickaxeBuyButton);
+        SetBuyButtonNotReady(pendantBuyButton);
+    }
+
+    private void SetBuyButtonNotReady(Button button)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        button.interactable = false;
+
+        TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>(true);
+
+        if (buttonText != null)
+        {
+            buttonText.text = "준비중";
+        }
     }
 
     private void OnClickSellButton()

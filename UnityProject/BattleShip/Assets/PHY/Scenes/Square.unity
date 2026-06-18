@@ -3265,6 +3265,8 @@ MonoBehaviour:
   itemBuyButton: {fileID: 1986324581}
   closeButton: {fileID: 691288250}
   sellButton: {fileID: 1419543824}
+  pickaxeBuyButton: {fileID: 2065559118}
+  pendantBuyButton: {fileID: 1711995150}
   oreSellRows:
   - item: {fileID: 11400000, guid: c4d8c25a56591a34e86f022aca256c7a, type: 2}
     price: 5
@@ -6641,7 +6643,7 @@ GameObject:
   - component: {fileID: 1711995151}
   - component: {fileID: 1711995150}
   m_Layer: 5
-  m_Name: BuyButton
+  m_Name: RedStonePandentBuyButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8099,7 +8101,7 @@ GameObject:
   - component: {fileID: 2065559119}
   - component: {fileID: 2065559118}
   m_Layer: 5
-  m_Name: BuyButton
+  m_Name: PickaxeBuyButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
