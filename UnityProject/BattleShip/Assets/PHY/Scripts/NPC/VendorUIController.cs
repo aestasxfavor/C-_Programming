@@ -200,7 +200,7 @@ public class VendorUIController : MonoBehaviour
         RefreshInventoryUIs();
         RefreshOreSalesUI();
 
-        Debug.Log($"광석 전체 판매 완료: +{totalPrice} Coin");
+        Debug.Log($"광석 전체 판매 완료: +{totalPrice} Y");
     }
 
     private int CalculateTotalPrice(Hotbar hotbar, Inventory inventory)
@@ -290,12 +290,12 @@ public class VendorUIController : MonoBehaviour
 
             if (row.unitPriceText != null)
             {
-                row.unitPriceText.text = $"개당 {row.price} Coin";
+                row.unitPriceText.text = $"개당 {row.price} Y";
             }
 
             if (row.subTotalText != null)
             {
-                row.subTotalText.text = $"판매가 {subTotal} Coin";
+                row.subTotalText.text = $"판매가 {subTotal} Y";
             }
         }
 
@@ -314,7 +314,7 @@ public class VendorUIController : MonoBehaviour
     {
         if (totalPriceText != null)
         {
-            totalPriceText.text = $"총 판매가: {totalPrice} Coin";
+            totalPriceText.text = $"총 판매가: {totalPrice} Y";
         }
     }
 

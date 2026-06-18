@@ -689,6 +689,7 @@ GameObject:
   - component: {fileID: 237526115}
   - component: {fileID: 237526117}
   - component: {fileID: 237526116}
+  - component: {fileID: 237526118}
   m_Layer: 5
   m_Name: CoinText
   m_TagString: Untagged
@@ -815,6 +816,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 237526114}
   m_CullTransparentMesh: 1
+--- !u!114 &237526118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 237526114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263ab11b51609e54f8cff73f34726254, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinTextBinder
+  coinText: {fileID: 237526116}
 --- !u!1 &249490488
 GameObject:
   m_ObjectHideFlags: 0
@@ -1908,7 +1922,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &593037408
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3246,7 +3260,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VendorUIController
   vendorUIRoot: {fileID: 992928285}
   oreSalesPanel: {fileID: 456787786}
-  itemBuyPanel: {fileID: 0}
+  itemBuyPanel: {fileID: 593037407}
   mineralSalesButton: {fileID: 139873963}
   itemBuyButton: {fileID: 1986324581}
   closeButton: {fileID: 691288250}
@@ -21435,7 +21449,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

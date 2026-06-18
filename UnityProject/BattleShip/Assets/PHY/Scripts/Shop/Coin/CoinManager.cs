@@ -31,6 +31,7 @@ public class CoinManager : MonoBehaviour
         }
 
         coin += amount;
+
         RefreshUI();
     }
 
@@ -61,7 +62,7 @@ public class CoinManager : MonoBehaviour
     {
         if (coinText != null)
         {
-            coinText.text = coin.ToString();
+            coinText.text = $"{coin} Y";
         }
     }
 }
