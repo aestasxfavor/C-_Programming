@@ -14,9 +14,26 @@ public class NPCInteractionHighlight : MonoBehaviour
 
     private bool isPlayerNear;
 
+    private void OnEnable()
+    {
+        isPlayerNear = false;
+        SetHighlight(false);
+
+        if (InteractionPromptUI.Instance != null)
+        {
+            InteractionPromptUI.Instance.HidePrompt(gameObject);
+        }
+    }
+
     private void Start()
     {
-        SetInteractionState(false);
+        isPlayerNear = false;
+        SetHighlight(false);
+
+        if (InteractionPromptUI.Instance != null)
+        {
+            InteractionPromptUI.Instance.HidePrompt(gameObject);
+        }
     }
 
     private void Update()
@@ -35,40 +52,88 @@ public class NPCInteractionHighlight : MonoBehaviour
 
         bool foundPlayer = hits.Length > 0;
 
-        if (isPlayerNear == foundPlayer)
-            return;
+        if (foundPlayer)
+        {
+            isPlayerNear = true;
+            SetHighlight(true);
 
-        isPlayerNear = foundPlayer;
-        SetInteractionState(isPlayerNear);
+            if (IsVendorUIOpen())
+            {
+                HidePrompt();
+            }
+            else
+            {
+                ShowPrompt();
+            }
+
+            return;
+        }
+
+        if (!isPlayerNear)
+        {
+            return;
+        }
+
+        isPlayerNear = false;
+        SetInteractionState(false);
+    }
+
+    private bool IsVendorUIOpen()
+    {
+        return VendorUIController.instance != null && VendorUIController.instance.IsOpen;
     }
 
     private void SetInteractionState(bool active)
     {
         SetHighlight(active);
-        SetPrompt(active);
+
+        if (active)
+        {
+            ShowPrompt();
+        }
+        else
+        {
+            HidePrompt();
+        }
     }
 
     private void SetHighlight(bool active)
     {
         if (highlightObject != null)
+        {
             highlightObject.SetActive(active);
+        }
     }
 
-    private void SetPrompt(bool active)
+    private void ShowPrompt()
     {
         if (InteractionPromptUI.Instance == null)
+        {
             return;
+        }
 
-        if (active)
-            InteractionPromptUI.Instance.ShowPrompt(promptMessage, gameObject);
-        else
-            InteractionPromptUI.Instance.HidePrompt(gameObject);
+        InteractionPromptUI.Instance.ShowPrompt(promptMessage, gameObject);
+    }
+
+    private void HidePrompt()
+    {
+        if (InteractionPromptUI.Instance == null)
+        {
+            return;
+        }
+
+        InteractionPromptUI.Instance.HidePrompt(gameObject);
     }
 
     private void OnDisable()
     {
+        isPlayerNear = false;
+        SetHighlight(false);
+
         if (InteractionPromptUI.Instance != null)
+        {
             InteractionPromptUI.Instance.HidePrompt(gameObject);
+        }
     }
 
     private void OnDrawGizmosSelected()
