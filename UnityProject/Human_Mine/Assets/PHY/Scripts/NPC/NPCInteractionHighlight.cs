@@ -9,11 +9,14 @@ public class NPCInteractionHighlight : MonoBehaviour
     [Header("Highlight")]
     [SerializeField] private GameObject highlightObject;
 
+    [Header("Prompt")]
+    [SerializeField] private string promptMessage = "[Shift] 상점 열기";
+
     private bool isPlayerNear;
 
     private void Start()
     {
-        SetHighlight(false);
+        SetInteractionState(false);
     }
 
     private void Update()
@@ -33,20 +36,39 @@ public class NPCInteractionHighlight : MonoBehaviour
         bool foundPlayer = hits.Length > 0;
 
         if (isPlayerNear == foundPlayer)
-        {
             return;
-        }
 
         isPlayerNear = foundPlayer;
-        SetHighlight(isPlayerNear);
+        SetInteractionState(isPlayerNear);
+    }
+
+    private void SetInteractionState(bool active)
+    {
+        SetHighlight(active);
+        SetPrompt(active);
     }
 
     private void SetHighlight(bool active)
     {
         if (highlightObject != null)
-        {
             highlightObject.SetActive(active);
-        }
+    }
+
+    private void SetPrompt(bool active)
+    {
+        if (InteractionPromptUI.Instance == null)
+            return;
+
+        if (active)
+            InteractionPromptUI.Instance.ShowPrompt(promptMessage, gameObject);
+        else
+            InteractionPromptUI.Instance.HidePrompt(gameObject);
+    }
+
+    private void OnDisable()
+    {
+        if (InteractionPromptUI.Instance != null)
+            InteractionPromptUI.Instance.HidePrompt(gameObject);
     }
 
     private void OnDrawGizmosSelected()

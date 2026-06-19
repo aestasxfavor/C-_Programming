@@ -5,63 +5,79 @@ public class VendorNPC : MonoBehaviour
 {
     [Header("Interaction")]
     [SerializeField] private KeyCode interactKey = KeyCode.LeftShift;
+    [SerializeField] private float detectRadius = 2.5f;
+    [SerializeField] private LayerMask playerLayer;
 
     private bool isPlayerInRange;
     private ItemPickupHandler playerPickupHandler;
 
     private void Update()
     {
+        CheckPlayerInRange();
+        CheckInteractionInput();
+    }
+
+    private void CheckPlayerInRange()
+    {
+        Collider[] hits = Physics.OverlapSphere(
+            transform.position,
+            detectRadius,
+            playerLayer,
+            QueryTriggerInteraction.Collide
+        );
+
+        ItemPickupHandler foundPickupHandler = null;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            foundPickupHandler = hits[i].GetComponent<ItemPickupHandler>();
+
+            if (foundPickupHandler == null)
+            {
+                foundPickupHandler = hits[i].GetComponentInParent<ItemPickupHandler>();
+            }
+
+            if (foundPickupHandler != null)
+            {
+                break;
+            }
+        }
+
+        bool foundPlayer = foundPickupHandler != null;
+
+        if (isPlayerInRange == foundPlayer)
+        {
+            if (foundPlayer)
+            {
+                playerPickupHandler = foundPickupHandler;
+            }
+
+            return;
+        }
+
+        isPlayerInRange = foundPlayer;
+        playerPickupHandler = foundPickupHandler;
+
+        if (isPlayerInRange)
+        {
+            Debug.Log("NPC 판매 범위 진입");
+        }
+        else
+        {
+            Debug.Log("NPC 판매 범위 이탈");
+        }
+    }
+
+    private void CheckInteractionInput()
+    {
         if (!isPlayerInRange)
         {
             return;
         }
 
-        if (Input.GetKeyDown(interactKey))
+        if (Input.GetKeyDown(interactKey) || Input.GetKeyDown(KeyCode.RightShift))
         {
             OpenVendorUI();
-        }
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        ItemPickupHandler pickupHandler = other.GetComponent<ItemPickupHandler>();
-
-        if (pickupHandler == null)
-        {
-            pickupHandler = other.GetComponentInParent<ItemPickupHandler>();
-        }
-
-        if (pickupHandler == null)
-        {
-            return;
-        }
-
-        isPlayerInRange = true;
-        playerPickupHandler = pickupHandler;
-
-        Debug.Log("NPC 판매 범위 진입");
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        ItemPickupHandler pickupHandler = other.GetComponent<ItemPickupHandler>();
-
-        if (pickupHandler == null)
-        {
-            pickupHandler = other.GetComponentInParent<ItemPickupHandler>();
-        }
-
-        if (pickupHandler == null)
-        {
-            return;
-        }
-
-        if (pickupHandler == playerPickupHandler)
-        {
-            isPlayerInRange = false;
-            playerPickupHandler = null;
-
-            Debug.Log("NPC 판매 범위 이탈");
         }
     }
 
@@ -74,5 +90,16 @@ public class VendorNPC : MonoBehaviour
         }
 
         VendorUIController.instance.Open();
+
+        if (InteractionPromptUI.Instance != null)
+        {
+            InteractionPromptUI.Instance.HidePrompt();
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectRadius);
     }
 }

@@ -25,7 +25,7 @@ public class InventoryToggleUI : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current.eKey.wasPressedThisFrame)
+        if (Keyboard.current.iKey.wasPressedThisFrame)
         {
             ToggleInventory();
         }
