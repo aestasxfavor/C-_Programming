@@ -80,7 +80,7 @@ public class OreSpawner : MonoBehaviour
 
     private bool SpawnOreAtRandomPoint()
     {
-        PoolingOre ore = GetInactiveOre();
+        PoolingOre ore = GetRandomInactiveOre();
 
         if (ore == null)
         {
@@ -103,17 +103,31 @@ public class OreSpawner : MonoBehaviour
         return true;
     }
 
-    private PoolingOre GetInactiveOre()
+    private PoolingOre GetRandomInactiveOre()
     {
+        List<PoolingOre> inactiveOres = new();
+
         foreach (PoolingOre ore in orePool)
         {
-            if (ore != null && !ore.gameObject.activeInHierarchy)
+            if (ore == null)
             {
-                return ore;
+                continue;
             }
+
+            if (ore.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            inactiveOres.Add(ore);
         }
 
-        return null;
+        if (inactiveOres.Count == 0)
+        {
+            return null;
+        }
+
+        return inactiveOres[Random.Range(0, inactiveOres.Count)];
     }
 
     private Transform GetRandomEmptySpawnPoint()

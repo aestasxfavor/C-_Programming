@@ -95,12 +95,39 @@ public class VendorUIController : MonoBehaviour
             return;
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UnlockCursor();
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Close();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            instance = null;
+        }
+
+        if (mineralSalesButton != null)
+        {
+            mineralSalesButton.onClick.RemoveListener(ShowOreSalesPanel);
+        }
+
+        if (itemBuyButton != null)
+        {
+            itemBuyButton.onClick.RemoveListener(ShowItemBuyPanel);
+        }
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(Close);
+        }
+
+        if (sellButton != null)
+        {
+            sellButton.onClick.RemoveListener(OnClickSellButton);
         }
     }
 
@@ -113,9 +140,7 @@ public class VendorUIController : MonoBehaviour
             vendorUIRoot.SetActive(true);
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
+        UnlockCursor();
         ShowOreSalesPanel();
     }
 
@@ -128,6 +153,11 @@ public class VendorUIController : MonoBehaviour
             vendorUIRoot.SetActive(false);
         }
 
+        UnlockCursor();
+    }
+
+    private void UnlockCursor()
+    {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -144,6 +174,7 @@ public class VendorUIController : MonoBehaviour
             itemBuyPanel.SetActive(false);
         }
 
+        UnlockCursor();
         RefreshOreSalesUI();
     }
 
@@ -163,6 +194,7 @@ public class VendorUIController : MonoBehaviour
             Debug.Log("아이템 구매 패널이 연결되어 있지 않습니다.");
         }
 
+        UnlockCursor();
         SetupItemBuyButtonsAsNotReady();
     }
 
@@ -179,7 +211,7 @@ public class VendorUIController : MonoBehaviour
             return;
         }
 
-        button.interactable = false;
+        button.interactable = true;
 
         TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>(true);
 

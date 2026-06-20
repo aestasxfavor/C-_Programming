@@ -14,8 +14,7 @@ public class InventoryToggleUI : MonoBehaviour
             inventoryPanel.SetActive(false);
         }
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        UnlockCursor();
     }
 
     private void Update()
@@ -41,7 +40,12 @@ public class InventoryToggleUI : MonoBehaviour
         isOpen = !isOpen;
         inventoryPanel.SetActive(isOpen);
 
-        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = isOpen;
+        UnlockCursor();
+    }
+
+    private void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
