@@ -8,12 +8,20 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private float interactDistance = 2f;
     [SerializeField] private LayerMask interactMask = ~0;
 
+    [Header("Sound")]
+    [SerializeField] private MiningSound miningSound;
+
     private ItemPickupHandler pickupHandler;
     private MineableOre currentMiningOre;
 
     private void Awake()
     {
         pickupHandler = GetComponent<ItemPickupHandler>();
+
+        if (miningSound == null)
+        {
+            miningSound = GetComponent<MiningSound>();
+        }
     }
 
     private void Update()
@@ -45,6 +53,11 @@ public class PlayerInteractor : MonoBehaviour
 
         currentMiningOre = nearestOre;
         currentMiningOre.StartMining(pickupHandler);
+
+        if (miningSound != null)
+        {
+            miningSound.StartMiningSound();
+        }
     }
 
     private MineableOre FindNearestOre()
@@ -89,6 +102,11 @@ public class PlayerInteractor : MonoBehaviour
 
         currentMiningOre.CancelMining();
         currentMiningOre = null;
+
+        if (miningSound != null)
+        {
+            miningSound.StopMiningSound();
+        }
     }
 
     private void OnDisable()

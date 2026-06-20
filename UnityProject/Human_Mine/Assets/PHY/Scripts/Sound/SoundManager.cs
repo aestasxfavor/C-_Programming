@@ -33,4 +33,14 @@ public class SoundManager : MonoBehaviour
 
         sfxSource.PlayOneShot(clip);
     }
+
+    public void StopSfx()
+    {
+        if (sfxSource == null)
+        {
+            return;
+        }
+
+        sfxSource.Stop();
+    }
 }
