@@ -1,10 +1,10 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using InventoryFramework;
 
 public class VendorNPC : MonoBehaviour
 {
     [Header("Interaction")]
-    [SerializeField] private KeyCode interactKey = KeyCode.LeftShift;
     [SerializeField] private float detectRadius = 2.5f;
     [SerializeField] private LayerMask playerLayer;
 
@@ -75,7 +75,13 @@ public class VendorNPC : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(interactKey) || Input.GetKeyDown(KeyCode.RightShift))
+        if (Keyboard.current == null)
+        {
+            return;
+        }
+
+        if (Keyboard.current.leftShiftKey.wasPressedThisFrame ||
+            Keyboard.current.rightShiftKey.wasPressedThisFrame)
         {
             OpenVendorUI();
         }

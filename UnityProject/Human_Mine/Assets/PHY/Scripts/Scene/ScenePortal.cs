@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 public class ScenePortal : MonoBehaviour
 {
@@ -7,7 +8,6 @@ public class ScenePortal : MonoBehaviour
     [SerializeField] private string targetSceneName;
 
     [Header("Interaction")]
-    [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private string promptMessage = "[E] ¿Ãµø";
 
     [Header("Detect")]
@@ -28,7 +28,7 @@ public class ScenePortal : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(interactKey))
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             LoadTargetScene();
         }

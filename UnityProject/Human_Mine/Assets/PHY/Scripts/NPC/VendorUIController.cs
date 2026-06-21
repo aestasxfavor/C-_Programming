@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using InventoryFramework;
 
 public class VendorUIController : MonoBehaviour
@@ -97,7 +98,7 @@ public class VendorUIController : MonoBehaviour
 
         UnlockCursor();
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             Close();
         }
