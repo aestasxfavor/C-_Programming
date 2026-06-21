@@ -12256,7 +12256,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.590027, y: 0}
+  m_AnchoredPosition: {x: 4.590088, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &6127395625516732183 stripped
@@ -12314,6 +12314,10 @@ PrefabInstance:
       propertyPath: miningAction
       value: 
       objectReference: {fileID: 5950118573186408804, guid: 50d511047015f86498c0692c3f649569, type: 3}
+    - target: {fileID: 7944285447831092298, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
+      propertyPath: stepInterval
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8042800036895314945, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
       propertyPath: hotbar
       value: 

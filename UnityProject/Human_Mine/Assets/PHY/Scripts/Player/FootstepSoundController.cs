@@ -55,9 +55,14 @@ public class FootstepSoundController : MonoBehaviour
         bool isMoving = horizontalVelocity.magnitude > moveThreshold;
         bool isGrounded = characterController.isGrounded;
 
-        if (!isMoving || !isGrounded)
+        if (!isMoving)
         {
             stepTimer = 0f;
+            return;
+        }
+
+        if (!isGrounded)
+        {
             return;
         }
 
