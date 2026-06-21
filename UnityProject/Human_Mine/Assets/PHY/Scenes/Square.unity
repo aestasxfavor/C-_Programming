@@ -2950,6 +2950,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 826bc9ed3a40d234f804aee15e6d5bf3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbyUIController
+  cancelAction: {fileID: 4852217242414405007, guid: 50d511047015f86498c0692c3f649569, type: 3}
   guideButton: {fileID: 1755241660}
   guidePanel: {fileID: 338314568}
   guideCloseButton: {fileID: 1845023172}
@@ -3917,6 +3918,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VendorUIController
   vendorUIRoot: {fileID: 992928285}
+  cancelAction: {fileID: 4852217242414405007, guid: 50d511047015f86498c0692c3f649569, type: 3}
   oreSalesPanel: {fileID: 456787786}
   itemBuyPanel: {fileID: 593037407}
   mineralSalesButton: {fileID: 139873963}
@@ -4237,10 +4239,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -11332,10 +11334,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -11736,6 +11738,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85c65bc04f32f3c40b893f688dfa945f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryToggleUI
+  inventoryAction: {fileID: -7709367306678992590, guid: 50d511047015f86498c0692c3f649569, type: 3}
+  cancelAction: {fileID: 4852217242414405007, guid: 50d511047015f86498c0692c3f649569, type: 3}
   inventoryPanel: {fileID: 1586478417558966545}
 --- !u!222 &649265921137510176
 CanvasRenderer:
@@ -12024,6 +12028,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5025807587450722480, guid: 8c14a579d06028e49aa7c507f2395fb1, type: 3}
+      propertyPath: interactAction
+      value: 
+      objectReference: {fileID: -4957622605195105439, guid: 50d511047015f86498c0692c3f649569, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12101,6 +12109,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7170077421415478401, guid: b9ac6d0ea0685524a9e9e4802ca5d49f, type: 3}
+      propertyPath: interactAction
+      value: 
+      objectReference: {fileID: 8007568083535417796, guid: 50d511047015f86498c0692c3f649569, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12298,6 +12310,10 @@ PrefabInstance:
       propertyPath: interval
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 1276632466349578779, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
+      propertyPath: miningAction
+      value: 
+      objectReference: {fileID: 5950118573186408804, guid: 50d511047015f86498c0692c3f649569, type: 3}
     - target: {fileID: 8042800036895314945, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
       propertyPath: hotbar
       value: 

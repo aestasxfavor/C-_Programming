@@ -1,8 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class LobbyUIController : MonoBehaviour
 {
+    [Header("Input")]
+    [SerializeField] private InputActionReference cancelAction;
+
     [Header("Guide")]
     [SerializeField] private Button guideButton;
     [SerializeField] private GameObject guidePanel;
@@ -15,6 +19,8 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private GameObject quitConfirmPanel;
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
+
+    private bool enabledCancelActionHere;
 
     private void Awake()
     {
@@ -46,6 +52,14 @@ public class LobbyUIController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (cancelAction != null &&
+            cancelAction.action != null &&
+            !cancelAction.action.enabled)
+        {
+            cancelAction.action.Enable();
+            enabledCancelActionHere = true;
+        }
+
         UnlockCursor();
         CloseGuidePanel();
         CloseQuitConfirmPanel();
@@ -56,6 +70,41 @@ public class LobbyUIController : MonoBehaviour
         UnlockCursor();
         CloseGuidePanel();
         CloseQuitConfirmPanel();
+    }
+
+    private void Update()
+    {
+        if (cancelAction == null || cancelAction.action == null)
+        {
+            return;
+        }
+
+        if (!cancelAction.action.WasPressedThisFrame())
+        {
+            return;
+        }
+
+        if (quitConfirmPanel != null && quitConfirmPanel.activeSelf)
+        {
+            CloseQuitConfirmPanel();
+            return;
+        }
+
+        if (guidePanel != null && guidePanel.activeSelf)
+        {
+            CloseGuidePanel();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (cancelAction != null &&
+            cancelAction.action != null &&
+            enabledCancelActionHere)
+        {
+            cancelAction.action.Disable();
+            enabledCancelActionHere = false;
+        }
     }
 
     private void OnDestroy()

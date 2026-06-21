@@ -24,6 +24,9 @@ public class VendorUIController : MonoBehaviour
     [Header("Root")]
     [SerializeField] private GameObject vendorUIRoot;
 
+    [Header("Input")]
+    [SerializeField] private InputActionReference cancelAction;
+
     [Header("Panels")]
     [SerializeField] private GameObject oreSalesPanel;
     [SerializeField] private GameObject itemBuyPanel;
@@ -51,6 +54,8 @@ public class VendorUIController : MonoBehaviour
     [SerializeField] private InventoryUI inventoryUI;
 
     public bool IsOpen { get; private set; }
+
+    private bool enabledCancelActionHere;
 
     private void Awake()
     {
@@ -83,6 +88,17 @@ public class VendorUIController : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        if (cancelAction != null &&
+            cancelAction.action != null &&
+            !cancelAction.action.enabled)
+        {
+            cancelAction.action.Enable();
+            enabledCancelActionHere = true;
+        }
+    }
+
     private void Start()
     {
         SetupItemBuyButtonsAsNotReady();
@@ -98,7 +114,12 @@ public class VendorUIController : MonoBehaviour
 
         UnlockCursor();
 
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (cancelAction == null || cancelAction.action == null)
+        {
+            return;
+        }
+
+        if (cancelAction.action.WasPressedThisFrame())
         {
             Close();
         }
@@ -129,6 +150,14 @@ public class VendorUIController : MonoBehaviour
         if (sellButton != null)
         {
             sellButton.onClick.RemoveListener(OnClickSellButton);
+        }
+
+        if (cancelAction != null &&
+            cancelAction.action != null &&
+            enabledCancelActionHere)
+        {
+            cancelAction.action.Disable();
+            enabledCancelActionHere = false;
         }
     }
 

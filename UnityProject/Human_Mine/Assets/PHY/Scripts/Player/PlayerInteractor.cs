@@ -4,6 +4,9 @@ using InventoryFramework;
 
 public class PlayerInteractor : MonoBehaviour
 {
+    [Header("Input")]
+    [SerializeField] private InputActionReference miningAction;
+
     [Header("Interaction")]
     [SerializeField] private float interactDistance = 2f;
     [SerializeField] private LayerMask interactMask = ~0;
@@ -13,6 +16,7 @@ public class PlayerInteractor : MonoBehaviour
 
     private ItemPickupHandler pickupHandler;
     private MineableOre currentMiningOre;
+    private bool enabledMiningActionHere;
 
     private void Awake()
     {
@@ -24,19 +28,30 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        if (miningAction != null &&
+            miningAction.action != null &&
+            !miningAction.action.enabled)
+        {
+            miningAction.action.Enable();
+            enabledMiningActionHere = true;
+        }
+    }
+
     private void Update()
     {
-        if (Keyboard.current == null)
+        if (miningAction == null || miningAction.action == null)
         {
             return;
         }
 
-        if (Keyboard.current.fKey.wasPressedThisFrame)
+        if (miningAction.action.WasPressedThisFrame())
         {
             TryStartMining();
         }
 
-        if (Keyboard.current.fKey.wasReleasedThisFrame)
+        if (miningAction.action.WasReleasedThisFrame())
         {
             CancelCurrentMining();
         }
@@ -112,6 +127,14 @@ public class PlayerInteractor : MonoBehaviour
     private void OnDisable()
     {
         CancelCurrentMining();
+
+        if (miningAction != null &&
+            miningAction.action != null &&
+            enabledMiningActionHere)
+        {
+            miningAction.action.Disable();
+            enabledMiningActionHere = false;
+        }
     }
 
     private void OnDrawGizmosSelected()

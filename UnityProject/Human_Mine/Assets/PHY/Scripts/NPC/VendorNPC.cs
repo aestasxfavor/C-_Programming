@@ -5,11 +5,24 @@ using InventoryFramework;
 public class VendorNPC : MonoBehaviour
 {
     [Header("Interaction")]
+    [SerializeField] private InputActionReference interactAction;
     [SerializeField] private float detectRadius = 2.5f;
     [SerializeField] private LayerMask playerLayer;
 
     private bool isPlayerInRange;
+    private bool enabledInteractActionHere;
     private ItemPickupHandler playerPickupHandler;
+
+    private void OnEnable()
+    {
+        if (interactAction != null &&
+            interactAction.action != null &&
+            !interactAction.action.enabled)
+        {
+            interactAction.action.Enable();
+            enabledInteractActionHere = true;
+        }
+    }
 
     private void Update()
     {
@@ -75,13 +88,12 @@ public class VendorNPC : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current == null)
+        if (interactAction == null || interactAction.action == null)
         {
             return;
         }
 
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame ||
-            Keyboard.current.rightShiftKey.wasPressedThisFrame)
+        if (interactAction.action.WasPressedThisFrame())
         {
             OpenVendorUI();
         }
@@ -100,6 +112,17 @@ public class VendorNPC : MonoBehaviour
         if (InteractionPromptUI.Instance != null)
         {
             InteractionPromptUI.Instance.HidePrompt();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (interactAction != null &&
+            interactAction.action != null &&
+            enabledInteractActionHere)
+        {
+            interactAction.action.Disable();
+            enabledInteractActionHere = false;
         }
     }
 

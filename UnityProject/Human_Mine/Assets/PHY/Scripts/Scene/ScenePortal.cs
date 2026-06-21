@@ -8,6 +8,7 @@ public class ScenePortal : MonoBehaviour
     [SerializeField] private string targetSceneName;
 
     [Header("Interaction")]
+    [SerializeField] private InputActionReference interactAction;
     [SerializeField] private string promptMessage = "[E] ¿Ãµø";
 
     [Header("Detect")]
@@ -15,6 +16,18 @@ public class ScenePortal : MonoBehaviour
 
     private bool isPlayerInRange;
     private bool isLoading;
+    private bool enabledInteractActionHere;
+
+    private void OnEnable()
+    {
+        if (interactAction != null &&
+            interactAction.action != null &&
+            !interactAction.action.enabled)
+        {
+            interactAction.action.Enable();
+            enabledInteractActionHere = true;
+        }
+    }
 
     private void Update()
     {
@@ -28,7 +41,12 @@ public class ScenePortal : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        if (interactAction == null || interactAction.action == null)
+        {
+            return;
+        }
+
+        if (interactAction.action.WasPressedThisFrame())
         {
             LoadTargetScene();
         }
@@ -98,6 +116,14 @@ public class ScenePortal : MonoBehaviour
         if (InteractionPromptUI.Instance != null)
         {
             InteractionPromptUI.Instance.HidePrompt(gameObject);
+        }
+
+        if (interactAction != null &&
+            interactAction.action != null &&
+            enabledInteractActionHere)
+        {
+            interactAction.action.Disable();
+            enabledInteractActionHere = false;
         }
     }
 }

@@ -3,12 +3,78 @@ using UnityEngine.InputSystem;
 
 public class InventoryToggleUI : MonoBehaviour
 {
+    [Header("Input")]
+    [SerializeField] private InputActionReference inventoryAction;
+    [SerializeField] private InputActionReference cancelAction;
+
+    [Header("UI")]
     [SerializeField] private GameObject inventoryPanel;
 
     private bool isOpen;
 
+    private void OnEnable()
+    {
+        EnableAction(inventoryAction);
+        EnableAction(cancelAction);
+    }
+
     private void Start()
     {
+        CloseInventory();
+        UnlockCursor();
+    }
+
+    private void Update()
+    {
+        EnableAction(inventoryAction);
+        EnableAction(cancelAction);
+
+        if (isOpen &&
+            cancelAction != null &&
+            cancelAction.action != null &&
+            cancelAction.action.WasPressedThisFrame())
+        {
+            CloseInventory();
+            return;
+        }
+
+        if (inventoryAction != null &&
+            inventoryAction.action != null &&
+            inventoryAction.action.WasPressedThisFrame())
+        {
+            ToggleInventory();
+        }
+    }
+
+    private void ToggleInventory()
+    {
+        if (isOpen)
+        {
+            CloseInventory();
+        }
+        else
+        {
+            OpenInventory();
+        }
+    }
+
+    private void OpenInventory()
+    {
+        if (inventoryPanel == null)
+        {
+            return;
+        }
+
+        isOpen = true;
+        inventoryPanel.SetActive(true);
+
+        UnlockCursor();
+    }
+
+    private void CloseInventory()
+    {
+        isOpen = false;
+
         if (inventoryPanel != null)
         {
             inventoryPanel.SetActive(false);
@@ -17,30 +83,14 @@ public class InventoryToggleUI : MonoBehaviour
         UnlockCursor();
     }
 
-    private void Update()
+    private void EnableAction(InputActionReference actionReference)
     {
-        if (Keyboard.current == null)
+        if (actionReference != null &&
+            actionReference.action != null &&
+            !actionReference.action.enabled)
         {
-            return;
+            actionReference.action.Enable();
         }
-
-        if (Keyboard.current.iKey.wasPressedThisFrame)
-        {
-            ToggleInventory();
-        }
-    }
-
-    private void ToggleInventory()
-    {
-        if (inventoryPanel == null)
-        {
-            return;
-        }
-
-        isOpen = !isOpen;
-        inventoryPanel.SetActive(isOpen);
-
-        UnlockCursor();
     }
 
     private void UnlockCursor()

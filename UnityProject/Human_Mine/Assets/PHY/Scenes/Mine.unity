@@ -1044,10 +1044,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1141,6 +1141,10 @@ PrefabInstance:
       propertyPath: interval
       value: 0.55
       objectReference: {fileID: 0}
+    - target: {fileID: 1276632466349578779, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
+      propertyPath: miningAction
+      value: 
+      objectReference: {fileID: 5950118573186408804, guid: 50d511047015f86498c0692c3f649569, type: 3}
     - target: {fileID: 8042800036895314945, guid: 17128299fd01e5d4f8044d737d16e9d4, type: 3}
       propertyPath: hotbar
       value: 
@@ -1388,10 +1392,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -2279,6 +2283,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 367962481816482007, guid: 13d25ee25e03bfc4a9ab4ad24b94670a, type: 3}
+      propertyPath: interactAction
+      value: 
+      objectReference: {fileID: 8007568083535417796, guid: 50d511047015f86498c0692c3f649569, type: 3}
     - target: {fileID: 4616321591858129917, guid: 13d25ee25e03bfc4a9ab4ad24b94670a, type: 3}
       propertyPath: m_Name
       value: Portal_ToSquare
