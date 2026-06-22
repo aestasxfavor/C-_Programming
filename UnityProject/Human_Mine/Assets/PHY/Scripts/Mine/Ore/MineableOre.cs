@@ -137,6 +137,11 @@ public class MineableOre : MonoBehaviour
 
         pickupHandler.PickupItem(oreItem, amount);
 
+        if (QuestManager.instance != null)
+        {
+            QuestManager.instance.AddMineCount();
+        }
+
         DespawnOre();
     }
 

@@ -30,14 +30,20 @@ public class VendorUIController : MonoBehaviour
     [Header("Panels")]
     [SerializeField] private GameObject oreSalesPanel;
     [SerializeField] private GameObject itemBuyPanel;
+    [SerializeField] private GameObject questPanel;
 
     [Header("Tab Buttons")]
     [SerializeField] private Button mineralSalesButton;
     [SerializeField] private Button itemBuyButton;
+    [SerializeField] private Button questButton;
 
     [Header("Common Buttons")]
     [SerializeField] private Button closeButton;
     [SerializeField] private Button sellButton;
+
+    [Header("Quest")]
+    [SerializeField] private Button questRewardButton;
+    [SerializeField] private TMP_Text questProgressText;
 
     [Header("Item Buy Buttons")]
     [SerializeField] private Button pickaxeBuyButton;
@@ -77,6 +83,11 @@ public class VendorUIController : MonoBehaviour
             itemBuyButton.onClick.AddListener(ShowItemBuyPanel);
         }
 
+        if (questButton != null)
+        {
+            questButton.onClick.AddListener(ShowQuestPanel);
+        }
+
         if (closeButton != null)
         {
             closeButton.onClick.AddListener(Close);
@@ -85,6 +96,11 @@ public class VendorUIController : MonoBehaviour
         if (sellButton != null)
         {
             sellButton.onClick.AddListener(OnClickSellButton);
+        }
+
+        if (questRewardButton != null)
+        {
+            questRewardButton.onClick.AddListener(OnClickQuestRewardButton);
         }
     }
 
@@ -142,6 +158,11 @@ public class VendorUIController : MonoBehaviour
             itemBuyButton.onClick.RemoveListener(ShowItemBuyPanel);
         }
 
+        if (questButton != null)
+        {
+            questButton.onClick.RemoveListener(ShowQuestPanel);
+        }
+
         if (closeButton != null)
         {
             closeButton.onClick.RemoveListener(Close);
@@ -150,6 +171,11 @@ public class VendorUIController : MonoBehaviour
         if (sellButton != null)
         {
             sellButton.onClick.RemoveListener(OnClickSellButton);
+        }
+
+        if (questRewardButton != null)
+        {
+            questRewardButton.onClick.RemoveListener(OnClickQuestRewardButton);
         }
 
         if (cancelAction != null &&
@@ -204,6 +230,11 @@ public class VendorUIController : MonoBehaviour
             itemBuyPanel.SetActive(false);
         }
 
+        if (questPanel != null)
+        {
+            questPanel.SetActive(false);
+        }
+
         UnlockCursor();
         RefreshOreSalesUI();
     }
@@ -221,11 +252,37 @@ public class VendorUIController : MonoBehaviour
         }
         else
         {
-            Debug.Log("아이템 구매 패널이 연결되어 있지 않습니다.");
+            Debug.Log("아이템 구매 패널이 연결되어 있지 않아요.");
+        }
+
+        if (questPanel != null)
+        {
+            questPanel.SetActive(false);
         }
 
         UnlockCursor();
         SetupItemBuyButtonsAsNotReady();
+    }
+
+    private void ShowQuestPanel()
+    {
+        if (oreSalesPanel != null)
+        {
+            oreSalesPanel.SetActive(false);
+        }
+
+        if (itemBuyPanel != null)
+        {
+            itemBuyPanel.SetActive(false);
+        }
+
+        if (questPanel != null)
+        {
+            questPanel.SetActive(true);
+        }
+
+        UnlockCursor();
+        RefreshQuestUI();
     }
 
     private void SetupItemBuyButtonsAsNotReady()
@@ -257,7 +314,7 @@ public class VendorUIController : MonoBehaviour
 
         if (inventorySystem == null)
         {
-            Debug.LogError("InventorySystem이 없습니다.");
+            Debug.LogError("InventorySystem이 없어요.");
             return;
         }
 
@@ -266,7 +323,7 @@ public class VendorUIController : MonoBehaviour
 
         if (hotbar == null || inventory == null)
         {
-            Debug.LogError("Hotbar 또는 Inventory 참조가 없습니다.");
+            Debug.LogError("Hotbar 또는 Inventory 참조가 없어요.");
             return;
         }
 
@@ -274,7 +331,7 @@ public class VendorUIController : MonoBehaviour
 
         if (totalPrice <= 0)
         {
-            Debug.Log("판매할 광석이 없습니다.");
+            Debug.Log("판매할 광석이 없어요.");
             RefreshOreSalesUI();
             return;
         }
@@ -287,13 +344,32 @@ public class VendorUIController : MonoBehaviour
         }
         else
         {
-            Debug.LogError("CoinManager가 없습니다.");
+            Debug.LogError("CoinManager가 없어요.");
         }
 
         RefreshInventoryUIs();
         RefreshOreSalesUI();
 
         Debug.Log($"광석 전체 판매 완료: +{totalPrice} Y");
+    }
+
+    private void OnClickQuestRewardButton()
+    {
+        if (QuestManager.instance == null)
+        {
+            Debug.LogError("QuestManager가 없어요.");
+            RefreshQuestUI();
+            return;
+        }
+
+        bool claimed = QuestManager.instance.TryClaimReward();
+
+        if (!claimed)
+        {
+            Debug.Log("퀘스트 조건 미달 또는 이미 보상 수령 완료");
+        }
+
+        RefreshQuestUI();
     }
 
     private int CalculateTotalPrice(Hotbar hotbar, Inventory inventory)
@@ -393,6 +469,66 @@ public class VendorUIController : MonoBehaviour
         }
 
         SetTotalPriceText(totalPrice);
+    }
+
+    private void RefreshQuestUI()
+    {
+        if (QuestManager.instance == null)
+        {
+            if (questProgressText != null)
+            {
+                questProgressText.text = "퀘스트 정보를 불러올 수 없어요.";
+            }
+
+            if (questRewardButton != null)
+            {
+                questRewardButton.interactable = false;
+            }
+
+            return;
+        }
+
+        if (questProgressText != null)
+        {
+            if (QuestManager.instance.IsRewardClaimed)
+            {
+                questProgressText.text =
+                    "[튜토리얼 퀘스트]\n\n" +
+                    "퀘스트 완료\n" +
+                    "보상 수령 완료";
+            }
+            else
+            {
+                questProgressText.text =
+                    "[튜토리얼 퀘스트]\n\n" +
+                    "아무 광물 5개 채굴하기\n" +
+                    $"진행도: {QuestManager.instance.CurrentMineCount} / {QuestManager.instance.RequiredMineCount}\n" +
+                    $"보상: {QuestManager.instance.RewardCoin} Y";
+            }
+        }
+
+        if (questRewardButton != null)
+        {
+            questRewardButton.interactable = QuestManager.instance.CanClaimReward;
+
+            TMP_Text buttonText = questRewardButton.GetComponentInChildren<TMP_Text>(true);
+
+            if (buttonText != null)
+            {
+                if (QuestManager.instance.IsRewardClaimed)
+                {
+                    buttonText.text = "완료";
+                }
+                else if (QuestManager.instance.CanClaimReward)
+                {
+                    buttonText.text = "보상 받기";
+                }
+                else
+                {
+                    buttonText.text = "받기";
+                }
+            }
+        }
     }
 
     private int GetTotalItemCount(Hotbar hotbar, Inventory inventory, Item item)

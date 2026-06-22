@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Button))]
-public class UIButtonSound : MonoBehaviour
+public class UIButtonSound : MonoBehaviour, IPointerDownHandler
 {
     [SerializeField] private AudioClip clickClip;
 
@@ -11,19 +12,27 @@ public class UIButtonSound : MonoBehaviour
     private void Awake()
     {
         button = GetComponent<Button>();
-        button.onClick.AddListener(PlayClickSound);
     }
 
-    private void OnDestroy()
+    public void OnPointerDown(PointerEventData eventData)
     {
-        if (button != null)
+        Debug.Log($"UI 버튼 사운드 입력 감지: {gameObject.name}");
+
+        if (button == null)
         {
-            button.onClick.RemoveListener(PlayClickSound);
+            return;
         }
-    }
 
-    private void PlayClickSound()
-    {
+        if (!button.interactable)
+        {
+            return;
+        }
+
+        if (clickClip == null)
+        {
+            return;
+        }
+
         if (SoundManager.Instance == null)
         {
             return;
